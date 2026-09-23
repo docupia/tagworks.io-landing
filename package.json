@@ -1,0 +1,19 @@
+{
+  "name": "tagworks",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @tagworks/web",
+    "dev:web": "npm run dev --workspace @tagworks/web",
+    "dev:publisher": "npm run dev --workspace @tagworks/publisher",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

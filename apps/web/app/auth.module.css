@@ -1,0 +1,139 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 40px 20px;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(215, 222, 191, 0.75), transparent 28%),
+    radial-gradient(circle at 82% 82%, rgba(222, 214, 232, 0.7), transparent 28%),
+    #f7f3e8;
+}
+
+.card {
+  width: min(100%, 460px);
+  padding: 34px;
+  border: 1px solid #d9d2c1;
+  border-radius: 24px;
+  background: rgba(255, 253, 247, 0.96);
+  box-shadow: 0 24px 70px rgba(79, 91, 62, 0.12);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  color: #4f5b3e;
+  font-weight: 800;
+  text-decoration: none;
+  letter-spacing: -0.03em;
+}
+
+.brandMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  color: #fffdf7;
+  background: #4f5b3e;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #788263;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #31382a;
+  font-size: clamp(1.8rem, 6vw, 2.4rem);
+  letter-spacing: -0.055em;
+}
+
+.description {
+  margin: 12px 0 26px;
+  color: #69705f;
+  line-height: 1.7;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+  color: #4b5243;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.field input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid #ccc5b3;
+  border-radius: 12px;
+  outline: none;
+  color: #31382a;
+  background: #fffdf8;
+  font: inherit;
+}
+
+.field input:focus {
+  border-color: #74805f;
+  box-shadow: 0 0 0 4px rgba(116, 128, 95, 0.13);
+}
+
+.submit {
+  min-height: 50px;
+  border: 0;
+  border-radius: 12px;
+  color: #fffdf7;
+  background: #4f5b3e;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 850;
+  box-shadow: 0 10px 26px rgba(79, 91, 62, 0.18);
+}
+
+.submit:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.notice,
+.error {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.notice {
+  color: #40553d;
+  background: #e8f0df;
+}
+
+.error {
+  color: #7a3f35;
+  background: #f7e3dc;
+}
+
+.switch {
+  margin: 22px 0 0;
+  color: #737868;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.switch a {
+  color: #4f5b3e;
+  font-weight: 800;
+}

@@ -1,0 +1,102 @@
+:root {
+  color-scheme: light;
+  --canvas: #f7f3e8;
+  --surface: #fffdf7;
+  --ink: #30352a;
+  --muted: #707565;
+  --olive: #4f5b3e;
+  --sage: #dfe5cf;
+  --line: #d8d4c6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 15% 5%, rgb(223 229 207 / 70%), transparent 34rem),
+    var(--canvas);
+  color: var(--ink);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+.shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 2rem;
+}
+
+.card {
+  width: min(34rem, 100%);
+  border: 1px solid var(--line);
+  border-radius: 1.5rem;
+  background: rgb(255 253 247 / 88%);
+  box-shadow: 0 1.25rem 4rem rgb(54 61 43 / 10%);
+  padding: clamp(1.75rem, 5vw, 3rem);
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--olive);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.mark::before {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0.25rem 0.5rem 0.25rem 0.5rem;
+  background: var(--olive);
+  content: "";
+  transform: rotate(-8deg);
+}
+
+h1 {
+  margin: 2rem 0 0.75rem;
+  font-size: clamp(2rem, 8vw, 3.35rem);
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  border-radius: 999px;
+  background: var(--sage);
+  color: var(--olive);
+  padding: 0.55rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.status::before {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 50%;
+  background: #77835f;
+  content: "";
+}

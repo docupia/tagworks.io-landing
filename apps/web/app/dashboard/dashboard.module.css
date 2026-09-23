@@ -1,0 +1,390 @@
+.shell {
+  min-height: 100vh;
+  color: #31382a;
+  background:
+    radial-gradient(circle at 88% 8%, rgba(222, 214, 232, 0.55), transparent 24rem),
+    #f7f3e8;
+}
+
+.topbar {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 clamp(20px, 5vw, 72px);
+  border-bottom: 1px solid #ddd6c5;
+  background: rgba(255, 253, 247, 0.88);
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #4f5b3e;
+  font-weight: 850;
+  text-decoration: none;
+  letter-spacing: -0.035em;
+}
+
+.brandMark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  color: #fffdf7;
+  background: #4f5b3e;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account {
+  max-width: 260px;
+  overflow: hidden;
+  color: #707667;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signout {
+  padding: 9px 13px;
+  border: 1px solid #cbc4b2;
+  border-radius: 10px;
+  color: #545b4c;
+  background: #fffdf8;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.main {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 64px 0 90px;
+}
+
+.headingRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #7a8465;
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  letter-spacing: -0.06em;
+}
+
+.subtitle {
+  margin: 12px 0 0;
+  color: #737969;
+  line-height: 1.65;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border-radius: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.primaryButton {
+  color: #fffdf7;
+  background: #4f5b3e;
+  box-shadow: 0 10px 26px rgba(79, 91, 62, 0.2);
+}
+
+.secondaryButton {
+  border: 1px solid #cfc8b6;
+  color: #4f5b3e;
+  background: #fffdf7;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.pageCard,
+.empty,
+.uploadCard {
+  border: 1px solid #d8d1bf;
+  border-radius: 20px;
+  background: rgba(255, 253, 247, 0.92);
+  box-shadow: 0 14px 40px rgba(79, 91, 62, 0.07);
+}
+
+.pageCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  padding: 22px 24px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 1.08rem;
+  letter-spacing: -0.025em;
+}
+
+.description {
+  margin: 7px 0 0;
+  color: #767b6c;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 12px;
+  color: #8b8f82;
+  font-size: 0.78rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #536349;
+  font-weight: 800;
+}
+
+.badge::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: #8fa472;
+  content: "";
+}
+
+.empty {
+  padding: 54px 28px;
+  text-align: center;
+}
+
+.emptyIcon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 17px;
+  place-items: center;
+  border-radius: 18px;
+  color: #556147;
+  background: #e8eddc;
+  font-size: 1.4rem;
+}
+
+.empty h2 {
+  margin: 0 0 9px;
+  letter-spacing: -0.035em;
+}
+
+.empty p {
+  margin: 0 0 22px;
+  color: #777c6d;
+}
+
+.uploadCard {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 42px);
+}
+
+.back {
+  display: inline-flex;
+  margin-bottom: 30px;
+  color: #657052;
+  font-size: 0.9rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.form {
+  display: grid;
+  gap: 20px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  color: #4b5243;
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #cbc4b3;
+  border-radius: 12px;
+  outline: none;
+  color: #31382a;
+  background: #fffef9;
+  font: inherit;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus,
+.dropzone:focus-within {
+  border-color: #74805f;
+  box-shadow: 0 0 0 4px rgba(116, 128, 95, 0.13);
+}
+
+.dropzone {
+  display: grid;
+  min-height: 190px;
+  place-items: center;
+  padding: 24px;
+  border: 1.5px dashed #aeb59c;
+  border-radius: 18px;
+  background: #f5f3e8;
+  text-align: center;
+  cursor: pointer;
+}
+
+.dropzone input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.dropTitle {
+  margin: 10px 0 4px;
+  color: #4f5b3e;
+  font-weight: 850;
+}
+
+.hint {
+  margin: 0;
+  color: #858a7c;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.error,
+.success {
+  padding: 14px 16px;
+  border-radius: 13px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.error {
+  color: #7a3f35;
+  background: #f7e3dc;
+}
+
+.success {
+  color: #42553d;
+  background: #e7efdd;
+}
+
+.publicLink {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.publicLink a {
+  min-width: 0;
+  overflow: hidden;
+  color: #42553d;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy {
+  border: 0;
+  color: #42553d;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.warningList {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: #6f6446;
+  font-size: 0.8rem;
+}
+
+.submit {
+  min-height: 50px;
+  border: 0;
+  border-radius: 13px;
+  color: #fffdf7;
+  background: #4f5b3e;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 850;
+}
+
+.submit:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+@media (max-width: 680px) {
+  .account {
+    display: none;
+  }
+
+  .main {
+    width: min(100% - 28px, 1120px);
+    padding-top: 42px;
+  }
+
+  .headingRow,
+  .pageCard {
+    align-items: stretch;
+    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .headingRow {
+    display: flex;
+  }
+
+  .publicLink {
+    grid-template-columns: 1fr;
+  }
+
+  .copy {
+    justify-self: start;
+  }
+}

@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.vercel/
+out/
+coverage/
+*.tsbuildinfo
+
+# Local and deployed secrets are configured outside Git.
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
