@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="AI로 만든 홍보용 HTML의 공개, 채널별 유입, 첫 외부 클릭을 보여주는 TagWorks 베타 제품 콘셉트입니다."
+    />
+    <meta name="theme-color" content="#f7f3e8" />
+    <title>TagWorks — 만든 HTML을 공개하고, 방문의 흐름을 보세요</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%234f5b3e'/%3E%3Cpath d='M16 19h22l10 13-10 13H16z' fill='%23f7f3e8'/%3E%3Ccircle cx='25' cy='32' r='4' fill='%234f5b3e'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 바로가기</a>
+
+    <header class="site-header" data-header>
+      <div class="nav-shell">
+        <a class="brand" href="#top" aria-label="TagWorks 홈">
+          <svg class="brand-mark" viewBox="0 0 38 38" aria-hidden="true">
+            <path d="M5 8.5h17.8L33 19 22.8 29.5H5V8.5Z" />
+            <circle cx="12.5" cy="19" r="2.8" />
+          </svg>
+          <span>TagWorks</span>
+        </a>
+
+        <nav class="desktop-nav" aria-label="주요 메뉴">
+          <a href="#workflow">작동 방식</a>
+          <a href="#product-view">제품 화면</a>
+          <a href="#principles">지원 범위</a>
+        </nav>
+
+        <a class="button button-small button-primary" href="#product-view">
+          제품 콘셉트 보기
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" /></svg>
+        </a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="hero-haze haze-one" aria-hidden="true"></div>
+        <div class="hero-haze haze-two" aria-hidden="true"></div>
+        <div class="shell hero-grid">
+          <div class="hero-copy" data-reveal>
+            <div class="eyebrow">
+              <span class="eyebrow-dot" aria-hidden="true"></span>
+              AI로 만든 HTML, 이제 공유할 차례
+            </div>
+            <h1 id="hero-title">
+              만든 HTML을 올리고,<br />
+              <span>방문의 다음 움직임</span>까지 보세요.
+            </h1>
+            <p class="hero-description">
+              태그웍스는 홍보용 HTML을 안전하게 검사해 고정 링크로 공개하고,
+              어느 채널에서 와서 어떤 외부 링크를 눌렀는지 보여주도록 설계된 한국어 서비스입니다.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#workflow">
+                공개 흐름 살펴보기
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" /></svg>
+              </a>
+              <a class="text-link" href="#product-view">
+                분석 화면 보기
+                <span aria-hidden="true">↘</span>
+              </a>
+            </div>
+            <ul class="hero-proof" aria-label="핵심 특징">
+              <li><span aria-hidden="true">✓</span> 호스팅 설정 없이</li>
+              <li><span aria-hidden="true">✓</span> 같은 주소로 다시 게시</li>
+              <li><span aria-hidden="true">✓</span> 채널별 유입 확인</li>
+            </ul>
+            <p class="concept-note">
+              <strong>현재 상태</strong>
+              이 화면은 공개 베타를 위한 제품 콘셉트입니다. 실제 계정·업로드·공개 기능은 아직 연결되지 않았습니다.
+            </p>
+          </div>
+
+          <div class="hero-product" data-reveal data-delay="120">
+            <div class="note-tab" aria-hidden="true">BETA PRODUCT FLOW</div>
+            <div class="product-window">
+              <div class="window-bar">
+                <div class="window-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+                <div class="window-title">제품 화면 예시 / 새로 등록</div>
+                <div class="window-status"><span aria-hidden="true"></span> 콘셉트 화면</div>
+              </div>
+
+              <div class="upload-card">
+                <div class="file-icon" aria-hidden="true">
+                  <svg viewBox="0 0 32 38"><path d="M5 2h14l8 8v26H5z" /><path d="M19 2v9h8" /><path d="M10 21h12M10 27h8" /></svg>
+                </div>
+                <div class="file-info">
+                  <strong>product-page.html</strong>
+                  <span>824 KB · 정적 HTML</span>
+                </div>
+                <div class="check-badge"><span aria-hidden="true">✓</span> 검사 통과 예시</div>
+              </div>
+
+              <div class="publish-line" aria-label="고정 공개 주소 예시">
+                <div>
+                  <span class="mini-label">고정 공개 주소</span>
+                  <code>/p/slow-morning</code>
+                </div>
+                <span class="live-pill"><i aria-hidden="true"></i> 공개 상태 예시</span>
+              </div>
+
+              <div class="mini-dashboard">
+                <div class="mini-dashboard-head">
+                  <div>
+                    <span class="mini-label">최근 7일 방문 흐름</span>
+                    <strong>방문은 어디에서 왔을까요?</strong>
+                  </div>
+                  <span class="percent-pill">외부 클릭 55%</span>
+                </div>
+
+                <div class="flow-preview" aria-label="유입 출처별 방문 세션 예시">
+                  <div class="flow-row">
+                    <span>인스타그램</span><div class="bar-track"><i style="--value: 92%; --bar: var(--peach)"></i></div><b>120</b>
+                  </div>
+                  <div class="flow-row">
+                    <span>블로그</span><div class="bar-track"><i style="--value: 68%; --bar: var(--sky)"></i></div><b>80</b>
+                  </div>
+                  <div class="flow-row">
+                    <span>태그웍스 탐색</span><div class="bar-track"><i style="--value: 52%; --bar: var(--lilac)"></i></div><b>60</b>
+                  </div>
+                </div>
+
+                <div class="click-summary">
+                  <span class="signal-dot signal-sage" aria-hidden="true"></span>
+                  <div><strong>구매 링크</strong><small>첫 외부 클릭 90회</small></div>
+                  <span class="summary-arrow" aria-hidden="true">→</span>
+                  <span class="summary-number">90</span>
+                </div>
+              </div>
+            </div>
+            <div class="floating-tag tag-fixed" aria-hidden="true">같은 주소, 최신 버전</div>
+            <div class="floating-tag tag-source" aria-hidden="true">source · instagram</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="value-strip" aria-label="TagWorks 핵심 가치">
+        <div class="shell value-grid">
+          <article>
+            <span class="value-number">01</span>
+            <div><h2>공개</h2><p>HTML 한 장을 링크로</p></div>
+          </article>
+          <article>
+            <span class="value-number">02</span>
+            <div><h2>유지</h2><p>수정해도 같은 주소</p></div>
+          </article>
+          <article>
+            <span class="value-number">03</span>
+            <div><h2>발견</h2><p>검색과 공유를 기본으로</p></div>
+          </article>
+          <article>
+            <span class="value-number">04</span>
+            <div><h2>이해</h2><p>유입부터 첫 클릭까지</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section workflow" id="workflow" aria-labelledby="workflow-title">
+        <div class="shell">
+          <div class="section-heading" data-reveal>
+            <span class="section-kicker">한 장에서 링크까지</span>
+            <h2 id="workflow-title">복잡한 배포 대신,<br />세 번의 명확한 단계.</h2>
+            <p>코드나 서버 설정을 다시 배우지 않아도 됩니다. 만든 파일을 확인하고, 공개하고, 반응을 읽으세요.</p>
+          </div>
+
+          <ol class="steps-grid">
+            <li class="step-card step-upload" data-reveal>
+              <div class="step-topline"><span>STEP 01</span><i aria-hidden="true"></i></div>
+              <div class="step-visual upload-visual" aria-hidden="true">
+                <div class="drop-zone">
+                  <svg viewBox="0 0 32 32"><path d="M16 22V7m0 0-6 6m6-6 6 6M7 20v5h18v-5" /></svg>
+                  <span>HTML 파일</span>
+                </div>
+              </div>
+              <h3>파일을 올리고 검사해요</h3>
+              <p>정적 HTML과 포함된 CSS를 확인하고, 지원하지 않는 기능은 공개 전에 정확히 알려드립니다.</p>
+            </li>
+            <li class="step-card step-publish" data-reveal data-delay="90">
+              <div class="step-topline"><span>STEP 02</span><i aria-hidden="true"></i></div>
+              <div class="step-visual version-visual" aria-hidden="true">
+                <div class="version-card version-old"><span>v1</span><b>현재 공개본</b></div>
+                <div class="version-arrow">→</div>
+                <div class="version-card version-new"><span>v2</span><b>새 공개본</b></div>
+                <code>/p/slow-morning</code>
+              </div>
+              <h3>같은 주소로 공개해요</h3>
+              <p>수정본은 준비가 끝난 순간에만 교체됩니다. 주소는 그대로, 방문자는 항상 최신 공개본을 봅니다.</p>
+            </li>
+            <li class="step-card step-measure" data-reveal data-delay="180">
+              <div class="step-topline"><span>STEP 03</span><i aria-hidden="true"></i></div>
+              <div class="step-visual measure-visual" aria-hidden="true">
+                <div><span>인스타그램</span><i style="width: 82%"></i></div>
+                <div><span>블로그</span><i style="width: 59%"></i></div>
+                <div><span>태그웍스</span><i style="width: 43%"></i></div>
+              </div>
+              <h3>방문의 흐름을 읽어요</h3>
+              <p>공유 채널별 방문과 세션의 첫 외부 클릭을 연결해, 다음 홍보를 결정할 근거를 만듭니다.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section insights" id="product-view" aria-labelledby="insights-title">
+        <div class="shell">
+          <div class="insights-heading" data-reveal>
+            <div>
+              <span class="section-kicker">방문 흐름 분석</span>
+              <h2 id="insights-title">숫자보다 흐름이<br />먼저 보이게.</h2>
+            </div>
+            <p>
+              방문 세션을 유입 출처부터 첫 외부 클릭까지 연결합니다. 무엇이 사람을 데려왔고,
+              다음에 어디로 움직였는지 같은 기준으로 확인하세요.
+            </p>
+          </div>
+
+          <div class="analytics-window" data-reveal data-delay="100">
+            <div class="analytics-toolbar">
+              <div class="analytics-title-group">
+                <span class="sample-badge">제품 화면 예시 · 샘플 데이터</span>
+                <div>
+                  <h3>봄 클래스 모집 페이지</h3>
+                  <span>예시 기간 · 최근 7일</span>
+                </div>
+              </div>
+              <div class="source-filters" aria-label="유입 출처 필터">
+                <button class="is-active" type="button" data-source-filter="all" aria-pressed="true">전체</button>
+                <button type="button" data-source-filter="instagram" aria-pressed="false">인스타그램</button>
+                <button type="button" data-source-filter="blog" aria-pressed="false">블로그</button>
+                <button type="button" data-source-filter="tagworks" aria-pressed="false">태그웍스</button>
+              </div>
+            </div>
+
+            <div class="metric-grid" aria-live="polite">
+              <article class="metric-card metric-visits">
+                <span>방문 세션</span>
+                <strong data-metric="visits">300</strong>
+                <small>선택한 기간에 시작된 세션</small>
+              </article>
+              <article class="metric-card metric-clicks">
+                <span>외부 클릭 세션</span>
+                <strong data-metric="clickSessions">165</strong>
+                <small>한 번 이상 외부 링크 클릭</small>
+              </article>
+              <article class="metric-card metric-rate">
+                <span>외부 클릭 비율</span>
+                <strong><span data-metric="rate">55</span><em>%</em></strong>
+                <small>클릭 세션 ÷ 방문 세션</small>
+              </article>
+              <article class="metric-card metric-contribution">
+                <span>태그웍스 기여 방문</span>
+                <strong data-metric="contribution">60</strong>
+                <small>탐색·태그 목록에서 유입</small>
+              </article>
+            </div>
+
+            <div class="flow-panel">
+              <div class="flow-panel-head">
+                <div>
+                  <h4>출처 → 페이지 → 첫 외부 클릭</h4>
+                  <p>세션마다 처음 관측된 외부 클릭 한 번만 연결합니다.</p>
+                </div>
+                <span class="updated-chip"><i aria-hidden="true"></i> 집계 방식 예시</span>
+              </div>
+
+              <div class="flow-map" aria-label="유입 출처에서 페이지를 거쳐 첫 외부 클릭으로 이어지는 흐름 예시">
+                <div class="flow-column flow-sources">
+                  <span class="flow-column-label">유입 출처</span>
+                  <div class="flow-node peach-node"><span>인스타그램</span><strong data-flow="instagram">120</strong></div>
+                  <div class="flow-node sky-node"><span>블로그</span><strong data-flow="blog">80</strong></div>
+                  <div class="flow-node lilac-node"><span>태그웍스 탐색</span><strong data-flow="tagworks">60</strong></div>
+                  <div class="flow-node khaki-node"><span>직접·출처 불명</span><strong data-flow="direct">40</strong></div>
+                </div>
+
+                <div class="flow-rail flow-rail-left" aria-hidden="true">
+                  <i class="rail-peach"></i><i class="rail-sky"></i><i class="rail-lilac"></i><i class="rail-khaki"></i>
+                </div>
+
+                <div class="flow-center">
+                  <span class="flow-column-label">공개 페이지</span>
+                  <div class="page-node">
+                    <span>봄 클래스 모집</span>
+                    <strong><span data-metric="visits">300</span> 세션</strong>
+                    <code>/p/spring-class</code>
+                  </div>
+                </div>
+
+                <div class="flow-rail flow-rail-right" aria-hidden="true">
+                  <i class="rail-sage"></i><i class="rail-peach-out"></i><i class="rail-sky-out"></i><i class="rail-empty"></i>
+                </div>
+
+                <div class="flow-column flow-targets">
+                  <span class="flow-column-label">첫 외부 클릭 결과</span>
+                  <div class="flow-node sage-node"><span>신청하기</span><strong data-flow="purchase">90</strong></div>
+                  <div class="flow-node peach-node"><span>문의하기</span><strong data-flow="inquiry">45</strong></div>
+                  <div class="flow-node sky-node"><span>소개 영상</span><strong data-flow="youtube">30</strong></div>
+                  <div class="flow-node empty-node"><span>외부 클릭 미관측</span><strong data-flow="none">135</strong></div>
+                </div>
+              </div>
+
+              <div class="mobile-flow" aria-label="모바일 방문 흐름 요약">
+                <div class="mobile-flow-stage">
+                  <span>선택한 출처</span>
+                  <strong data-mobile-flow="source">전체 채널 · 300</strong>
+                </div>
+                <span class="mobile-flow-arrow" aria-hidden="true">↓</span>
+                <div class="mobile-flow-stage mobile-page-stage">
+                  <span>공개 페이지</span>
+                  <strong>봄 클래스 모집</strong>
+                </div>
+                <span class="mobile-flow-arrow" aria-hidden="true">↓</span>
+                <div class="mobile-result-grid">
+                  <div><span>신청하기</span><strong data-flow="purchase">90</strong></div>
+                  <div><span>문의하기</span><strong data-flow="inquiry">45</strong></div>
+                  <div><span>소개 영상</span><strong data-flow="youtube">30</strong></div>
+                  <div><span>클릭 미관측</span><strong data-flow="none">135</strong></div>
+                </div>
+              </div>
+
+              <details class="data-table-details">
+                <summary>같은 데이터를 표로 보기</summary>
+                <div class="table-scroll">
+                  <table>
+                    <caption>첫 외부 클릭 결과 샘플 데이터</caption>
+                    <thead><tr><th scope="col">결과</th><th scope="col">세션 수</th><th scope="col">비율</th></tr></thead>
+                    <tbody>
+                      <tr><th scope="row">신청하기</th><td data-table="purchase">90</td><td data-table-rate="purchase">30%</td></tr>
+                      <tr><th scope="row">문의하기</th><td data-table="inquiry">45</td><td data-table-rate="inquiry">15%</td></tr>
+                      <tr><th scope="row">소개 영상</th><td data-table="youtube">30</td><td data-table-rate="youtube">10%</td></tr>
+                      <tr><th scope="row">외부 클릭 미관측</th><td data-table="none">135</td><td data-table-rate="none">45%</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            </div>
+
+            <p class="analytics-note">
+              <span aria-hidden="true">i</span>
+              외부 클릭은 구매·예약 완료를 뜻하지 않습니다. 태그웍스는 페이지에서 관측된 이동만 정확하게 구분해 보여줍니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section principles" id="principles" aria-labelledby="principles-title">
+        <div class="shell principles-grid">
+          <div class="principles-copy" data-reveal>
+            <span class="section-kicker">공개 원칙</span>
+            <h2 id="principles-title">안전하게 공개하고,<br />원본은 따로 지킵니다.</h2>
+            <p>
+              모든 HTML을 그대로 실행하는 호스팅이 아닙니다. 공개하기 전 지원 범위를 검사하고,
+              로그인 정보와 분리된 환경에서 정제된 버전만 제공합니다.
+            </p>
+            <a class="text-link" href="#faq">자주 묻는 질문 보기 <span aria-hidden="true">↓</span></a>
+          </div>
+
+          <div class="principle-board" data-reveal data-delay="100">
+            <div class="board-head">
+              <span>STATIC HTML CHECK</span>
+              <span class="secure-state"><i aria-hidden="true"></i> 검사 결과 예시</span>
+            </div>
+            <div class="board-file">
+              <div class="board-file-icon" aria-hidden="true">HTML</div>
+              <div><strong>class-intro.html</strong><span>검사된 공개 후보본 · 원본은 비공개 보관</span></div>
+            </div>
+            <div class="check-groups">
+              <article class="allowed-group">
+                <div class="check-group-title"><span aria-hidden="true">✓</span><strong>지원해요</strong></div>
+                <ul>
+                  <li>정적 HTML 본문과 레이아웃</li>
+                  <li>파일 안에 포함된 CSS</li>
+                  <li>일반 HTTPS 외부 링크</li>
+                  <li>검사된 이미지와 대표 이미지</li>
+                </ul>
+              </article>
+              <article class="blocked-group">
+                <div class="check-group-title"><span aria-hidden="true">×</span><strong>제거하거나 막아요</strong></div>
+                <ul>
+                  <li>사용자 JavaScript와 이벤트</li>
+                  <li>iframe·임의 폼·자동 이동</li>
+                  <li>서버·DB·API 비밀키</li>
+                  <li>누락된 로컬 파일 경로</li>
+                </ul>
+              </article>
+            </div>
+            <div class="board-foot">
+              <span>관리 화면</span><i aria-hidden="true"></i><span>분리된 공개 환경</span><i aria-hidden="true"></i><span>방문자</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section use-cases" aria-labelledby="use-cases-title">
+        <div class="shell">
+          <div class="use-cases-head" data-reveal>
+            <div>
+              <span class="section-kicker">누구를 위한 도구인가요?</span>
+              <h2 id="use-cases-title">페이지는 만들었지만,<br />배포가 낯선 사람들.</h2>
+            </div>
+            <p>AI 도구로 완성한 홍보 페이지를 실제 고객이 만나는 링크로 바꾸고 싶은 1인 운영자부터 시작합니다.</p>
+          </div>
+          <div class="use-case-grid">
+            <article class="use-case-card" data-reveal>
+              <span class="use-case-index">01</span>
+              <div class="use-case-signal signal-product" aria-hidden="true">
+                <span>PRODUCT PAGE</span><strong>상품 소개</strong><code>source · instagram</code>
+              </div>
+              <h3>작은 상품을 소개할 때</h3>
+              <p>상품 설명 HTML을 올리고, 인스타그램·블로그마다 구분된 공유 링크를 사용합니다.</p>
+              <div class="tag-row"><span>상품 소개</span><span>채널별 링크</span></div>
+            </article>
+            <article class="use-case-card" data-reveal data-delay="90">
+              <span class="use-case-index">02</span>
+              <div class="use-case-signal signal-republish" aria-hidden="true">
+                <span>RE-PUBLISH</span><strong>v1 → v2</strong><code>/p/my-class</code>
+              </div>
+              <h3>강의·서비스를 모집할 때</h3>
+              <p>가격이나 일정을 바꾼 새 버전을 같은 주소에 다시 게시해, 오래된 링크를 살려둡니다.</p>
+              <div class="tag-row"><span>고정 주소</span><span>재게시</span></div>
+            </article>
+            <article class="use-case-card" data-reveal data-delay="180">
+              <span class="use-case-index">03</span>
+              <div class="use-case-signal signal-flow" aria-hidden="true">
+                <span>FLOW DATA</span><strong>120 → 72</strong><code>visit → click</code>
+              </div>
+              <h3>반응을 확인하고 싶을 때</h3>
+              <p>방문 수만 세지 않고, 어느 채널의 방문이 어떤 외부 링크로 이어졌는지 확인합니다.</p>
+              <div class="tag-row"><span>방문 흐름</span><span>첫 외부 클릭</span></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section faq" id="faq" aria-labelledby="faq-title">
+        <div class="shell faq-grid">
+          <div class="faq-heading" data-reveal>
+            <span class="section-kicker">자주 묻는 질문</span>
+            <h2 id="faq-title">약속할 수 있는 것만,<br />분명하게 말합니다.</h2>
+          </div>
+          <div class="faq-list" data-reveal data-delay="100">
+            <details open>
+              <summary><span>HTML 디자인이 그대로 공개되나요?</span><i aria-hidden="true"></i></summary>
+              <p>정적 HTML과 포함된 CSS를 우선 지원합니다. 사용자 스크립트, iframe, 임의 폼처럼 안전하게 제공하기 어려운 요소는 제거하거나 게시를 막고, 예상되는 영향을 미리 안내합니다.</p>
+            </details>
+            <details>
+              <summary><span>수정하면 공유 주소도 바뀌나요?</span><i aria-hidden="true"></i></summary>
+              <p>첫 공개 후 기본 주소는 유지됩니다. 수정본을 저장하는 동안 기존 공개본은 그대로 보이고, 재게시가 성공한 순간에만 새 버전으로 교체됩니다.</p>
+            </details>
+            <details>
+              <summary><span>외부 클릭 수가 곧 구매 수인가요?</span><i aria-hidden="true"></i></summary>
+              <p>아닙니다. 외부 클릭은 페이지에서 링크 이동이 관측된 세션 수입니다. 외부 서비스에서 실제 구매·문의·예약이 완료됐는지는 태그웍스가 기본 기능으로 판단하지 않습니다.</p>
+            </details>
+            <details>
+              <summary><span>검색 상위 노출을 보장하나요?</span><i aria-hidden="true"></i></summary>
+              <p>제목, 설명, canonical, 공유 메타데이터와 같은 기본 설정은 돕지만 검색 순위, 색인 시점, 방문자 증가를 보장하지 않습니다.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing-section" aria-labelledby="closing-title">
+        <div class="shell closing-card" data-reveal>
+          <div class="closing-tag" aria-hidden="true">BETA CONCEPT</div>
+          <span class="section-kicker">당신의 HTML, 다음 단계로</span>
+          <h2 id="closing-title">만들어둔 페이지가 있다면,<br />이제 링크로 만날 차례예요.</h2>
+          <p>현재는 베타 제품 화면을 먼저 공개합니다. 실제 계정 생성과 파일 공개는 다음 개발 단계에서 제공됩니다.</p>
+          <div class="closing-actions">
+            <a class="button button-primary" href="#product-view">베타 제품 화면 보기<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" /></svg></a>
+            <a class="text-link" href="#workflow">공개 과정 다시 보기 <span aria-hidden="true">↑</span></a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <a class="brand" href="#top" aria-label="TagWorks 홈">
+          <svg class="brand-mark" viewBox="0 0 38 38" aria-hidden="true"><path d="M5 8.5h17.8L33 19 22.8 29.5H5V8.5Z" /><circle cx="12.5" cy="19" r="2.8" /></svg>
+          <span>TagWorks</span>
+        </a>
+        <p>HTML을 공개하고, 방문의 흐름을 이해하는 가장 단순한 방법.</p>
+        <div class="footer-links"><a href="#workflow">작동 방식</a><a href="#principles">지원 범위</a><a href="#faq">FAQ</a></div>
+        <span>© <span data-year></span> TagWorks</span>
+      </div>
+    </footer>
+  </body>
+</html>
