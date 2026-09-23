@@ -81,19 +81,19 @@ sandbox 헤더를 적용합니다.
 
 한 저장소에서 프로젝트 두 개를 만듭니다.
 
-1. 웹 프로젝트는 저장소 루트의 `vercel.json`을 사용해 배포할 수 있습니다.
-   이 설정은 `@tagworks/web`만 빌드하고 `apps/web/.next`를 결과물로 사용합니다.
-   또는 Vercel의 Root Directory를 `apps/web`으로 설정하고 Build/Output Directory
-   override를 모두 끈 상태로 Next.js 기본값을 사용해도 됩니다.
+1. 웹 프로젝트 Root Directory: `apps/web`
+   Framework Preset은 `Next.js`, Build Command와 Output Directory는 기본값을 사용합니다.
 2. 퍼블리셔 프로젝트 Root Directory: `apps/publisher`
    Framework Preset은 `Next.js`, Build Command와 Output Directory는 기본값을 사용합니다.
 3. 퍼블리셔를 먼저 배포하고 그 URL을 웹 프로젝트의
    `NEXT_PUBLIC_PUBLISHER_URL`로 설정
 4. 웹 프로젝트의 실제 URL을 `NEXT_PUBLIC_SITE_URL` 및 Supabase Auth Redirect URL에 설정
 
-Vercel이 `/vercel/path0/.next`를 찾는 오류는 저장소 루트에서 전체 workspace 빌드를
-실행하면서 실제 결과물이 `apps/web/.next`에 생성될 때 발생합니다. 이 저장소의
-`vercel.json`이 웹 앱 빌드 명령과 결과 경로를 명시해 해당 불일치를 방지합니다.
+Vercel이 `/vercel/path0/.next`를 찾는 오류는 Root Directory가 저장소 루트로 남아
+전체 workspace 빌드 결과를 잘못 찾을 때 발생합니다. 각 프로젝트의 Root Directory를
+위와 같이 지정하고 Build/Output Directory override를 끄면 `.next`를 앱 기준으로
+자동 인식합니다. 저장소 루트에 웹 전용 `vercel.json`을 두면 퍼블리셔 프로젝트에도
+적용될 수 있으므로 사용하지 않습니다.
 
 모든 환경변수는 Development, Preview, Production에 동일한 Supabase 프로젝트 값을
 사용합니다. 단, 로컬 테스트도 같은 운영 데이터에 반영되므로 테스트 페이지 이름을
