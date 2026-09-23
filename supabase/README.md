@@ -12,6 +12,11 @@ Next.js upload route must validate the Supabase session, sanitize the HTML, uplo
 the source with that user's session, then use its server-only PostgreSQL connection
 to commit the metadata transaction.
 
+The second migration creates the `tagworks_ingest` login with column-level grants
+for that transaction only. Set its password out-of-band and use its Supavisor
+transaction-pooler URL in `SUPABASE_DATABASE_URL`; never use the `postgres` role as
+an application runtime credential.
+
 ## Publish transaction
 
 Use one PostgreSQL transaction in this order:
@@ -27,9 +32,13 @@ page and already has sanitized HTML. The composite foreign keys prevent cross-pa
 version pointers. A database transaction should be rolled back if any step fails;
 the API should also remove the just-uploaded Storage object on failure.
 
-The public RPC calculates `artifact_sha256` from the exact UTF-8 bytes stored in
-`sanitized_html`.
-`source_sha256` hashes the original upload. Both values are lowercase hex SHA-256.
+`source_sha256` hashes the original upload as lowercase hex SHA-256. The public
+RPC returns only the title, description, slug, sanitized HTML, and update time.
+
+Before an upload, the server creates a short-lived row in `upload_reservations`.
+The Storage INSERT policy accepts only that exact path for that authenticated
+owner. Successful and failed attempts are marked consumed and retained briefly
+for per-user rate limiting, preventing direct clients from filling the bucket.
 
 The database intentionally does not attempt to parse or sanitize HTML. The web
 service must sanitize before inserting an artifact, and the isolated publisher

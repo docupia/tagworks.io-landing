@@ -34,20 +34,33 @@ npm run dev:publisher
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
 `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_PUBLISHER_URL`, `SUPABASE_DATABASE_URL`이
 필요합니다. 퍼블리셔에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`만 필요합니다.
-Vercel의 `SUPABASE_DATABASE_URL`에는 Supabase Transaction pooler 연결 문자열을
-사용하고 prepared statements를 비활성화합니다.
+Vercel의 `SUPABASE_DATABASE_URL`에는 두 번째 마이그레이션에서 만든 최소 권한
+`tagworks_ingest` 역할의 Supabase Transaction pooler 연결 문자열을 사용합니다.
+애플리케이션은 prepared statements를 비활성화하고 연결을 인스턴스당 1개로 제한합니다.
 
 ## Supabase 적용
 
 ```sh
-psql "$SUPABASE_DATABASE_URL" -v ON_ERROR_STOP=1 \
+psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/migrations/202609230001_tagworks_core.sql
-psql "$SUPABASE_DATABASE_URL" -v ON_ERROR_STOP=1 \
+psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f supabase/migrations/202609230002_ingest_role.sql
+psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f supabase/migrations/202609230003_upload_reservations.sql
+psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/tests/tagworks_core_schema.sql
+psql "$SUPABASE_ADMIN_DATABASE_URL" -c '\password tagworks_ingest'
 ```
+
+마이그레이션과 역할 비밀번호 설정에는 관리자용 Session pooler URL을 로컬에서만
+사용합니다. `\password`가 비밀번호를 가려서 두 번 입력받으므로 셸 기록에 남지 않습니다.
+설정 후 `tagworks_ingest` 역할의 Transaction pooler URL만 웹 앱에 넣고, 관리자 URL은
+Vercel에 절대 등록하지 않습니다.
 
 Supabase Auth의 Site URL과 Redirect URLs에는 로컬 웹 주소와 실제 Vercel 웹 주소의
 `/auth/callback`을 등록해야 이메일 확인 후 대시보드로 돌아옵니다.
+불특정 사용자의 공개 회원가입을 운영하려면 Supabase 기본 테스트 메일러 대신 별도의
+Custom SMTP도 연결해야 합니다.
 
 ## 검증
 
@@ -56,6 +69,9 @@ npm run typecheck
 npm test
 npm run build
 ```
+
+실제 E2E 검증은 별도 로컬 전용 `SUPABASE_E2E_DATABASE_URL`을 사용합니다. 이 값은
+테스트 계정 확인과 즉시 정리에만 쓰며 Vercel에는 설정하지 않습니다.
 
 업로드는 UTF-8 `.html`/`.htm`, 최대 1MiB로 제한됩니다. 스크립트, 이벤트 핸들러,
 폼, iframe, SVG/MathML, 외부 CSS 리소스는 제거되며, 퍼블리셔는 별도의 강한 CSP와

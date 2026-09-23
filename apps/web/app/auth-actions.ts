@@ -55,6 +55,19 @@ export async function signUp(formData: FormData) {
   });
 
   if (error) {
+    if (
+      error.code === "email_address_not_authorized" ||
+      error.code === "over_email_send_rate_limit"
+    ) {
+      redirect(
+        withMessage(
+          "/signup",
+          "error",
+          "인증 메일 발송 설정이 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.",
+        ),
+      );
+    }
+
     redirect(withMessage("/signup", "error", "회원가입을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요."));
   }
 

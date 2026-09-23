@@ -40,6 +40,7 @@ function errorResponse(reason: unknown) {
 
 export async function POST(request: NextRequest) {
   let objectPath: string | null = null;
+  let reservationId: string | null = null;
   let storageClient: Awaited<ReturnType<typeof createClient>> | null = null;
 
   try {
@@ -73,6 +74,71 @@ export async function POST(request: NextRequest) {
       throw new RequestError(".html 또는 .htm 파일만 업로드할 수 있습니다.", 415);
     }
 
+    const pageId = randomUUID();
+    const versionId = randomUUID();
+    reservationId = randomUUID();
+    const slug = `page-${randomBytes(6).toString("hex")}`;
+    objectPath = `${user.id}/${pageId}/${versionId}/original.html`;
+
+    const sql = getDatabase();
+    const expiredReservations = await sql<{ object_path: string }[]>`
+      select object_path
+      from public.upload_reservations
+      where owner_id = ${user.id}::uuid
+        and consumed_at is null
+        and expires_at <= now()
+      order by expires_at asc
+      limit 20
+    `;
+    if (expiredReservations.length) {
+      const { error: cleanupError } = await supabase.storage
+        .from("page-originals")
+        .remove(expiredReservations.map((reservation) => reservation.object_path));
+      if (!cleanupError) {
+        const expiredPaths = expiredReservations.map(
+          (reservation) => reservation.object_path,
+        );
+        await sql`
+          delete from public.upload_reservations
+          where owner_id = ${user.id}::uuid
+            and object_path in ${sql(expiredPaths)}
+        `;
+      }
+    }
+
+    await sql.begin(async (transaction) => {
+      // postgres.js currently loses the callable signature from TransactionSql
+      // under TypeScript 5.9; the runtime object is the same tagged SQL client.
+      const tx = transaction as unknown as typeof sql;
+
+      await tx`select pg_advisory_xact_lock(hashtextextended(${user.id}, 0))`;
+      await tx`
+        delete from public.upload_reservations
+        where owner_id = ${user.id}::uuid
+          and consumed_at is not null
+          and created_at < now() - interval '24 hours'
+      `;
+      const [rate] = await tx<{ count: number }[]>`
+        select count(id)::int as count
+        from public.upload_reservations
+        where owner_id = ${user.id}::uuid
+          and created_at > now() - interval '1 hour'
+      `;
+      if ((rate?.count ?? 0) >= 20) {
+        throw new RequestError("한 시간에 최대 20개까지 게시할 수 있습니다.", 429);
+      }
+
+      await tx`
+        insert into public.upload_reservations (
+          id, owner_id, object_path
+        ) values (
+          ${reservationId}::uuid,
+          ${user.id}::uuid,
+          ${objectPath}
+        )
+      `;
+    });
+
     const bytes = new Uint8Array(await file.arrayBuffer());
     let source: string;
     try {
@@ -89,11 +155,6 @@ export async function POST(request: NextRequest) {
       throw new RequestError("안전 검사 후 게시할 수 있는 내용이 남지 않았습니다.", 422);
     }
 
-    const pageId = randomUUID();
-    const versionId = randomUUID();
-    const slug = `page-${randomBytes(6).toString("hex")}`;
-    objectPath = `${user.id}/${pageId}/${versionId}/original.html`;
-
     const { error: uploadError } = await supabase.storage
       .from("page-originals")
       .upload(objectPath, bytes, {
@@ -104,20 +165,8 @@ export async function POST(request: NextRequest) {
     if (uploadError) throw new RequestError("원본 파일을 안전하게 보관하지 못했습니다.", 503);
 
     const sha256 = createHash("sha256").update(bytes).digest("hex");
-    const sql = getDatabase();
     await sql.begin(async (transaction) => {
-      // postgres.js currently loses the callable signature from TransactionSql
-      // under TypeScript 5.9; the runtime object is the same tagged SQL client.
       const tx = transaction as unknown as typeof sql;
-      const [rate] = await tx<{ count: number }[]>`
-        select count(*)::int as count
-        from public.pages
-        where owner_id = ${user.id}::uuid
-          and created_at > now() - interval '1 hour'
-      `;
-      if ((rate?.count ?? 0) >= 20) {
-        throw new RequestError("한 시간에 최대 20개까지 게시할 수 있습니다.", 429);
-      }
 
       await tx`
         insert into public.pages (
@@ -161,6 +210,12 @@ export async function POST(request: NextRequest) {
         where id = ${pageId}::uuid
           and owner_id = ${user.id}::uuid
       `;
+      await tx`
+        update public.upload_reservations
+        set consumed_at = now()
+        where id = ${reservationId}::uuid
+          and owner_id = ${user.id}::uuid
+      `;
     });
 
     return NextResponse.json(
@@ -174,6 +229,18 @@ export async function POST(request: NextRequest) {
   } catch (reason) {
     if (objectPath && storageClient) {
       await storageClient.storage.from("page-originals").remove([objectPath]);
+    }
+    if (reservationId) {
+      try {
+        const sql = getDatabase();
+        await sql`
+          update public.upload_reservations
+          set consumed_at = coalesce(consumed_at, now())
+          where id = ${reservationId}::uuid
+        `;
+      } catch {
+        // The reservation expires automatically; preserve the original error.
+      }
     }
     return errorResponse(reason);
   }

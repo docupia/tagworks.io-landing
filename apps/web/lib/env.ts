@@ -20,5 +20,13 @@ export const getSiteUrl = () =>
 export const getPublisherUrl = () =>
   (process.env.NEXT_PUBLIC_PUBLISHER_URL ?? "http://localhost:3001").replace(/\/$/, "");
 
-export const getDatabaseUrl = () =>
-  required("SUPABASE_DATABASE_URL", process.env.SUPABASE_DATABASE_URL);
+export const getDatabaseUrl = () => {
+  const value = required("SUPABASE_DATABASE_URL", process.env.SUPABASE_DATABASE_URL);
+  const parsed = new URL(value);
+
+  if (!decodeURIComponent(parsed.username).startsWith("tagworks_ingest.")) {
+    throw new Error("SUPABASE_DATABASE_URL은 tagworks_ingest 최소 권한 역할이어야 합니다.");
+  }
+
+  return value;
+};

@@ -10,6 +10,7 @@
     "dev:web": "npm run dev --workspace @tagworks/web",
     "dev:publisher": "npm run dev --workspace @tagworks/publisher",
     "build": "npm run build --workspaces --if-present",
+    "test:e2e:local": "node --env-file=apps/web/.env.local --env-file=apps/web/.env.e2e.local scripts/e2e-local.mjs",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present"
   },

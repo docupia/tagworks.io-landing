@@ -226,6 +226,10 @@ function rewriteTag(
   tagName: string,
   attribs: Record<string, string>,
 ): sanitizeHtml.Tag {
+  if (tagName === "style") {
+    return { tagName, attribs: {} };
+  }
+
   const next = { ...attribs };
 
   if (next.style) {
@@ -304,7 +308,7 @@ export function sanitizePublishedHtml(source: string): SanitizedPage {
     },
   });
 
-  cleaned = cleaned.replace(/<style>([\s\S]*?)<\/style>/gi, (_match, css: string) => {
+  cleaned = cleaned.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, (_match, css: string) => {
     const safeCss = cleanCssRoot(css);
     return safeCss ? `<style>${safeCss}</style>` : "";
   });

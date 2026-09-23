@@ -14,14 +14,14 @@ const CONTENT_SECURITY_POLICY = [
   "form-action 'none'",
   "frame-ancestors 'none'",
   "frame-src 'none'",
-  "img-src https: data:",
+  "img-src data:",
   "manifest-src 'none'",
-  "media-src https:",
+  "media-src 'none'",
   "object-src 'none'",
   "script-src 'none'",
   "style-src 'unsafe-inline'",
   "worker-src 'none'",
-  "sandbox",
+  "sandbox allow-popups allow-popups-to-escape-sandbox",
 ].join("; ");
 
 const SECURITY_HEADERS: Readonly<Record<string, string>> = {
