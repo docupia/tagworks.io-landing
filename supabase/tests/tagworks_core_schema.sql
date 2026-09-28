@@ -11,12 +11,45 @@ begin
   select array_agg(expected.name order by expected.name)
   into missing_tables
   from (
-    values ('pages'), ('page_versions'), ('upload_reservations')
+    values
+      ('analytics_events'),
+      ('analytics_sessions'),
+      ('page_links'),
+      ('pages'),
+      ('page_versions'),
+      ('upload_reservations')
   ) as expected(name)
   where to_regclass('public.' || expected.name) is null;
 
   if missing_tables is not null then
     raise exception 'missing application tables: %', missing_tables;
+  end if;
+end;
+$$;
+
+do $$
+declare
+  analytics_role pg_roles%rowtype;
+begin
+  select * into analytics_role
+  from pg_roles
+  where rolname = 'tagworks_analytics';
+
+  if not found then
+    raise exception 'tagworks_analytics role does not exist';
+  end if;
+
+  if analytics_role.rolsuper or analytics_role.rolcreaterole
+    or analytics_role.rolcreatedb or analytics_role.rolreplication
+    or analytics_role.rolbypassrls then
+    raise exception 'tagworks_analytics must remain an unprivileged function-only role';
+  end if;
+
+  if has_table_privilege('tagworks_analytics', 'public.pages', 'SELECT')
+    or has_table_privilege('tagworks_analytics', 'public.page_links', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('tagworks_analytics', 'public.analytics_sessions', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('tagworks_analytics', 'public.analytics_events', 'SELECT,INSERT,UPDATE,DELETE') then
+    raise exception 'tagworks_analytics must not receive direct table privileges';
   end if;
 end;
 $$;
@@ -56,7 +89,14 @@ do $$
 declare
   table_name text;
 begin
-  foreach table_name in array array['pages', 'page_versions', 'upload_reservations']
+  foreach table_name in array array[
+    'pages',
+    'page_versions',
+    'upload_reservations',
+    'page_links',
+    'analytics_sessions',
+    'analytics_events'
+  ]
   loop
     if not exists (
       select 1
@@ -77,6 +117,12 @@ begin
   if has_table_privilege('anon', 'public.pages', 'SELECT')
     or has_table_privilege('anon', 'public.page_versions', 'SELECT')
     or has_table_privilege('anon', 'public.upload_reservations', 'SELECT')
+    or has_table_privilege('anon', 'public.page_links', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('anon', 'public.analytics_sessions', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('anon', 'public.analytics_events', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('authenticated', 'public.page_links', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('authenticated', 'public.analytics_sessions', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('authenticated', 'public.analytics_events', 'SELECT,INSERT,UPDATE,DELETE')
     or has_table_privilege('authenticated', 'public.upload_reservations', 'SELECT') then
     raise exception 'anon must not have direct SELECT access to application tables';
   end if;
@@ -104,6 +150,50 @@ begin
     'EXECUTE'
   ) then
     raise exception 'upload reservation check has incorrect role grants';
+  end if;
+
+  if has_function_privilege(
+    'anon',
+    'public.sync_published_links(text,uuid,jsonb)',
+    'EXECUTE'
+  ) or has_function_privilege(
+    'anon',
+    'public.record_analytics_event(uuid,text,uuid,text,uuid,text,text,text,text,text,uuid,text)',
+    'EXECUTE'
+  ) or has_function_privilege(
+    'anon',
+    'public.get_page_analytics(uuid,integer)',
+    'EXECUTE'
+  ) then
+    raise exception 'anonymous callers must not invoke analytics collector or owner functions';
+  end if;
+
+  if not has_function_privilege(
+    'tagworks_analytics',
+    'public.sync_published_links(text,uuid,jsonb)',
+    'EXECUTE'
+  ) or not has_function_privilege(
+    'tagworks_analytics',
+    'public.record_analytics_event(uuid,text,uuid,text,uuid,text,text,text,text,text,uuid,text)',
+    'EXECUTE'
+  ) or has_function_privilege(
+    'tagworks_analytics',
+    'public.get_page_analytics(uuid,integer)',
+    'EXECUTE'
+  ) then
+    raise exception 'analytics collector function privileges are not least-privilege';
+  end if;
+
+  if not has_function_privilege(
+    'authenticated',
+    'public.get_page_analytics(uuid,integer)',
+    'EXECUTE'
+  ) or not has_function_privilege(
+    'authenticated',
+    'public.get_owner_page_analytics_summary(integer)',
+    'EXECUTE'
+  ) then
+    raise exception 'authenticated owners require aggregate analytics RPC access';
   end if;
 end;
 $$;

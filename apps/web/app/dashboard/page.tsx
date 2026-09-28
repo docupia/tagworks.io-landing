@@ -17,11 +17,23 @@ type PageRow = {
   created_at: string;
 };
 
+type PageAnalyticsSummary = {
+  page_id: string;
+  sessions: number;
+  click_sessions: number;
+  total_clicks: number;
+};
+
 const date = new Intl.DateTimeFormat("ko-KR", {
   year: "numeric",
   month: "short",
   day: "numeric",
 });
+
+const displayCount = (value: unknown) => {
+  const count = Number(value);
+  return Number.isFinite(count) && count > 0 ? Math.floor(count).toLocaleString("ko-KR") : "0";
+};
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -30,12 +42,22 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data, error } = await supabase
-    .from("pages")
-    .select("id,slug,title,description,status,published_at,created_at")
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  const [pagesResult, summariesResult] = await Promise.all([
+    supabase
+      .from("pages")
+      .select("id,slug,title,description,status,published_at,created_at")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    supabase.rpc("get_owner_page_analytics_summary", { range_days: 7 }),
+  ]);
+  const { data, error } = pagesResult;
   const pages = (data ?? []) as PageRow[];
+  const summaryRows = summariesResult.error || !Array.isArray(summariesResult.data)
+    ? null
+    : (summariesResult.data as PageAnalyticsSummary[]);
+  const summaries = summaryRows
+    ? new Map(summaryRows.map((summary) => [summary.page_id, summary]))
+    : null;
   const publisherUrl = getPublisherUrl();
 
   return (
@@ -68,9 +90,15 @@ export default async function DashboardPage() {
           <div className={styles.grid}>
             {pages.map((page) => {
               const href = `${publisherUrl}/p/${page.slug}`;
+              const summary = summaries?.get(page.id) ?? (summaries ? {
+                page_id: page.id,
+                sessions: 0,
+                click_sessions: 0,
+                total_clicks: 0,
+              } : null);
               return (
                 <article className={styles.pageCard} key={page.id}>
-                  <div>
+                  <div className={styles.pageDetails}>
                     <h2 className={styles.pageTitle}>{page.title}</h2>
                     {page.description ? <p className={styles.description}>{page.description}</p> : null}
                     <div className={styles.meta}>
@@ -80,12 +108,31 @@ export default async function DashboardPage() {
                       <span>{date.format(new Date(page.created_at))} 생성</span>
                       <span>/{page.slug}</span>
                     </div>
+                    <div className={styles.miniAnalytics} aria-label="최근 7일 분석 요약">
+                      <span>최근 7일</span>
+                      {summary ? (
+                        <>
+                          <strong>{displayCount(summary.sessions)} 방문</strong>
+                          <i aria-hidden="true" />
+                          <strong>{displayCount(summary.click_sessions)} 외부 클릭 세션</strong>
+                          <i aria-hidden="true" />
+                          <strong>{displayCount(summary.total_clicks)}회 클릭</strong>
+                        </>
+                      ) : (
+                        <strong>통계 —</strong>
+                      )}
+                    </div>
                   </div>
-                  {page.status === "published" ? (
-                    <a className={styles.secondaryButton} href={href} target="_blank" rel="noreferrer">
-                      고정 링크 열기
-                    </a>
-                  ) : null}
+                  <div className={styles.cardActions}>
+                    <Link className={styles.analyticsButton} href={`/pages/${page.id}/analytics`}>
+                      분석 보기
+                    </Link>
+                    {page.status === "published" ? (
+                      <a className={styles.secondaryButton} href={href} target="_blank" rel="noreferrer">
+                        고정 링크 열기
+                      </a>
+                    ) : null}
+                  </div>
                 </article>
               );
             })}

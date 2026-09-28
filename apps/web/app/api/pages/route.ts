@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
       throw new RequestError("올바른 HTML 문서를 선택해 주세요.", 400);
     }
 
-    const sanitized = sanitizePublishedHtml(source);
+    const sanitized = sanitizePublishedHtml(source, { versionId });
     if (!sanitized.html) {
       throw new RequestError("안전 검사 후 게시할 수 있는 내용이 남지 않았습니다.", 422);
     }
@@ -201,6 +201,29 @@ export async function POST(request: NextRequest) {
           ${tx.json(sanitized.warnings)}
         )
       `;
+      if (sanitized.outboundLinks.length) {
+        const linkRows = sanitized.outboundLinks.map((link) => ({
+          id: link.id,
+          page_id: pageId,
+          page_version_id: versionId,
+          ordinal: link.ordinal,
+          label: link.label,
+          destination_url: link.destinationUrl,
+          destination_host: link.destinationHost,
+        }));
+        await tx`
+          insert into public.page_links ${tx(
+            linkRows,
+            "id",
+            "page_id",
+            "page_version_id",
+            "ordinal",
+            "label",
+            "destination_url",
+            "destination_host",
+          )}
+        `;
+      }
       await tx`
         update public.pages
         set status = 'published',

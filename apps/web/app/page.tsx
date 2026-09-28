@@ -179,11 +179,11 @@ export default function HomePage() {
           <div className="shell">
             <div className="insights-heading" data-reveal>
               <div>
-                <span className="section-kicker">다음으로 준비하는 기능</span>
+                <span className="section-kicker">페이지별 방문 흐름 분석</span>
                 <h2 id="insights-title">숫자보다 흐름이<br />먼저 보이게.</h2>
               </div>
               <p>
-                태그웍스는 업로드와 공개 링크에서 시작해, 방문 세션을 유입 출처부터 첫 외부 클릭까지 연결하는 분석을 준비하고 있습니다.
+                방문 세션이 어디에서 시작되어 어떤 외부 링크로 이어졌는지 페이지별 분석 화면에서 확인할 수 있습니다.
               </p>
             </div>
             <AnalyticsDemo />

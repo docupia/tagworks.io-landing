@@ -189,7 +189,7 @@ export function AnalyticsDemo() {
     <div className="analytics-window" data-reveal>
       <div className="analytics-toolbar">
         <div className="analytics-title-group">
-          <span className="sample-badge">향후 분석 기능 · 샘플 데이터</span>
+          <span className="sample-badge">분석 화면 예시 · 샘플 데이터</span>
           <div>
             <h3>봄 클래스 모집 페이지</h3>
             <span>예시 기간 · 최근 7일</span>
@@ -243,7 +243,7 @@ export function AnalyticsDemo() {
             <p>세션마다 처음 관측된 외부 클릭 한 번만 연결합니다.</p>
           </div>
           <span className="updated-chip">
-            <i aria-hidden="true" /> 분석 기능 미리보기
+            <i aria-hidden="true" /> 페이지별 분석 예시
           </span>
         </div>
 
@@ -340,7 +340,7 @@ export function AnalyticsDemo() {
 
       <p className="analytics-note">
         <span aria-hidden="true">i</span>
-        분석 영역은 앞으로 제공할 기능의 샘플입니다. 현재 서비스는 계정, HTML 검사·업로드, 고정 공개 링크에 집중합니다.
+        위 숫자는 화면 이해를 위한 샘플입니다. 로그인 후 내 페이지에서 실제 방문과 외부 클릭 분석을 확인할 수 있습니다.
       </p>
     </div>
   );

@@ -1,9 +1,11 @@
+import { createHash } from "node:crypto";
 import postcss, { type ChildNode, type Declaration } from "postcss";
 import safeParser from "postcss-safe-parser";
 import sanitizeHtml from "sanitize-html";
 
 export const MAX_HTML_BYTES = 1024 * 1024;
-export const SANITIZER_VERSION = "tagworks-html-v1";
+export const MAX_TRACKED_LINKS = 100;
+export const SANITIZER_VERSION = "tagworks-html-v2-analytics";
 
 const allowedTags = [
   "a",
@@ -222,40 +224,130 @@ function cleanCssRoot(css: string, inline = false) {
   }
 }
 
-function rewriteTag(
-  tagName: string,
-  attribs: Record<string, string>,
-): sanitizeHtml.Tag {
-  if (tagName === "style") {
-    return { tagName, attribs: {} };
+function formatUuid(bytes: Uint8Array): string {
+  const hex = Buffer.from(bytes).toString("hex");
+  return [
+    hex.slice(0, 8),
+    hex.slice(8, 12),
+    hex.slice(12, 16),
+    hex.slice(16, 20),
+    hex.slice(20, 32),
+  ].join("-");
+}
+
+export function deterministicLinkId(
+  versionId: string,
+  ordinal: number,
+  destinationUrl: string,
+): string {
+  const digest = createHash("sha256")
+    .update(versionId)
+    .update("\0")
+    .update(String(ordinal))
+    .update("\0")
+    .update(destinationUrl)
+    .digest()
+    .subarray(0, 16);
+
+  // RFC 9562 version 8 is reserved for application-defined UUID layouts.
+  digest[6] = (digest[6] & 0x0f) | 0x80;
+  digest[8] = (digest[8] & 0x3f) | 0x80;
+  return formatUuid(digest);
+}
+
+function normalizeAbsoluteHttpsUrl(rawHref: string): URL | null {
+  const href = rawHref.trim();
+  if (!/^https:/i.test(href)) return null;
+
+  try {
+    const parsed = new URL(href);
+    if (
+      parsed.protocol !== "https:" ||
+      !parsed.hostname ||
+      parsed.href.length > 2048 ||
+      parsed.hostname.length > 253
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
   }
+}
 
-  const next = { ...attribs };
+export type PublishedOutboundLink = {
+  destinationHost: string;
+  destinationUrl: string;
+  id: string;
+  label: string;
+  ordinal: number;
+};
 
-  if (next.style) {
-    next.style = cleanCssRoot(next.style, true);
-    if (!next.style) delete next.style;
-  }
+function createTagRewriter(
+  versionId: string | undefined,
+  outboundLinks: PublishedOutboundLink[],
+  onTrackingLimit: () => void,
+) {
+  let externalLinkCount = 0;
 
-  if (tagName === "a") {
-    next.target = "_blank";
-    next.rel = "noopener noreferrer nofollow";
-  }
+  return function rewriteTag(
+    tagName: string,
+    attribs: Record<string, string>,
+  ): sanitizeHtml.Tag {
+    if (tagName === "style") {
+      return { tagName, attribs: {} };
+    }
 
-  if ((tagName === "img" || tagName === "source") && next.src) {
-    if (!/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(next.src)) delete next.src;
-  }
+    const next = { ...attribs };
 
-  return { tagName, attribs: next };
+    if (next.style) {
+      next.style = cleanCssRoot(next.style, true);
+      if (!next.style) delete next.style;
+    }
+
+    if (tagName === "a") {
+      const destination = next.href ? normalizeAbsoluteHttpsUrl(next.href) : null;
+      if (destination) {
+        if (externalLinkCount < MAX_TRACKED_LINKS && versionId) {
+          const ordinal = externalLinkCount;
+          outboundLinks.push({
+            destinationHost: destination.hostname.toLowerCase(),
+            destinationUrl: destination.href,
+            id: deterministicLinkId(versionId, ordinal, destination.href),
+            label: destination.hostname.toLowerCase(),
+            ordinal,
+          });
+        } else if (externalLinkCount >= MAX_TRACKED_LINKS) {
+          onTrackingLimit();
+        }
+        externalLinkCount += 1;
+      }
+
+      next.target = "_blank";
+      next.rel = "noopener noreferrer nofollow";
+    }
+
+    if ((tagName === "img" || tagName === "source") && next.src) {
+      if (!/^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(next.src)) delete next.src;
+    }
+
+    return { tagName, attribs: next };
+  };
 }
 
 export type SanitizedPage = {
   html: string;
+  outboundLinks: PublishedOutboundLink[];
   warnings: string[];
 };
 
-export function sanitizePublishedHtml(source: string): SanitizedPage {
+export function sanitizePublishedHtml(
+  source: string,
+  options: { versionId?: string } = {},
+): SanitizedPage {
   const warnings: string[] = [];
+  const outboundLinks: PublishedOutboundLink[] = [];
+  let trackingLimitWarning = false;
   const checks: Array<[RegExp, string]> = [
     [/<\s*script\b/i, "스크립트가 제거되었습니다."],
     [/\son[a-z]+\s*=/i, "이벤트 핸들러가 제거되었습니다."],
@@ -298,7 +390,9 @@ export function sanitizePublishedHtml(source: string): SanitizedPage {
     allowProtocolRelative: false,
     parseStyleAttributes: false,
     transformTags: {
-      "*": rewriteTag,
+      "*": createTagRewriter(options.versionId, outboundLinks, () => {
+        trackingLimitWarning = true;
+      }),
     },
     exclusiveFilter(frame) {
       if ((frame.tag === "img" || frame.tag === "source") && !frame.attribs.src) {
@@ -313,5 +407,13 @@ export function sanitizePublishedHtml(source: string): SanitizedPage {
     return safeCss ? `<style>${safeCss}</style>` : "";
   });
 
-  return { html: cleaned.trim(), warnings: [...new Set(warnings)] };
+  if (trackingLimitWarning) {
+    warnings.push(`외부 링크 분석은 문서에서 처음 ${MAX_TRACKED_LINKS}개까지 적용됩니다.`);
+  }
+
+  return {
+    html: cleaned.trim(),
+    outboundLinks,
+    warnings: [...new Set(warnings)],
+  };
 }

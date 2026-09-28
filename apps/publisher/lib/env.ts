@@ -31,3 +31,30 @@ export function getPublisherEnvironment(): PublisherEnvironment {
   cachedEnvironment = { supabaseUrl: parsedUrl.origin, supabasePublishableKey };
   return cachedEnvironment;
 }
+
+export function getAnalyticsDatabaseUrl(): string {
+  const value = process.env.SUPABASE_ANALYTICS_DATABASE_URL?.trim();
+  if (!value) {
+    throw new Error("SUPABASE_ANALYTICS_DATABASE_URL is not configured.");
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error("SUPABASE_ANALYTICS_DATABASE_URL must be a valid PostgreSQL URL.");
+  }
+
+  if (parsed.protocol !== "postgresql:" && parsed.protocol !== "postgres:") {
+    throw new Error("SUPABASE_ANALYTICS_DATABASE_URL must use PostgreSQL.");
+  }
+
+  const role = decodeURIComponent(parsed.username).split(".", 1)[0];
+  if (role !== "tagworks_analytics") {
+    throw new Error(
+      "SUPABASE_ANALYTICS_DATABASE_URL must use the least-privilege tagworks_analytics role.",
+    );
+  }
+
+  return value;
+}

@@ -1,3 +1,13 @@
+import { randomBytes } from "node:crypto";
+
+import {
+  analyticsExclusionReason,
+  classifyAnalyticsSource,
+  extractPublishedLinks,
+  isUuid,
+  renderTrackerScript,
+} from "../../../lib/analytics";
+import { syncPublishedLinks } from "../../../lib/analytics-database";
 import { createPublicSupabaseClient } from "../../../lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -5,28 +15,8 @@ export const runtime = "nodejs";
 
 const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 
-const CONTENT_SECURITY_POLICY = [
-  "default-src 'none'",
-  "base-uri 'none'",
-  "child-src 'none'",
-  "connect-src 'none'",
-  "font-src data:",
-  "form-action 'none'",
-  "frame-ancestors 'none'",
-  "frame-src 'none'",
-  "img-src data:",
-  "manifest-src 'none'",
-  "media-src 'none'",
-  "object-src 'none'",
-  "script-src 'none'",
-  "style-src 'unsafe-inline'",
-  "worker-src 'none'",
-  "sandbox allow-popups allow-popups-to-escape-sandbox",
-].join("; ");
-
 const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "Cache-Control": "no-store, max-age=0",
-  "Content-Security-Policy": CONTENT_SECURITY_POLICY,
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cross-Origin-Resource-Policy": "same-origin",
   "Origin-Agent-Cluster": "?1",
@@ -39,12 +29,37 @@ const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
 };
 
+function contentSecurityPolicy(nonce?: string): string {
+  return [
+    "default-src 'none'",
+    "base-uri 'none'",
+    "child-src 'none'",
+    nonce ? "connect-src 'self'" : "connect-src 'none'",
+    "font-src data:",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+    "frame-src 'none'",
+    "img-src data:",
+    "manifest-src 'none'",
+    "media-src 'none'",
+    "object-src 'none'",
+    nonce ? `script-src 'nonce-${nonce}'` : "script-src 'none'",
+    "script-src-attr 'none'",
+    "style-src 'unsafe-inline'",
+    "worker-src 'none'",
+    nonce
+      ? "sandbox allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      : "sandbox allow-popups allow-popups-to-escape-sandbox",
+  ].join("; ");
+}
+
 type PublishedPage = {
   description: string | null;
   sanitized_html: string;
   slug: string;
   title: string;
   updated_at: string;
+  version_id: string;
 };
 
 function escapeHtml(value: string): string {
@@ -71,7 +86,7 @@ function normalizedSlug(input: string): string | null {
   return normalized;
 }
 
-function renderDocument(page: PublishedPage): string {
+function renderDocument(page: PublishedPage, trackerScript = ""): string {
   const title = escapeHtml(page.title);
   const description = page.description
     ? `<meta name="description" content="${escapeHtml(page.description)}">`
@@ -89,15 +104,17 @@ function renderDocument(page: PublishedPage): string {
 </head>
 <body>
 ${page.sanitized_html}
+${trackerScript}
 </body>
 </html>`;
 }
 
-function htmlResponse(body: string, status: number): Response {
+function htmlResponse(body: string, status: number, nonce?: string): Response {
   return new Response(body, {
     status,
     headers: {
       ...SECURITY_HEADERS,
+      "Content-Security-Policy": contentSecurityPolicy(nonce),
       "Content-Type": "text/html; charset=utf-8",
     },
   });
@@ -117,7 +134,7 @@ function unavailableResponse(status: 404 | 500): Response {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ slug: string }> },
 ): Promise<Response> {
   const { slug: rawSlug } = await context.params;
@@ -145,7 +162,47 @@ export async function GET(
       return unavailableResponse(404);
     }
 
-    return htmlResponse(renderDocument(data), 200);
+    if (!isUuid(data.version_id)) {
+      console.error("Published page is missing a valid analytics version identifier");
+      return htmlResponse(renderDocument(data), 200);
+    }
+
+    try {
+      const links = extractPublishedLinks(data.sanitized_html, data.version_id);
+      try {
+        await syncPublishedLinks(slug, data.version_id, links);
+      } catch (error) {
+        console.error("Unable to synchronize published page links", {
+          code:
+            error && typeof error === "object" && "code" in error
+              ? String(error.code)
+              : "unknown",
+        });
+      }
+
+      const nonce = randomBytes(18).toString("base64url");
+      const tracker = renderTrackerScript(
+        {
+          excludedReason: analyticsExclusionReason(request.headers),
+          links: links.map((link) => ({ id: link.link_id, ordinal: link.ordinal })),
+          pageSlug: slug,
+          source: classifyAnalyticsSource(request.url, request.headers.get("referer")),
+          versionId: data.version_id,
+        },
+        nonce,
+      );
+
+      return htmlResponse(renderDocument(data, tracker), 200, nonce);
+    } catch (error) {
+      // Analytics must never make a public page unavailable.
+      console.error("Unable to prepare publisher analytics", {
+        code:
+          error && typeof error === "object" && "code" in error
+            ? String(error.code)
+            : "unknown",
+      });
+      return htmlResponse(renderDocument(data), 200);
+    }
   } catch (error) {
     console.error("Publisher request failed", {
       message: error instanceof Error ? error.message : "Unknown publisher error",

@@ -101,7 +101,8 @@
 }
 
 .primaryButton,
-.secondaryButton {
+.secondaryButton,
+.analyticsButton {
   display: inline-flex;
   min-height: 46px;
   align-items: center;
@@ -124,6 +125,11 @@
   background: #fffdf7;
 }
 
+.analyticsButton {
+  color: #fffdf7;
+  background: #657052;
+}
+
 .grid {
   display: grid;
   gap: 16px;
@@ -144,6 +150,10 @@
   gap: 24px;
   align-items: center;
   padding: 22px 24px;
+}
+
+.pageDetails {
+  min-width: 0;
 }
 
 .pageTitle {
@@ -182,6 +192,42 @@
   border-radius: 99px;
   background: #8fa472;
   content: "";
+}
+
+.miniAnalytics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+  align-items: center;
+  margin-top: 14px;
+  color: #747a69;
+  font-size: 0.72rem;
+}
+
+.miniAnalytics > span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #667053;
+  background: #edf0e3;
+  font-weight: 850;
+}
+
+.miniAnalytics > strong {
+  font-weight: 750;
+}
+
+.miniAnalytics > i {
+  width: 3px;
+  height: 3px;
+  border-radius: 99px;
+  background: #b6b8ad;
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .empty {
@@ -374,6 +420,14 @@
     align-items: stretch;
     flex-direction: column;
     grid-template-columns: 1fr;
+  }
+
+  .cardActions {
+    justify-content: stretch;
+  }
+
+  .cardActions > * {
+    flex: 1 1 150px;
   }
 
   .headingRow {
