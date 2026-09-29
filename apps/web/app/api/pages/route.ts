@@ -150,7 +150,10 @@ export async function POST(request: NextRequest) {
       throw new RequestError("올바른 HTML 문서를 선택해 주세요.", 400);
     }
 
-    const sanitized = sanitizePublishedHtml(source, { versionId });
+    const sanitized = sanitizePublishedHtml(source, {
+      fallbackTitle: fields.title,
+      versionId,
+    });
     if (!sanitized.html) {
       throw new RequestError("안전 검사 후 게시할 수 있는 내용이 남지 않았습니다.", 422);
     }

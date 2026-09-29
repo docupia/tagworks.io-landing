@@ -8,6 +8,7 @@ import {
   renderTrackerScript,
 } from "../../../lib/analytics";
 import { syncPublishedLinks } from "../../../lib/analytics-database";
+import { renderPublishedDocument } from "../../../lib/html-document";
 import { createPublicSupabaseClient } from "../../../lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -35,17 +36,17 @@ function contentSecurityPolicy(nonce?: string): string {
     "base-uri 'none'",
     "child-src 'none'",
     nonce ? "connect-src 'self'" : "connect-src 'none'",
-    "font-src data:",
+    "font-src 'self' https: data:",
     "form-action 'none'",
     "frame-ancestors 'none'",
     "frame-src 'none'",
-    "img-src data:",
+    "img-src 'self' https: data:",
     "manifest-src 'none'",
-    "media-src 'none'",
+    "media-src 'self' https: data:",
     "object-src 'none'",
     nonce ? `script-src 'nonce-${nonce}'` : "script-src 'none'",
     "script-src-attr 'none'",
-    "style-src 'unsafe-inline'",
+    "style-src 'self' https: 'unsafe-inline'",
     "worker-src 'none'",
     nonce
       ? "sandbox allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
@@ -55,26 +56,13 @@ function contentSecurityPolicy(nonce?: string): string {
 
 type PublishedPage = {
   description: string | null;
+  sanitizer_version: string;
   sanitized_html: string;
   slug: string;
   title: string;
   updated_at: string;
   version_id: string;
 };
-
-function escapeHtml(value: string): string {
-  return value.replace(
-    /[&<>"']/g,
-    (character) =>
-      ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;",
-      })[character] ?? character,
-  );
-}
 
 function normalizedSlug(input: string): string | null {
   const normalized = input.normalize("NFKC").trim().toLowerCase();
@@ -87,26 +75,13 @@ function normalizedSlug(input: string): string | null {
 }
 
 function renderDocument(page: PublishedPage, trackerScript = ""): string {
-  const title = escapeHtml(page.title);
-  const description = page.description
-    ? `<meta name="description" content="${escapeHtml(page.description)}">`
-    : "";
-
-  return `<!doctype html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="referrer" content="no-referrer">
-  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
-  ${description}
-  <title>${title}</title>
-</head>
-<body>
-${page.sanitized_html}
-${trackerScript}
-</body>
-</html>`;
+  return renderPublishedDocument({
+    description: page.description,
+    fallbackTitle: page.title,
+    sanitizerVersion: page.sanitizer_version,
+    sanitizedHtml: page.sanitized_html,
+    trackerScript,
+  });
 }
 
 function htmlResponse(body: string, status: number, nonce?: string): Response {

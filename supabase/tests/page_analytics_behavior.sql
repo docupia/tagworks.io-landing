@@ -77,6 +77,20 @@ set
   published_at = now()
 where id = '20000000-0000-4000-8000-000000000001'::uuid;
 
+do $$
+declare
+  public_sanitizer_version text;
+begin
+  select published.sanitizer_version
+  into public_sanitizer_version
+  from public.get_published_page('analytics-schema-test') as published;
+
+  if public_sanitizer_version is distinct from 'analytics-schema-test' then
+    raise exception 'public artifact must expose its sanitizer contract';
+  end if;
+end;
+$$;
+
 select public.sync_published_links(
   'analytics-schema-test',
   '30000000-0000-4000-8000-000000000001'::uuid,
