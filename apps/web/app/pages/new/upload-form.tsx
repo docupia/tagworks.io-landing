@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { PageQrCode } from "@/app/components/page-qr-code";
 import styles from "@/app/dashboard/dashboard.module.css";
 import { deriveUploadTitle, titleFromHtmlFileName } from "@/lib/upload-title";
 
@@ -106,7 +107,7 @@ export function UploadForm() {
           }}
         />
         <span className={styles.hint}>
-          내 페이지 목록에 표시됩니다. 파일의 원본 &lt;head&gt;&lt;title&gt;은 공개 문서에 유지됩니다.
+          내 페이지 목록과 공개 페이지의 브라우저 탭 제목에 표시됩니다.
         </span>
       </label>
       <label className={styles.field}>
@@ -138,6 +139,11 @@ export function UploadForm() {
               {copied ? "복사됨" : "링크 복사"}
             </button>
           </div>
+          <PageQrCode
+            fileName={`tagworks-${result.page.slug}-qr.png`}
+            title={result.page.title}
+            url={result.publicUrl}
+          />
           {result.warnings.length ? (
             <ul className={styles.warningList}>
               {result.warnings.map((warning) => <li key={warning}>{warning}</li>)}

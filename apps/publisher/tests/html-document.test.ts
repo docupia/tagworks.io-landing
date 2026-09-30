@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   isIsolatedOriginalDocument,
   renderPublishedDocument,
+  renderTagworksCornerLink,
 } from "../lib/html-document";
 
 const TRACKER = '<script nonce="test">tracker()</script>';
@@ -30,7 +31,7 @@ test("detects executable originals when an older public RPC omits the version", 
   );
 });
 
-test("preserves a complete source document and its title byte-for-byte around tracker insertion", () => {
+test("preserves a complete source document while applying the managed title", () => {
   const source = `<!DOCTYPE html>
 <html lang="en" data-theme="paper">
 <head>
@@ -50,15 +51,17 @@ test("preserves a complete source document and its title byte-for-byte around tr
 
   assert.equal(
     rendered,
-    source.replace(
-      '<body class="source-body"><main>Original layout</main></body>',
-      `<body class="source-body"><main>Original layout</main>${TRACKER}</body>`,
-    ),
+    source
+      .replace("Source document title", "Database title")
+      .replace(
+        '<body class="source-body"><main>Original layout</main></body>',
+        `<body class="source-body"><main>Original layout</main>${TRACKER}</body>`,
+      ),
   );
   assert.equal((rendered.match(/<!DOCTYPE html>/g) ?? []).length, 1);
   assert.equal((rendered.match(/<html\b/gi) ?? []).length, 1);
-  assert.match(rendered, /<title>Source document title<\/title>/);
-  assert.doesNotMatch(rendered, /Database title|Database description/);
+  assert.match(rendered, /<title>Database title<\/title>/);
+  assert.doesNotMatch(rendered, /Source document title|Database description/);
 });
 
 test("adds only an escaped fallback title when a full document has no title", () => {
@@ -104,7 +107,7 @@ test("uses the v3 sanitizer contract even when a stored document lacks html and 
 
   assert.equal(
     rendered,
-    `<head><title>Versioned document</title></head><body>Page${TRACKER}</body>`,
+    `<head><title>Fallback</title></head><body>Page${TRACKER}</body>`,
   );
 });
 
@@ -119,7 +122,12 @@ test("keeps v4 original scripts and stylesheet markup around tracker insertion",
     trackerScript: TRACKER,
   });
 
-  assert.equal(rendered, source.replace("</body>", `${TRACKER}</body>`));
+  assert.equal(
+    rendered,
+    source
+      .replace("<title>Original</title>", "<title>Fallback</title>")
+      .replace("</body>", `${TRACKER}</body>`),
+  );
   assert.match(rendered, /<script>window\.inline=true<\/script>/);
   assert.match(rendered, /href="https:\/\/cdn\.example\/site\.css"/);
   assert.match(rendered, /onload="window\.ready=true"/);
@@ -137,7 +145,7 @@ test("keeps parsed-document detection as a fallback for unversioned full documen
 
   assert.equal(
     rendered,
-    `<!doctype html><html><head><title>Existing</title></head><body>Page${TRACKER}</body></html>`,
+    `<!doctype html><html><head><title>Fallback</title></head><body>Page${TRACKER}</body></html>`,
   );
 });
 
@@ -174,7 +182,7 @@ test("keeps the legacy fragment wrapper for previously stored fragments", () => 
   assert.ok(rendered.includes(`${TRACKER}\n</body>`));
 });
 
-test("does not rewrite complete documents when no fallback or tracker is needed", () => {
+test("replaces an existing title without rewriting surrounding bytes", () => {
   const source = "<HTML><HEAD><TITLE>Kept</TITLE></HEAD><BODY>Exact bytes</BODY></HTML>";
   const rendered = renderPublishedDocument({
     description: "Ignored",
@@ -182,7 +190,19 @@ test("does not rewrite complete documents when no fallback or tracker is needed"
     sanitizedHtml: source,
   });
 
-  assert.equal(rendered, source);
+  assert.equal(
+    rendered,
+    "<HTML><HEAD><TITLE>Ignored</TITLE></HEAD><BODY>Exact bytes</BODY></HTML>",
+  );
+});
+
+test("renders a fixed top-right Tagworks corner link above page content", () => {
+  const cornerLink = renderTagworksCornerLink();
+
+  assert.match(cornerLink, /href="https:\/\/tagworks\.io\/"/);
+  assert.match(cornerLink, /clip-path:polygon\(0 0,100% 0,100% 100%\)!important/);
+  assert.match(cornerLink, /z-index:2147483647!important/);
+  assert.match(cornerLink, /position:fixed!important/);
 });
 
 test("does not mistake html-looking CSS text for a complete document", () => {

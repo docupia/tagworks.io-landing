@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import styles from "./dashboard.module.css";
+import { PageQrCode } from "@/app/components/page-qr-code";
 import { getPublisherUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -123,15 +124,25 @@ export default async function DashboardPage() {
                       )}
                     </div>
                   </div>
-                  <div className={styles.cardActions}>
-                    <Link className={styles.analyticsButton} href={`/pages/${page.id}/analytics`}>
-                      분석 보기
-                    </Link>
+                  <div className={styles.cardTools}>
                     {page.status === "published" ? (
-                      <a className={styles.secondaryButton} href={href} target="_blank" rel="noreferrer">
-                        고정 링크 열기
-                      </a>
+                      <PageQrCode
+                        compact
+                        fileName={`tagworks-${page.slug}-qr.png`}
+                        title={page.title}
+                        url={href}
+                      />
                     ) : null}
+                    <div className={styles.cardActions}>
+                      <Link className={styles.analyticsButton} href={`/pages/${page.id}/analytics`}>
+                        분석 보기
+                      </Link>
+                      {page.status === "published" ? (
+                        <a className={styles.secondaryButton} href={href} target="_blank" rel="noreferrer">
+                          고정 링크 열기
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
                 </article>
               );

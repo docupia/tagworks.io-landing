@@ -12,6 +12,7 @@ import { syncPublishedLinks } from "../../../lib/analytics-database";
 import {
   isIsolatedOriginalDocument,
   renderPublishedDocument,
+  renderTagworksCornerLink,
 } from "../../../lib/html-document";
 import { createPublicSupabaseClient } from "../../../lib/supabase";
 
@@ -110,7 +111,7 @@ function renderDocument(page: PublishedPage, trackerScript = ""): string {
     fallbackTitle: page.title,
     sanitizerVersion: page.sanitizer_version,
     sanitizedHtml: page.sanitized_html,
-    trackerScript,
+    trackerScript: `${renderTagworksCornerLink()}${trackerScript}`,
   });
 }
 

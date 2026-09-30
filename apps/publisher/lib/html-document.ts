@@ -34,6 +34,8 @@ type DocumentMarkers = {
   hasHeadTitleElement: boolean;
   headCloseStart: number | null;
   headOpenEnd: number | null;
+  headTitleCloseStart: number | null;
+  headTitleOpenEnd: number | null;
   htmlCloseStart: number | null;
   htmlOpenEnd: number | null;
 };
@@ -60,6 +62,8 @@ function inspectDocument(html: string): DocumentMarkers {
     hasHeadTitleElement: false,
     headCloseStart: null,
     headOpenEnd: null,
+    headTitleCloseStart: null,
+    headTitleOpenEnd: null,
     htmlCloseStart: null,
     htmlOpenEnd: null,
   };
@@ -74,6 +78,13 @@ function inspectDocument(html: string): DocumentMarkers {
           if (name === "body") markers.bodyCloseStart = parser.startIndex;
           if (name === "head") markers.headCloseStart = parser.startIndex;
           if (name === "html") markers.htmlCloseStart = parser.startIndex;
+          if (
+            name === "title" &&
+            markers.headTitleOpenEnd !== null &&
+            markers.headTitleCloseStart === null
+          ) {
+            markers.headTitleCloseStart = parser.startIndex;
+          }
         }
 
         if (name === "head") headDepth = Math.max(0, headDepth - 1);
@@ -91,6 +102,7 @@ function inspectDocument(html: string): DocumentMarkers {
         if (name === "svg") svgDepth += 1;
         if (name === "title" && headDepth > 0 && svgDepth === 0) {
           markers.hasHeadTitleElement = true;
+          markers.headTitleOpenEnd ??= parser.endIndex + 1;
         }
       },
       onprocessinginstruction(name, data) {
@@ -110,14 +122,21 @@ function insertAt(source: string, index: number, addition: string): string {
   return `${source.slice(0, index)}${addition}${source.slice(index)}`;
 }
 
-function ensureFallbackTitle(
+function ensureManagedTitle(
   document: string,
   markers: DocumentMarkers,
-  fallbackTitle: string,
+  managedTitle: string,
 ): string {
-  if (markers.hasHeadTitleElement) return document;
+  const escapedTitle = escapeHtml(managedTitle);
+  if (
+    markers.hasHeadTitleElement &&
+    markers.headTitleOpenEnd !== null &&
+    markers.headTitleCloseStart !== null
+  ) {
+    return `${document.slice(0, markers.headTitleOpenEnd)}${escapedTitle}${document.slice(markers.headTitleCloseStart)}`;
+  }
 
-  const title = `<title>${escapeHtml(fallbackTitle)}</title>`;
+  const title = `<title>${escapedTitle}</title>`;
   if (markers.headCloseStart !== null) {
     return insertAt(document, markers.headCloseStart, title);
   }
@@ -133,6 +152,10 @@ function ensureFallbackTitle(
     return insertAt(document, markers.doctypeEnd, head);
   }
   return `${head}${document}`;
+}
+
+export function renderTagworksCornerLink(): string {
+  return '<a data-tagworks-platform="corner-link" href="https://tagworks.io/" target="_blank" rel="noopener noreferrer" aria-label="Tagworks.io로 이동" title="Tagworks.io" style="position:fixed!important;top:0!important;right:0!important;width:76px!important;height:76px!important;margin:0!important;padding:0!important;display:block!important;overflow:hidden!important;clip-path:polygon(0 0,100% 0,100% 100%)!important;background:#596248!important;color:#fffdf7!important;text-decoration:none!important;filter:drop-shadow(-4px 5px 8px rgba(32,38,26,.22))!important;z-index:2147483647!important;isolation:isolate!important"><span aria-hidden="true" style="position:absolute!important;top:10px!important;right:11px!important;color:#fffdf7!important;font:900 18px/1 system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif!important;letter-spacing:-.05em!important">T</span></a>';
 }
 
 function injectTracker(document: string, trackerScript: string): string {
@@ -200,6 +223,6 @@ export function renderPublishedDocument({
     );
   }
 
-  const withTitle = ensureFallbackTitle(sanitizedHtml, markers, fallbackTitle);
+  const withTitle = ensureManagedTitle(sanitizedHtml, markers, fallbackTitle);
   return injectTracker(withTitle, trackerScript);
 }
