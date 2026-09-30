@@ -83,6 +83,23 @@ test("uses the v3 sanitizer contract even when a stored document lacks html and 
   );
 });
 
+test("keeps v4 original scripts and stylesheet markup around tracker insertion", () => {
+  const source =
+    '<!doctype html><html><head><title>Original</title><link rel="stylesheet preload" href="https://cdn.example/site.css"><script>window.inline=true</script><script src="https://cdn.example/site.js"></script></head><body onload="window.ready=true">Page</body></html>';
+  const rendered = renderPublishedDocument({
+    description: null,
+    fallbackTitle: "Fallback",
+    sanitizerVersion: "tagworks-html-v4-isolated-original",
+    sanitizedHtml: source,
+    trackerScript: TRACKER,
+  });
+
+  assert.equal(rendered, source.replace("</body>", `${TRACKER}</body>`));
+  assert.match(rendered, /<script>window\.inline=true<\/script>/);
+  assert.match(rendered, /href="https:\/\/cdn\.example\/site\.css"/);
+  assert.match(rendered, /onload="window\.ready=true"/);
+});
+
 test("keeps parsed-document detection as a fallback for unversioned full documents", () => {
   const source = "<!doctype html><html><head><title>Existing</title></head><body>Page</body></html>";
   const rendered = renderPublishedDocument({

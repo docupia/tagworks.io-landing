@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import sanitizeHtml from "sanitize-html";
 
 export const MAX_TRACKED_LINKS = 100;
@@ -25,14 +25,18 @@ export type AnalyticsSource = {
 };
 
 export type TrackerConfig = {
+  eventEndpoint: string;
+  eventToken: string | null;
   excludedReason: "bot" | "prefetch" | null;
   links: Array<{ id: string; ordinal: number }>;
+  opaqueOrigin: boolean;
   pageSlug: string;
   source: AnalyticsSource;
   versionId: string;
 };
 
 export type AnalyticsEventPayload = {
+  event_token: string | null;
   event_id: string;
   event_type: "outbound_click" | "page_view";
   excluded_reason: "bot" | "prefetch" | null;
@@ -64,6 +68,49 @@ export function isUuid(value: unknown): value is string {
 
 export function isPageSlug(value: unknown): value is string {
   return typeof value === "string" && SLUG_PATTERN.test(value);
+}
+
+function analyticsEventSigningKey(): Buffer | null {
+  const secret =
+    process.env.TAGWORKS_ANALYTICS_EVENT_SECRET?.trim() ||
+    process.env.SUPABASE_ANALYTICS_DATABASE_URL?.trim();
+  if (!secret) return null;
+
+  return createHash("sha256")
+    .update("tagworks-analytics-event-v1\0")
+    .update(secret)
+    .digest();
+}
+
+export function createAnalyticsEventToken(
+  pageSlug: string,
+  versionId: string,
+): string | null {
+  const key = analyticsEventSigningKey();
+  if (!key || !isPageSlug(pageSlug) || !isUuid(versionId)) return null;
+
+  return createHmac("sha256", key)
+    .update(pageSlug)
+    .update("\0")
+    .update(versionId)
+    .digest("base64url");
+}
+
+export function verifyAnalyticsEventToken(
+  token: string | null,
+  pageSlug: string,
+  versionId: string,
+): boolean {
+  if (!token) return false;
+  const expected = createAnalyticsEventToken(pageSlug, versionId);
+  if (!expected) return false;
+
+  const actualBytes = Buffer.from(token);
+  const expectedBytes = Buffer.from(expected);
+  return (
+    actualBytes.length === expectedBytes.length &&
+    timingSafeEqual(actualBytes, expectedBytes)
+  );
 }
 
 export function deterministicLinkId(
@@ -215,9 +262,9 @@ function safeJson(value: unknown): string {
   });
 }
 
-// This is the only script allowed on a published page. Uploaded scripts and
-// event attributes remain stripped, and the response CSP authorizes this block
-// with a fresh nonce. Keep it dependency-free and tolerant of blocked storage.
+// Keep the platform tracker dependency-free and tolerant of blocked storage.
+// Original-mode pages run in an opaque-origin sandbox, so their uploaded code
+// cannot read the tracker session used by other published pages.
 export function renderTrackerScript(config: TrackerConfig, nonce: string): string {
   return `<script nonce="${nonce}">(()=>{"use strict";
 const config=${safeJson(config)};
@@ -235,20 +282,19 @@ try{
   storageAvailable=false;
 }
 const touchSession=()=>{
-  if(!storageAvailable)return null;
   const now=Date.now();
   if(!session||now-session.lastActivity<0||now-session.lastActivity>=sessionTimeout){
     session={id:newId(),lastActivity:now,source:config.source};
   }else{
     session.lastActivity=now;
   }
+  if(!storageAvailable)return session;
   try{
     sessionStorage.setItem(storageKey,JSON.stringify(session));
     return session;
   }catch{
     storageAvailable=false;
-    session=null;
-    return null;
+    return session;
   }
 };
 const trackedLinks=new WeakMap();
@@ -265,6 +311,7 @@ const send=(eventType,linkId=null)=>{
   let eventId;
   try{eventId=newId()}catch{return}
   const payload=JSON.stringify({
+    event_token:config.eventToken,
     event_id:eventId,
     page_slug:config.pageSlug,
     page_version_id:config.versionId,
@@ -279,13 +326,13 @@ const send=(eventType,linkId=null)=>{
     excluded_reason:config.excludedReason
   });
   const beaconBody=new Blob([payload],{type:"text/plain;charset=UTF-8"});
-  const beacon=()=>{try{navigator.sendBeacon("/api/events",beaconBody)}catch{}};
+  const beacon=()=>{try{return navigator.sendBeacon(config.eventEndpoint,beaconBody)}catch{return false}};
   const deliver=attempt=>{
     try{
-      fetch("/api/events",{
+      fetch(config.eventEndpoint,{
         method:"POST",
         body:payload,
-        headers:{"content-type":"application/json"},
+        headers:{"content-type":"text/plain;charset=UTF-8"},
         credentials:"omit",
         keepalive:true
       }).then(response=>{
@@ -298,7 +345,7 @@ const send=(eventType,linkId=null)=>{
       if(attempt===0)setTimeout(()=>deliver(1),250);else beacon();
     }
   };
-  deliver(0);
+  if(!config.opaqueOrigin||!beacon())deliver(0);
 };
 send("page_view");
 document.addEventListener("click",event=>{
@@ -314,6 +361,7 @@ export function parseAnalyticsEvent(value: unknown): AnalyticsEventPayload | nul
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const record = value as Record<string, unknown>;
   const allowedKeys = new Set([
+    "event_token",
     "event_id",
     "event_type",
     "excluded_reason",
@@ -330,6 +378,7 @@ export function parseAnalyticsEvent(value: unknown): AnalyticsEventPayload | nul
   if (Object.keys(record).some((key) => !allowedKeys.has(key))) return null;
 
   const eventType = record.event_type;
+  const eventToken = record.event_token ?? null;
   const sourceType = record.source_type;
   const excludedReason = record.excluded_reason;
   const linkId = record.link_id;
@@ -349,6 +398,13 @@ export function parseAnalyticsEvent(value: unknown): AnalyticsEventPayload | nul
     /[\u0000-\u001f\u007f]/.test(record.source_label) ||
     (eventType === "page_view" && linkId !== null) ||
     (eventType === "outbound_click" && !isUuid(linkId))
+  ) {
+    return null;
+  }
+
+  if (
+    eventToken !== null &&
+    (typeof eventToken !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(eventToken))
   ) {
     return null;
   }
@@ -373,7 +429,7 @@ export function parseAnalyticsEvent(value: unknown): AnalyticsEventPayload | nul
     return null;
   }
 
-  return record as AnalyticsEventPayload;
+  return { ...record, event_token: eventToken } as AnalyticsEventPayload;
 }
 
 function isNormalizedHostname(value: string): boolean {

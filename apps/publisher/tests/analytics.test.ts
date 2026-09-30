@@ -6,14 +6,40 @@ import {
   MAX_TRACKED_LINKS,
   analyticsExclusionReason,
   classifyAnalyticsSource,
+  createAnalyticsEventToken,
   deterministicLinkId,
   extractPublishedLinks,
   isUuid,
   parseAnalyticsEvent,
   renderTrackerScript,
+  verifyAnalyticsEventToken,
 } from "../lib/analytics";
 
 const VERSION_ID = "8acdf989-6c7c-47ba-a577-127483efdc03";
+
+test("signs opaque-sandbox analytics tokens for one page version", () => {
+  const previousSecret = process.env.TAGWORKS_ANALYTICS_EVENT_SECRET;
+  process.env.TAGWORKS_ANALYTICS_EVENT_SECRET = "test-only-event-secret";
+
+  try {
+    const token = createAnalyticsEventToken("page-abc123", VERSION_ID);
+    assert.match(token ?? "", /^[A-Za-z0-9_-]{43}$/);
+    assert.equal(
+      verifyAnalyticsEventToken(token, "page-abc123", VERSION_ID),
+      true,
+    );
+    assert.equal(
+      verifyAnalyticsEventToken(token, "page-different", VERSION_ID),
+      false,
+    );
+  } finally {
+    if (previousSecret === undefined) {
+      delete process.env.TAGWORKS_ANALYTICS_EVENT_SECRET;
+    } else {
+      process.env.TAGWORKS_ANALYTICS_EVENT_SECRET = previousSecret;
+    }
+  }
+});
 
 test("extracts only absolute HTTPS anchors and creates stable per-position UUIDs", () => {
   const links = extractPublishedLinks(
@@ -121,6 +147,7 @@ test("marks bot and prefetch requests without retaining user agent data", () => 
 
 test("validates the bounded public event contract", () => {
   const event = {
+    event_token: null,
     event_id: "2a6d9e68-d1bf-4f3f-9714-4d01382a3dca",
     event_type: "outbound_click",
     excluded_reason: null,
@@ -160,8 +187,11 @@ test("validates the bounded public event contract", () => {
 test("serializes tracker configuration without ending the platform script", () => {
   const script = renderTrackerScript(
     {
+      eventEndpoint: "https://pages.example/api/events",
+      eventToken: null,
       excludedReason: null,
       links: [],
+      opaqueOrigin: false,
       pageSlug: "page-abc123",
       source: {
         sourceLabel: "</script><script>alert(1)</script>",
@@ -181,6 +211,8 @@ test("serializes tracker configuration without ending the platform script", () =
   assert.ok(script.includes("\\u003c/script\\u003e"));
   assert.match(script, /sessionStorage/);
   assert.match(script, /\/api\/events/);
+  assert.ok(script.includes("https://pages.example/api/events"));
+  assert.doesNotMatch(script, /fetch\("\/api\/events"/);
 });
 
 test("rotates a tab session when an event occurs after 30 minutes of inactivity", async () => {
@@ -204,8 +236,11 @@ test("rotates a tab session when an event occurs after 30 minutes of inactivity"
   const anchor = new FakeElement();
   const script = renderTrackerScript(
     {
+      eventEndpoint: "https://pages.example/api/events",
+      eventToken: "signed-event-token",
       excludedReason: null,
       links: [{ id: "632d90ab-1230-8d18-92dc-829ef1328ee4", ordinal: 0 }],
+      opaqueOrigin: false,
       pageSlug: "page-abc123",
       source: {
         sourceLabel: "blog.example",

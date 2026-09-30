@@ -1,7 +1,7 @@
 # TagWorks
 
-TagWorks는 정적 HTML을 안전하게 검사해 고정 링크로 공개하는 Next.js 서비스입니다.
-카키·파스텔 랜딩, Supabase 이메일 인증, 비공개 원본 업로드, 정제된 HTML 게시,
+TagWorks는 HTML 원본을 격리된 고정 링크로 공개하는 Next.js 서비스입니다.
+카키·파스텔 랜딩, Supabase 이메일 인증, 비공개 원본 업로드, 원본 HTML 게시,
 사용자별 대시보드를 포함합니다.
 
 ## 구조
@@ -12,8 +12,9 @@ TagWorks는 정적 HTML을 안전하게 검사해 고정 링크로 공개하는 
 - `site/dist`: 전환 전 정적 랜딩 보관본
 
 공개 페이지는 앱 인증 쿠키가 전달되지 않는 별도 Vercel 프로젝트에서 제공됩니다.
-원본 HTML은 `page-originals` 비공개 버킷에 저장되고, 공개 RPC는 현재 게시된
-정제 결과만 반환합니다.
+원본 HTML은 `page-originals` 비공개 버킷에 보관되고, 공개 RPC는 현재 게시 버전의
+HTML과 렌더링 계약만 반환합니다. 신규 원본 모드는 퍼블리셔의 인증 쿠키와 분리된
+opaque-origin CSP sandbox에서 스크립트를 실행합니다.
 
 ## 로컬 실행
 
@@ -33,7 +34,10 @@ npm run dev:publisher
 실제 값은 Git에 커밋하지 말고 각 앱의 `.env.local`에 둡니다. 웹 앱에는
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
 `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_PUBLISHER_URL`, `SUPABASE_DATABASE_URL`이
-필요합니다. 퍼블리셔에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`만 필요합니다.
+필요합니다. 퍼블리셔에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
+`SUPABASE_ANALYTICS_DATABASE_URL`이 필요합니다. 전용 이벤트 서명 키를 분리하려면
+`TAGWORKS_ANALYTICS_EVENT_SECRET`도 설정할 수 있으며, 생략하면 서버가 비공개 분석 DB
+연결 정보에서 용도 분리된 서명 키를 파생합니다.
 Vercel의 `SUPABASE_DATABASE_URL`에는 두 번째 마이그레이션에서 만든 최소 권한
 `tagworks_ingest` 역할의 Supabase Transaction pooler 연결 문자열을 사용합니다.
 애플리케이션은 prepared statements를 비활성화하고 연결을 인스턴스당 1개로 제한합니다.
@@ -73,9 +77,11 @@ npm run build
 실제 E2E 검증은 별도 로컬 전용 `SUPABASE_E2E_DATABASE_URL`을 사용합니다. 이 값은
 테스트 계정 확인과 즉시 정리에만 쓰며 Vercel에는 설정하지 않습니다.
 
-업로드는 UTF-8 `.html`/`.htm`, 최대 1MiB로 제한됩니다. 스크립트, 이벤트 핸들러,
-폼, iframe, SVG/MathML, 외부 CSS 리소스는 제거되며, 퍼블리셔는 별도의 강한 CSP와
-sandbox 헤더를 적용합니다.
+업로드는 UTF-8 `.html`/`.htm`, 최대 1MiB로 제한됩니다. 원본 `<head>`, 제목,
+인라인·외부 스크립트, 이벤트 핸들러, 외부 CSS를 그대로 게시합니다. 퍼블리셔는
+`allow-same-origin`이 없는 CSP sandbox를 적용해 업로드 코드가 퍼블리셔 오리진의
+쿠키와 저장소에 접근하지 못하도록 격리합니다. HTTP 혼합 콘텐츠와 외부 서버의
+CORS 정책은 브라우저 보안 규칙에 따라 여전히 차단될 수 있습니다.
 
 ## Vercel
 

@@ -2,6 +2,7 @@ import {
   ANALYTICS_EVENT_MAX_BYTES,
   analyticsExclusionReason,
   parseAnalyticsEvent,
+  verifyAnalyticsEventToken,
 } from "../../../lib/analytics";
 import { recordAnalyticsEvent } from "../../../lib/analytics-database";
 
@@ -65,12 +66,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const fetchSite = request.headers.get("sec-fetch-site");
-  if (fetchSite && fetchSite !== "same-origin") {
-    return errorResponse("허용되지 않은 요청입니다.", 403);
-  }
-
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  const isOpaqueSandboxRequest = origin === "null";
+  if (
+    !isOpaqueSandboxRequest &&
+    ((fetchSite && fetchSite !== "same-origin") ||
+      (origin && origin !== new URL(request.url).origin))
+  ) {
     return errorResponse("허용되지 않은 요청입니다.", 403);
   }
 
@@ -94,6 +96,17 @@ export async function POST(request: Request): Promise<Response> {
   const event = parseAnalyticsEvent(input);
   if (!event) {
     return errorResponse("올바르지 않은 이벤트입니다.", 400);
+  }
+
+  if (
+    isOpaqueSandboxRequest &&
+    !verifyAnalyticsEventToken(
+      event.event_token,
+      event.page_slug,
+      event.page_version_id,
+    )
+  ) {
+    return errorResponse("허용되지 않은 요청입니다.", 403);
   }
 
   event.excluded_reason = analyticsExclusionReason(request.headers) ?? event.excluded_reason;

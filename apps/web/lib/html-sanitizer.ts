@@ -5,7 +5,7 @@ import sanitizeHtml from "sanitize-html";
 
 export const MAX_HTML_BYTES = 1024 * 1024;
 export const MAX_TRACKED_LINKS = 100;
-export const SANITIZER_VERSION = "tagworks-html-v3-fidelity";
+export const SANITIZER_VERSION = "tagworks-html-v4-isolated-original";
 
 const allowedTags = [
   "a",
@@ -903,6 +903,78 @@ export type SanitizedPage = {
   outboundLinks: PublishedOutboundLink[];
   warnings: string[];
 };
+
+function extractOriginalOutboundLinks(
+  source: string,
+  versionId: string | undefined,
+): { links: PublishedOutboundLink[]; limitExceeded: boolean } {
+  const links: PublishedOutboundLink[] = [];
+  let externalLinkCount = 0;
+  const parser = new Parser(
+    {
+      onopentag(tagName, attributes) {
+        if (tagName.toLowerCase() !== "a") return;
+        const destination = normalizeAbsoluteHttpsUrl(attributes.href ?? "");
+        if (!destination) return;
+
+        if (versionId && links.length < MAX_TRACKED_LINKS) {
+          const ordinal = externalLinkCount;
+          links.push({
+            destinationHost: destination.hostname.toLowerCase(),
+            destinationUrl: destination.href,
+            id: deterministicLinkId(versionId, ordinal, destination.href),
+            label: destination.hostname.toLowerCase(),
+            ordinal,
+          });
+        }
+        externalLinkCount += 1;
+      },
+    },
+    { decodeEntities: true },
+  );
+  parser.end(source);
+
+  return {
+    links,
+    limitExceeded: externalLinkCount > MAX_TRACKED_LINKS,
+  };
+}
+
+/**
+ * Keeps the uploaded document byte-for-byte after UTF-8 decoding. A streaming
+ * parser only derives bounded outbound-link metadata and never rewrites the
+ * artifact. Runtime isolation is enforced by the publisher CSP/sandbox.
+ */
+export function prepareOriginalPublishedHtml(
+  source: string,
+  options: { fallbackTitle?: string; versionId?: string } = {},
+): SanitizedPage {
+  const analysis = extractOriginalOutboundLinks(source, options.versionId);
+  const warnings: string[] = [];
+
+  if (/<\s*script\b|\son[a-z]+\s*=/i.test(source)) {
+    warnings.push("원본 스크립트와 상호작용 코드가 격리된 공개 환경에서 실행됩니다.");
+  }
+  if (
+    /(?:<(?:img|link|source|video|audio|track|script)\b[^>]*(?:src|href)\s*=\s*["']?https:|(?:url\s*\(|@import\s+)(?:["']|url\(["']?)?https:)/i.test(
+      source,
+    )
+  ) {
+    warnings.push("외부 이미지·폰트·스타일·스크립트는 방문 시 해당 제공자에게 직접 요청됩니다.");
+  }
+  if (/\b(?:src|href)\s*=\s*["']http:\/\//i.test(source)) {
+    warnings.push("HTTP 외부 리소스는 HTTPS 공개 페이지에서 브라우저가 차단할 수 있습니다.");
+  }
+  if (analysis.limitExceeded) {
+    warnings.push(`외부 링크 분석은 문서에서 처음 ${MAX_TRACKED_LINKS}개까지 적용됩니다.`);
+  }
+
+  return {
+    html: source,
+    outboundLinks: analysis.links,
+    warnings,
+  };
+}
 
 export function sanitizePublishedHtml(
   source: string,

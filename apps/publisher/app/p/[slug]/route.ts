@@ -3,12 +3,16 @@ import { randomBytes } from "node:crypto";
 import {
   analyticsExclusionReason,
   classifyAnalyticsSource,
+  createAnalyticsEventToken,
   extractPublishedLinks,
   isUuid,
   renderTrackerScript,
 } from "../../../lib/analytics";
 import { syncPublishedLinks } from "../../../lib/analytics-database";
-import { renderPublishedDocument } from "../../../lib/html-document";
+import {
+  isIsolatedOriginalVersion,
+  renderPublishedDocument,
+} from "../../../lib/html-document";
 import { createPublicSupabaseClient } from "../../../lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +34,33 @@ const SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
 };
 
-function contentSecurityPolicy(nonce?: string): string {
+export function contentSecurityPolicy(
+  nonce?: string,
+  isolatedOriginal = false,
+): string {
+  if (isolatedOriginal) {
+    return [
+      "default-src 'none'",
+      "base-uri 'self' https:",
+      "child-src https: data: blob:",
+      "connect-src 'self' https: wss:",
+      "font-src 'self' https: data:",
+      "form-action https:",
+      "frame-ancestors 'none'",
+      "frame-src https: data: blob:",
+      "img-src 'self' https: data: blob:",
+      "manifest-src 'self' https:",
+      "media-src 'self' https: data: blob:",
+      "object-src https: data: blob:",
+      "script-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'",
+      "script-src-attr 'unsafe-inline'",
+      "style-src 'self' https: data: 'unsafe-inline'",
+      "worker-src 'self' https: blob:",
+      "upgrade-insecure-requests",
+      "sandbox allow-downloads allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-presentation allow-scripts allow-top-navigation-by-user-activation",
+    ].join("; ");
+  }
+
   return [
     "default-src 'none'",
     "base-uri 'none'",
@@ -84,12 +114,17 @@ function renderDocument(page: PublishedPage, trackerScript = ""): string {
   });
 }
 
-function htmlResponse(body: string, status: number, nonce?: string): Response {
+function htmlResponse(
+  body: string,
+  status: number,
+  nonce?: string,
+  isolatedOriginal = false,
+): Response {
   return new Response(body, {
     status,
     headers: {
       ...SECURITY_HEADERS,
-      "Content-Security-Policy": contentSecurityPolicy(nonce),
+      "Content-Security-Policy": contentSecurityPolicy(nonce, isolatedOriginal),
       "Content-Type": "text/html; charset=utf-8",
     },
   });
@@ -137,9 +172,11 @@ export async function GET(
       return unavailableResponse(404);
     }
 
+    const isolatedOriginal = isIsolatedOriginalVersion(data.sanitizer_version);
+
     if (!isUuid(data.version_id)) {
       console.error("Published page is missing a valid analytics version identifier");
-      return htmlResponse(renderDocument(data), 200);
+      return htmlResponse(renderDocument(data), 200, undefined, isolatedOriginal);
     }
 
     try {
@@ -156,10 +193,17 @@ export async function GET(
       }
 
       const nonce = randomBytes(18).toString("base64url");
+      const eventToken = createAnalyticsEventToken(slug, data.version_id);
+      if (isolatedOriginal && !eventToken) {
+        return htmlResponse(renderDocument(data), 200, undefined, true);
+      }
       const tracker = renderTrackerScript(
         {
+          eventEndpoint: new URL("/api/events", request.url).toString(),
+          eventToken,
           excludedReason: analyticsExclusionReason(request.headers),
           links: links.map((link) => ({ id: link.link_id, ordinal: link.ordinal })),
+          opaqueOrigin: isolatedOriginal,
           pageSlug: slug,
           source: classifyAnalyticsSource(request.url, request.headers.get("referer")),
           versionId: data.version_id,
@@ -167,7 +211,12 @@ export async function GET(
         nonce,
       );
 
-      return htmlResponse(renderDocument(data, tracker), 200, nonce);
+      return htmlResponse(
+        renderDocument(data, tracker),
+        200,
+        nonce,
+        isolatedOriginal,
+      );
     } catch (error) {
       // Analytics must never make a public page unavailable.
       console.error("Unable to prepare publisher analytics", {
@@ -176,7 +225,7 @@ export async function GET(
             ? String(error.code)
             : "unknown",
       });
-      return htmlResponse(renderDocument(data), 200);
+      return htmlResponse(renderDocument(data), 200, undefined, isolatedOriginal);
     }
   } catch (error) {
     console.error("Publisher request failed", {

@@ -123,7 +123,9 @@ export function UploadForm() {
         />
         <span aria-hidden="true">↑</span>
         <span className={styles.dropTitle}>{fileName || "HTML 파일 선택"}</span>
-        <span className={styles.hint}>.html 또는 .htm · 최대 1MiB · 문서 제목을 읽어 관리용 제목에 반영합니다.</span>
+        <span className={styles.hint}>
+          .html 또는 .htm · 최대 1MiB · 원본 스크립트와 외부 CSS를 격리된 공개 환경에서 그대로 실행합니다.
+        </span>
       </label>
 
       {error ? <div className={styles.error} role="alert">{error}</div> : null}

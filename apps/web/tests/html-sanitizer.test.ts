@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   deterministicLinkId,
   MAX_TRACKED_LINKS,
+  prepareOriginalPublishedHtml,
   sanitizePublishedHtml,
 } from "../lib/html-sanitizer";
 
@@ -220,4 +221,27 @@ test("allows only local SVG references and safe static paint values", () => {
   assert.match(result.html, /<image href="https:\/\/cdn\.example\/photo\.webp"/);
   assert.doesNotMatch(result.html, /image\/svg\+xml/i);
   assert.match(result.html, /<path fill="url\(#local\)" d="M0 0L1 1"><\/path>/);
+});
+
+test("publishes the decoded original document without removing scripts or external CSS", () => {
+  const source = `<!doctype html>
+<html><head>
+  <title>Original source</title>
+  <link rel="stylesheet preload" href="https://cdn.example/original.css">
+  <script>window.originalInline = true;</script>
+  <script src="https://cdn.example/original.js"></script>
+</head><body onclick="window.clicked = true">
+  <a href="https://outside.example/apply">Apply</a>
+</body></html>`;
+  const result = prepareOriginalPublishedHtml(source, {
+    fallbackTitle: "Fallback",
+    versionId: "018f47ba-7052-7d4f-8dc7-56e4f4e77f87",
+  });
+
+  assert.equal(result.html, source);
+  assert.match(result.html, /<script>window\.originalInline = true;<\/script>/);
+  assert.match(result.html, /href="https:\/\/cdn\.example\/original\.css"/);
+  assert.match(result.html, /onclick="window\.clicked = true"/);
+  assert.equal(result.outboundLinks.length, 1);
+  assert.ok(result.warnings.some((warning) => warning.includes("격리된 공개 환경")));
 });

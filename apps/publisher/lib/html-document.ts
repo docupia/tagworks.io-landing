@@ -1,8 +1,16 @@
 import { Parser } from "htmlparser2";
 
+export const ISOLATED_ORIGINAL_SANITIZER_VERSION =
+  "tagworks-html-v4-isolated-original";
+
 const FULL_DOCUMENT_SANITIZER_VERSIONS = new Set([
   "tagworks-html-v3-fidelity",
+  ISOLATED_ORIGINAL_SANITIZER_VERSION,
 ]);
+
+export function isIsolatedOriginalVersion(version: string | null | undefined) {
+  return version === ISOLATED_ORIGINAL_SANITIZER_VERSION;
+}
 
 type DocumentMarkers = {
   bodyCloseStart: number | null;

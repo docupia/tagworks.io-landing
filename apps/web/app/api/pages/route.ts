@@ -5,7 +5,7 @@ import { getPublisherUrl } from "@/lib/env";
 import {
   MAX_HTML_BYTES,
   SANITIZER_VERSION,
-  sanitizePublishedHtml,
+  prepareOriginalPublishedHtml,
 } from "@/lib/html-sanitizer";
 import { isSameOriginMutation } from "@/lib/request-security";
 import { createClient } from "@/lib/supabase/server";
@@ -150,13 +150,10 @@ export async function POST(request: NextRequest) {
       throw new RequestError("올바른 HTML 문서를 선택해 주세요.", 400);
     }
 
-    const sanitized = sanitizePublishedHtml(source, {
+    const published = prepareOriginalPublishedHtml(source, {
       fallbackTitle: fields.title,
       versionId,
     });
-    if (!sanitized.html) {
-      throw new RequestError("안전 검사 후 게시할 수 있는 내용이 남지 않았습니다.", 422);
-    }
 
     const { error: uploadError } = await supabase.storage
       .from("page-originals")
@@ -199,13 +196,13 @@ export async function POST(request: NextRequest) {
           ${objectPath},
           ${sha256},
           ${bytes.byteLength},
-          ${sanitized.html},
+          ${published.html},
           ${SANITIZER_VERSION},
-          ${tx.json(sanitized.warnings)}
+          ${tx.json(published.warnings)}
         )
       `;
-      if (sanitized.outboundLinks.length) {
-        const linkRows = sanitized.outboundLinks.map((link) => ({
+      if (published.outboundLinks.length) {
+        const linkRows = published.outboundLinks.map((link) => ({
           id: link.id,
           page_id: pageId,
           page_version_id: versionId,
@@ -248,7 +245,7 @@ export async function POST(request: NextRequest) {
       {
         page: { id: pageId, slug, title: fields.title },
         publicUrl: `${getPublisherUrl()}/p/${slug}`,
-        warnings: sanitized.warnings,
+        warnings: published.warnings,
       },
       { status: 201 },
     );
