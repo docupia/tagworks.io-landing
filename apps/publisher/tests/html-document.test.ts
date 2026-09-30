@@ -1,9 +1,34 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { renderPublishedDocument } from "../lib/html-document";
+import {
+  isIsolatedOriginalDocument,
+  renderPublishedDocument,
+} from "../lib/html-document";
 
 const TRACKER = '<script nonce="test">tracker()</script>';
+
+test("detects executable originals when an older public RPC omits the version", () => {
+  assert.equal(
+    isIsolatedOriginalDocument(undefined, "<html><script>run()</script></html>"),
+    true,
+  );
+  assert.equal(
+    isIsolatedOriginalDocument(undefined, '<body onload="run()">Page</body>'),
+    true,
+  );
+  assert.equal(
+    isIsolatedOriginalDocument(undefined, "<main>Legacy safe fragment</main>"),
+    false,
+  );
+  assert.equal(
+    isIsolatedOriginalDocument(
+      "tagworks-html-v3-fidelity",
+      "<script>should-not-be-present()</script>",
+    ),
+    false,
+  );
+});
 
 test("preserves a complete source document and its title byte-for-byte around tracker insertion", () => {
   const source = `<!DOCTYPE html>

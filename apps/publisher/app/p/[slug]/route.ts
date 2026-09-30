@@ -10,7 +10,7 @@ import {
 } from "../../../lib/analytics";
 import { syncPublishedLinks } from "../../../lib/analytics-database";
 import {
-  isIsolatedOriginalVersion,
+  isIsolatedOriginalDocument,
   renderPublishedDocument,
 } from "../../../lib/html-document";
 import { createPublicSupabaseClient } from "../../../lib/supabase";
@@ -86,7 +86,7 @@ export function contentSecurityPolicy(
 
 type PublishedPage = {
   description: string | null;
-  sanitizer_version: string;
+  sanitizer_version?: string | null;
   sanitized_html: string;
   slug: string;
   title: string;
@@ -172,7 +172,10 @@ export async function GET(
       return unavailableResponse(404);
     }
 
-    const isolatedOriginal = isIsolatedOriginalVersion(data.sanitizer_version);
+    const isolatedOriginal = isIsolatedOriginalDocument(
+      data.sanitizer_version,
+      data.sanitized_html,
+    );
 
     if (!isUuid(data.version_id)) {
       console.error("Published page is missing a valid analytics version identifier");

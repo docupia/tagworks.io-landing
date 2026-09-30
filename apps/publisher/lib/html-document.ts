@@ -12,6 +12,21 @@ export function isIsolatedOriginalVersion(version: string | null | undefined) {
   return version === ISOLATED_ORIGINAL_SANITIZER_VERSION;
 }
 
+export function isIsolatedOriginalDocument(
+  version: string | null | undefined,
+  html: string,
+) {
+  if (isIsolatedOriginalVersion(version)) return true;
+
+  // Compatibility for deployments where the public RPC has not yet exposed
+  // sanitizer_version. Legacy v3 artifacts never retain executable markup, so
+  // this narrow fallback only selects documents that require script isolation.
+  return (
+    !version &&
+    (/<\s*script\b/i.test(html) || /\son[a-z]+\s*=\s*(?:["']|[^\s>])/i.test(html))
+  );
+}
+
 type DocumentMarkers = {
   bodyCloseStart: number | null;
   doctypeEnd: number | null;
