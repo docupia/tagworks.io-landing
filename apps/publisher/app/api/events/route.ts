@@ -1,126 +1,84 @@
 import {
   ANALYTICS_EVENT_MAX_BYTES,
-  analyticsExclusionReason,
   parseAnalyticsEvent,
   verifyAnalyticsEventToken,
 } from "../../../lib/analytics";
-import { recordAnalyticsEvent } from "../../../lib/analytics-database";
+import { getAnalyticsEventsUrl } from "../../../lib/env";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const PUBLISHER_ORIGIN = "https://tagworks-publisher.vercel.app";
+
 const RESPONSE_HEADERS: Readonly<Record<string, string>> = {
+  "Access-Control-Allow-Origin": "null",
   "Cache-Control": "no-store, max-age=0",
-  "Cross-Origin-Resource-Policy": "same-origin",
+  "Cross-Origin-Resource-Policy": "cross-origin",
   "Referrer-Policy": "no-referrer",
+  "Vary": "Origin",
   "X-Content-Type-Options": "nosniff",
 };
 
-class BodyTooLargeError extends Error {}
-
-async function readBoundedBody(request: Request): Promise<string> {
-  if (!request.body) return "";
-
-  const reader = request.body.getReader();
-  const decoder = new TextDecoder("utf-8", { fatal: true });
-  let total = 0;
-  let body = "";
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      total += value.byteLength;
-      if (total > ANALYTICS_EVENT_MAX_BYTES) {
-        await reader.cancel();
-        throw new BodyTooLargeError();
-      }
-      body += decoder.decode(value, { stream: true });
-    }
-    body += decoder.decode();
-    return body;
-  } finally {
-    reader.releaseLock();
-  }
-}
-
-function errorResponse(message: string, status: number): Response {
-  return Response.json(
-    { error: message },
-    { status, headers: RESPONSE_HEADERS },
-  );
+function response(status: number, message?: string): Response {
+  return message
+    ? Response.json({ error: message }, { status, headers: RESPONSE_HEADERS })
+    : new Response(null, { status, headers: RESPONSE_HEADERS });
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const contentType = request.headers.get("content-type")?.toLowerCase() ?? "";
   if (
-    !contentType.startsWith("application/json") &&
-    !contentType.startsWith("text/plain")
+    request.headers.get("origin") !== "null" ||
+    request.headers.get("sec-fetch-site") !== "cross-site" ||
+    !request.headers.get("content-type")?.toLowerCase().startsWith("text/plain")
   ) {
-    return errorResponse("지원하지 않는 요청 형식입니다.", 415);
+    return response(403, "허용되지 않은 요청입니다.");
   }
 
   const contentLength = Number(request.headers.get("content-length") ?? "0");
   if (Number.isFinite(contentLength) && contentLength > ANALYTICS_EVENT_MAX_BYTES) {
-    return errorResponse("이벤트 요청이 너무 큽니다.", 413);
+    return response(413, "이벤트 요청이 너무 큽니다.");
   }
 
-  const fetchSite = request.headers.get("sec-fetch-site");
-  const origin = request.headers.get("origin");
-  const isOpaqueSandboxRequest = origin === "null";
-  if (
-    !isOpaqueSandboxRequest &&
-    ((fetchSite && fetchSite !== "same-origin") ||
-      (origin && origin !== new URL(request.url).origin))
-  ) {
-    return errorResponse("허용되지 않은 요청입니다.", 403);
-  }
-
-  let rawBody: string;
-  try {
-    rawBody = await readBoundedBody(request);
-  } catch (error) {
-    if (error instanceof BodyTooLargeError) {
-      return errorResponse("이벤트 요청이 너무 큽니다.", 413);
-    }
-    return errorResponse("이벤트 요청을 읽을 수 없습니다.", 400);
+  const body = await request.text();
+  if (new TextEncoder().encode(body).byteLength > ANALYTICS_EVENT_MAX_BYTES) {
+    return response(413, "이벤트 요청이 너무 큽니다.");
   }
 
   let input: unknown;
   try {
-    input = JSON.parse(rawBody);
+    input = JSON.parse(body);
   } catch {
-    return errorResponse("올바르지 않은 이벤트입니다.", 400);
+    return response(400, "올바르지 않은 이벤트입니다.");
   }
 
   const event = parseAnalyticsEvent(input);
-  if (!event) {
-    return errorResponse("올바르지 않은 이벤트입니다.", 400);
-  }
-
   if (
-    isOpaqueSandboxRequest &&
+    !event ||
+    !event.event_token ||
     !verifyAnalyticsEventToken(
       event.event_token,
       event.page_slug,
       event.page_version_id,
     )
   ) {
-    return errorResponse("허용되지 않은 요청입니다.", 403);
+    return response(403, "허용되지 않은 요청입니다.");
   }
 
-  event.excluded_reason = analyticsExclusionReason(request.headers) ?? event.excluded_reason;
-
   try {
-    await recordAnalyticsEvent(event);
-    return new Response(null, { status: 204, headers: RESPONSE_HEADERS });
-  } catch (error) {
-    console.error("Unable to record publisher analytics event", {
-      code:
-        error && typeof error === "object" && "code" in error
-          ? String(error.code)
-          : "unknown",
+    const upstream = await fetch(getAnalyticsEventsUrl(), {
+      method: "POST",
+      body,
+      cache: "no-store",
+      headers: {
+        "content-type": "text/plain;charset=UTF-8",
+        origin: PUBLISHER_ORIGIN,
+        referer: `${PUBLISHER_ORIGIN}/p/${event.page_slug}`,
+        "sec-fetch-site": "cross-site",
+        "user-agent": request.headers.get("user-agent") ?? "Tagworks publisher relay",
+      },
     });
-    return errorResponse("이벤트를 저장하지 못했습니다.", 503);
+    return response(upstream.status);
+  } catch {
+    return response(503, "이벤트를 전달하지 못했습니다.");
   }
 }

@@ -32,29 +32,25 @@ export function getPublisherEnvironment(): PublisherEnvironment {
   return cachedEnvironment;
 }
 
-export function getAnalyticsDatabaseUrl(): string {
-  const value = process.env.SUPABASE_ANALYTICS_DATABASE_URL?.trim();
-  if (!value) {
-    throw new Error("SUPABASE_ANALYTICS_DATABASE_URL is not configured.");
-  }
-
+export function getAnalyticsEventsUrl(): string {
+  const value =
+    process.env.TAGWORKS_ANALYTICS_EVENTS_URL?.trim() ||
+    "http://localhost:3000/api/events";
   let parsed: URL;
   try {
     parsed = new URL(value);
   } catch {
-    throw new Error("SUPABASE_ANALYTICS_DATABASE_URL must be a valid PostgreSQL URL.");
+    throw new Error("TAGWORKS_ANALYTICS_EVENTS_URL must be a valid URL.");
   }
 
-  if (parsed.protocol !== "postgresql:" && parsed.protocol !== "postgres:") {
-    throw new Error("SUPABASE_ANALYTICS_DATABASE_URL must use PostgreSQL.");
+  if (
+    parsed.pathname !== "/api/events" ||
+    parsed.search ||
+    parsed.hash ||
+    (parsed.protocol !== "https:" && parsed.hostname !== "localhost")
+  ) {
+    throw new Error("TAGWORKS_ANALYTICS_EVENTS_URL must point to a secure /api/events endpoint.");
   }
 
-  const role = decodeURIComponent(parsed.username).split(".", 1)[0];
-  if (role !== "tagworks_analytics") {
-    throw new Error(
-      "SUPABASE_ANALYTICS_DATABASE_URL must use the least-privilege tagworks_analytics role.",
-    );
-  }
-
-  return value;
+  return parsed.href;
 }

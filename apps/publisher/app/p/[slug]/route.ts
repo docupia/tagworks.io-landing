@@ -8,7 +8,6 @@ import {
   isUuid,
   renderTrackerScript,
 } from "../../../lib/analytics";
-import { syncPublishedLinks } from "../../../lib/analytics-database";
 import {
   isIsolatedOriginalDocument,
   renderPublishedDocument,
@@ -185,17 +184,6 @@ export async function GET(
 
     try {
       const links = extractPublishedLinks(data.sanitized_html, data.version_id);
-      try {
-        await syncPublishedLinks(slug, data.version_id, links);
-      } catch (error) {
-        console.error("Unable to synchronize published page links", {
-          code:
-            error && typeof error === "object" && "code" in error
-              ? String(error.code)
-              : "unknown",
-        });
-      }
-
       const nonce = randomBytes(18).toString("base64url");
       const eventToken = createAnalyticsEventToken(slug, data.version_id);
       if (isolatedOriginal && !eventToken) {

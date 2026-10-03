@@ -30,3 +30,19 @@ export const getDatabaseUrl = () => {
 
   return value;
 };
+
+export const getAnalyticsDatabaseUrl = () => {
+  const value = required(
+    "SUPABASE_ANALYTICS_DATABASE_URL",
+    process.env.SUPABASE_ANALYTICS_DATABASE_URL,
+  );
+  const parsed = new URL(value);
+
+  if (!decodeURIComponent(parsed.username).startsWith("tagworks_analytics.")) {
+    throw new Error(
+      "SUPABASE_ANALYTICS_DATABASE_URL은 tagworks_analytics 최소 권한 역할이어야 합니다.",
+    );
+  }
+
+  return value;
+};

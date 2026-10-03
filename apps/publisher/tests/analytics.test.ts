@@ -212,6 +212,8 @@ test("serializes tracker configuration without ending the platform script", () =
   assert.match(script, /sessionStorage/);
   assert.match(script, /\/api\/events/);
   assert.ok(script.includes("https://pages.example/api/events"));
+  assert.match(script, /mode:"cors"/);
+  assert.match(script, /referrerPolicy:"origin"/);
   assert.doesNotMatch(script, /fetch\("\/api\/events"/);
 });
 

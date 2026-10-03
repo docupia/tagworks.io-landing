@@ -1,20 +1,5 @@
-import type { AnalyticsEventPayload, PublishedLink } from "./analytics";
-import { getAnalyticsDatabase } from "./database";
-
-export async function syncPublishedLinks(
-  pageSlug: string,
-  versionId: string,
-  links: PublishedLink[],
-): Promise<void> {
-  const sql = getAnalyticsDatabase();
-  await sql`
-    select public.sync_published_links(
-      ${pageSlug},
-      ${versionId}::uuid,
-      ${sql.json(links)}
-    )
-  `;
-}
+import type { AnalyticsEventPayload } from "@/lib/analytics-events";
+import { getAnalyticsDatabase } from "@/lib/database";
 
 export async function recordAnalyticsEvent(
   event: AnalyticsEventPayload,

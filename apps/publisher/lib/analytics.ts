@@ -71,9 +71,7 @@ export function isPageSlug(value: unknown): value is string {
 }
 
 function analyticsEventSigningKey(): Buffer | null {
-  const secret =
-    process.env.TAGWORKS_ANALYTICS_EVENT_SECRET?.trim() ||
-    process.env.SUPABASE_ANALYTICS_DATABASE_URL?.trim();
+  const secret = process.env.TAGWORKS_ANALYTICS_EVENT_SECRET?.trim();
   if (!secret) return null;
 
   return createHash("sha256")
@@ -334,7 +332,9 @@ const send=(eventType,linkId=null)=>{
         body:payload,
         headers:{"content-type":"text/plain;charset=UTF-8"},
         credentials:"omit",
-        keepalive:true
+        keepalive:true,
+        mode:"cors",
+        referrerPolicy:"origin"
       }).then(response=>{
         if(response.ok)return;
         if(attempt===0)setTimeout(()=>deliver(1),250);else beacon();
@@ -345,7 +345,7 @@ const send=(eventType,linkId=null)=>{
       if(attempt===0)setTimeout(()=>deliver(1),250);else beacon();
     }
   };
-  if(!config.opaqueOrigin||!beacon())deliver(0);
+  deliver(0);
 };
 send("page_view");
 document.addEventListener("click",event=>{

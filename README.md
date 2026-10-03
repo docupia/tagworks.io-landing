@@ -33,11 +33,14 @@ npm run dev:publisher
 
 실제 값은 Git에 커밋하지 말고 각 앱의 `.env.local`에 둡니다. 웹 앱에는
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
-`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_PUBLISHER_URL`, `SUPABASE_DATABASE_URL`이
+`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_PUBLISHER_URL`, `SUPABASE_DATABASE_URL`,
+`SUPABASE_ANALYTICS_DATABASE_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`이
 필요합니다. 퍼블리셔에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
-`SUPABASE_ANALYTICS_DATABASE_URL`이 필요합니다. 전용 이벤트 서명 키를 분리하려면
-`TAGWORKS_ANALYTICS_EVENT_SECRET`도 설정할 수 있으며, 생략하면 서버가 비공개 분석 DB
-연결 정보에서 용도 분리된 서명 키를 파생합니다.
+`TAGWORKS_ANALYTICS_EVENTS_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`만 필요합니다.
+퍼블리셔는 PostgreSQL에 직접 접속하지 않습니다. 공개 페이지에 삽입된 스크립트는
+서명된 이벤트를 퍼블리셔의 무상태 릴레이로 보내고, 릴레이가 운영 웹의 `/api/events`로
+전달합니다. 운영 API는 퍼블리셔 도메인의 리퍼러와 서명을 모두 검증한 뒤
+`tagworks_analytics` 최소 권한 역할로 이벤트를 저장합니다.
 Vercel의 `SUPABASE_DATABASE_URL`에는 두 번째 마이그레이션에서 만든 최소 권한
 `tagworks_ingest` 역할의 Supabase Transaction pooler 연결 문자열을 사용합니다.
 애플리케이션은 prepared statements를 비활성화하고 연결을 인스턴스당 1개로 제한합니다.
