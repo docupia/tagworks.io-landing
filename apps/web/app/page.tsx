@@ -32,7 +32,7 @@ export default async function HomePage() {
               </div>
               <h1 id="hero-title">
                 {tx("Upload your HTML and publish it", "만든 HTML을 올리고,")}<br />
-                {locale === "ko" ? <><span>하나의 링크</span>로 공개하세요.</> : <>with <span>one permanent link.</span></>}
+                <span>{tx("with one permanent link.", "하나의 링크로 공개하세요.")}</span>
               </h1>
               <p className="hero-description">
                 {tx(

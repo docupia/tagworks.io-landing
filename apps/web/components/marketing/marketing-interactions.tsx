@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { LanguageSwitcher } from "@/app/components/language-switcher";
-import { text, type Locale } from "@/lib/i18n";
+import { LOCALE_TAGS, text, type Locale } from "@/lib/i18n";
 import { BrandMark } from "./brand-mark";
 
 type SourceKey = "all" | "instagram" | "blog" | "tagworks";
@@ -170,7 +170,7 @@ function FlowNode({ tone, label, value, locale }: { tone: string; label: string;
   return (
     <div className={`flow-node ${tone}${value === 0 ? " is-zero" : ""}`}>
       <span>{label}</span>
-      <strong>{value.toLocaleString(locale === "ko" ? "ko-KR" : "en-US")}</strong>
+      <strong>{value.toLocaleString(LOCALE_TAGS[locale])}</strong>
     </div>
   );
 }
@@ -178,7 +178,7 @@ function FlowNode({ tone, label, value, locale }: { tone: string; label: string;
 export function AnalyticsDemo({ locale }: { locale: Locale }) {
   const [source, setSource] = useState<SourceKey>("all");
   const tx = (english: string, korean: string) => text(locale, english, korean);
-  const format = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US");
+  const format = new Intl.NumberFormat(LOCALE_TAGS[locale]);
   const data = analyticsData[source];
   const sourceValues = [data.instagram, data.blog, data.tagworks, data.direct];
   const targetValues = [data.purchase, data.inquiry, data.youtube, data.none];
@@ -188,6 +188,12 @@ export function AnalyticsDemo({ locale }: { locale: Locale }) {
     ["blog", tx("Blog", "블로그")],
     ["tagworks", tx("TagWorks", "태그웍스")],
   ];
+  const selectedSourceLabel: Record<SourceKey, string> = {
+    all: tx("All channels · 300", "전체 채널 · 300"),
+    instagram: tx("Instagram · 120", "인스타그램 · 120"),
+    blog: tx("Blog · 80", "블로그 · 80"),
+    tagworks: tx("TagWorks discovery · 60", "태그웍스 탐색 · 60"),
+  };
 
   return (
     <div className="analytics-window" data-reveal>
@@ -301,7 +307,7 @@ export function AnalyticsDemo({ locale }: { locale: Locale }) {
         <div className="mobile-flow" aria-label={tx("Mobile visit flow summary", "모바일 방문 흐름 요약")}>
           <div className="mobile-flow-stage">
             <span>{tx("Selected source", "선택한 출처")}</span>
-            <strong>{locale === "ko" ? data.label.replace("All channels", "전체 채널").replace("Instagram", "인스타그램").replace("Blog", "블로그").replace("TagWorks discovery", "태그웍스 탐색") : data.label}</strong>
+            <strong>{selectedSourceLabel[source]}</strong>
           </div>
           <span className="mobile-flow-arrow" aria-hidden="true">↓</span>
           <div className="mobile-flow-stage mobile-page-stage">

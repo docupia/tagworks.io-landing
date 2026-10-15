@@ -6,7 +6,7 @@ import { LanguageSwitcher } from "@/app/components/language-switcher";
 import { PageQrCode } from "@/app/components/page-qr-code";
 import { getPublisherUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
-import { text } from "@/lib/i18n";
+import { LOCALE_TAGS, text, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,15 +31,15 @@ type PageAnalyticsSummary = {
   total_clicks: number;
 };
 
-const displayCount = (value: unknown, locale: "en" | "ko") => {
+const displayCount = (value: unknown, locale: Locale) => {
   const count = Number(value);
-  return Number.isFinite(count) && count > 0 ? Math.floor(count).toLocaleString(locale === "ko" ? "ko-KR" : "en-US") : "0";
+  return Number.isFinite(count) && count > 0 ? Math.floor(count).toLocaleString(LOCALE_TAGS[locale]) : "0";
 };
 
 export default async function DashboardPage() {
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
-  const date = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  const date = new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
       <main className={styles.main}>
         <div className={styles.headingRow}>
           <div>
-            <p className={styles.eyebrow}>My pages</p>
+            <p className={styles.eyebrow}>{tx("My pages", "내 페이지")}</p>
             <h1 className={styles.title}>{tx("My pages", "내 페이지")}</h1>
             <p className={styles.subtitle}>{tx("Manage your uploaded HTML and permanent links in one place.", "업로드한 HTML과 고정 링크를 한곳에서 확인하세요.")}</p>
           </div>

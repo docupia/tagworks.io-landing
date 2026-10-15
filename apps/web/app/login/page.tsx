@@ -35,7 +35,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
         </Link>
         <LanguageSwitcher locale={locale} />
         </div>
-        <p className={styles.eyebrow}>Welcome back</p>
+        <p className={styles.eyebrow}>{tx("Welcome back", "다시 오신 것을 환영해요")}</p>
         <h1 className={styles.title}>{tx("Welcome back.", "다시 만나 반가워요.")}</h1>
         <p className={styles.description}>{tx("Log in to manage your uploaded pages and permanent links.", "로그인하고 업로드한 페이지와 고정 링크를 관리하세요.")}</p>
         {params.message ? <p className={styles.notice}>{params.message}</p> : null}

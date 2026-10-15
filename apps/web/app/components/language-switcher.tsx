@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LOCALE_COOKIE, type Locale } from "@/lib/i18n";
+import { LOCALE_COOKIE, LOCALE_LABELS, LOCALES, text, type Locale } from "@/lib/i18n";
 
 export function LanguageSwitcher({ locale }: { locale: Locale }) {
   const router = useRouter();
@@ -13,27 +13,13 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div
-      className="language-switcher"
-      role="group"
-      aria-label={locale === "ko" ? "언어 선택" : "Select language"}
-    >
-      <button
-        type="button"
-        className={locale === "en" ? "is-active" : undefined}
-        aria-pressed={locale === "en"}
-        onClick={() => select("en")}
-      >
-        EN
-      </button>
-      <button
-        type="button"
-        className={locale === "ko" ? "is-active" : undefined}
-        aria-pressed={locale === "ko"}
-        onClick={() => select("ko")}
-      >
-        한국어
-      </button>
-    </div>
+    <label className="language-switcher">
+      <span className="sr-only">{text(locale, "Select language", "언어 선택")}</span>
+      <select value={locale} onChange={(event) => select(event.target.value as Locale)}>
+        {LOCALES.map((option) => (
+          <option value={option} key={option}>{LOCALE_LABELS[option]}</option>
+        ))}
+      </select>
+    </label>
   );
 }

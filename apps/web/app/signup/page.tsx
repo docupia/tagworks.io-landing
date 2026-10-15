@@ -35,7 +35,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Searc
         </Link>
         <LanguageSwitcher locale={locale} />
         </div>
-        <p className={styles.eyebrow}>Create account</p>
+        <p className={styles.eyebrow}>{tx("Create account", "계정 만들기")}</p>
         <h1 className={styles.title}>{tx("Ready to publish your first page?", "첫 페이지를 올려볼까요?")}</h1>
         <p className={styles.description}>{tx("Create an account, upload HTML, and get a permanent link right away.", "계정을 만들고 HTML을 업로드하면 바로 고정 링크가 생깁니다.")}</p>
         {params.error ? <p className={styles.error}>{params.error}</p> : null}

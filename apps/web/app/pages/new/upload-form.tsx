@@ -35,9 +35,9 @@ export function UploadForm({ locale }: { locale: Locale }) {
   const [copied, setCopied] = useState(false);
   const displayWarning = (warning: string) => {
     if (locale === "ko") return warning;
-    if (ENGLISH_WARNINGS[warning]) return ENGLISH_WARNINGS[warning];
+    if (ENGLISH_WARNINGS[warning]) return text(locale, ENGLISH_WARNINGS[warning], warning);
     const tracked = warning.match(/^외부 링크 분석은 문서에서 처음 (\d+)개까지 적용됩니다\.$/);
-    return tracked ? `Outbound-link analytics are applied to the first ${tracked[1]} links in the document.` : warning;
+    return tracked ? text(locale, `Outbound-link analytics are applied to the first ${tracked[1]} links in the document.`, warning) : warning;
   };
 
   async function submit(event: FormEvent<HTMLFormElement>) {

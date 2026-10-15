@@ -40,7 +40,7 @@ export default async function NewPage() {
       <main className={styles.main}>
         <section className={styles.uploadCard}>
           <Link className={styles.back} href="/dashboard">← {tx("Back to my pages", "내 페이지로 돌아가기")}</Link>
-          <p className={styles.eyebrow}>New page</p>
+          <p className={styles.eyebrow}>{tx("New page", "새 페이지")}</p>
           <h1 className={styles.title}>{tx("Upload HTML", "HTML 업로드")}</h1>
           <p className={styles.subtitle}>
             {tx("Your original is stored privately and served from an isolated public URL.", "원본은 비공개로 보관하고, 별도 주소의 격리된 환경에서 공개합니다.")}

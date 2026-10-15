@@ -14,7 +14,7 @@ import {
 } from "@/lib/analytics";
 import { getPublisherUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
-import { text, type Locale } from "@/lib/i18n";
+import { LOCALE_TAGS, text, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import styles from "./analytics.module.css";
 
@@ -51,7 +51,7 @@ function sourceTypeLabel(type: string, locale: Locale) {
     direct: ["Direct", "직접"],
   };
   const label = labels[type] ?? ["Other", "기타"];
-  return locale === "ko" ? label[1] : label[0];
+  return text(locale, label[0], label[1]);
 }
 
 function sourceLabel(label: string, type: string, locale: Locale) {
@@ -81,7 +81,7 @@ function FlowRows({
   locale: Locale;
 }) {
   const tx = (english: string, korean: string) => text(locale, english, korean);
-  const number = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US");
+  const number = new Intl.NumberFormat(LOCALE_TAGS[locale]);
   const largest = Math.max(...flows.map((flow) => flow.sessions), 1);
 
   return (
@@ -125,8 +125,8 @@ function FlowRows({
 
 function DailyChart({ rows, locale }: { rows: AnalyticsDailyRow[]; locale: Locale }) {
   const tx = (english: string, korean: string) => text(locale, english, korean);
-  const number = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US");
-  const shortDate = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  const number = new Intl.NumberFormat(LOCALE_TAGS[locale]);
+  const shortDate = new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
     timeZone: "Asia/Seoul", month: "numeric", day: "numeric",
   });
   const maximum = Math.max(...rows.map((row) => row.sessions), 1);
@@ -159,8 +159,8 @@ function DailyChart({ rows, locale }: { rows: AnalyticsDailyRow[]; locale: Local
 
 function SourceTable({ sources, locale }: { sources: AnalyticsSource[]; locale: Locale }) {
   const tx = (english: string, korean: string) => text(locale, english, korean);
-  const number = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US");
-  const percent = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US", { maximumFractionDigits: 1 });
+  const number = new Intl.NumberFormat(LOCALE_TAGS[locale]);
+  const percent = new Intl.NumberFormat(LOCALE_TAGS[locale], { maximumFractionDigits: 1 });
   return (
     <div className={styles.tableScroll} role="region" aria-label={tx("Inbound source details", "유입 출처 상세 표")} tabIndex={0}>
       <table className={styles.table}>
@@ -199,9 +199,9 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
 
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
-  const number = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US");
-  const percent = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US", { maximumFractionDigits: 1 });
-  const updatedDate = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+  const number = new Intl.NumberFormat(LOCALE_TAGS[locale]);
+  const percent = new Intl.NumberFormat(LOCALE_TAGS[locale], { maximumFractionDigits: 1 });
+  const updatedDate = new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
     timeZone: "Asia/Seoul", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
   });
   const rangeDays = parseAnalyticsRange(query.range);
@@ -257,7 +257,7 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
               <span className={styles.statusChip}>{statusLabel(page.status, locale)}</span>
               <code>/{page.slug}</code>
             </div>
-            <p className={dashboardStyles.eyebrow}>Page analytics</p>
+            <p className={dashboardStyles.eyebrow}>{tx("Page analytics", "페이지 분석")}</p>
             <h1 className={dashboardStyles.title} id="analytics-title">{page.title}</h1>
             <p className={dashboardStyles.subtitle}>
               {tx("See where visits started and which external links they reached.", "방문이 어디에서 시작되어 어떤 외부 링크로 이어졌는지 확인하세요.")}
@@ -328,7 +328,7 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
                   <section className={styles.panel} aria-labelledby="daily-title">
                     <div className={styles.panelHeading}>
                       <div>
-                        <p className={styles.kicker}>Daily sessions</p>
+                        <p className={styles.kicker}>{tx("Daily sessions", "일별 세션")}</p>
                         <h2 id="daily-title">{tx("Daily visit trend", "일별 방문 추이")}</h2>
                       </div>
                       <p>{tx("Shows sessions started during this period in Korea Standard Time.", "기간에 시작한 방문 세션을 한국 시간 기준으로 표시합니다.")}</p>
@@ -340,7 +340,7 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
                 <section className={styles.panel} aria-labelledby="flow-title">
                   <div className={styles.panelHeading}>
                     <div>
-                      <p className={styles.kicker}>Session flow</p>
+                      <p className={styles.kicker}>{tx("Session flow", "세션 흐름")}</p>
                       <h2 id="flow-title">{tx("Inbound source → page → first outbound click", "유입 출처 → 페이지 → 첫 외부 클릭")}</h2>
                     </div>
                     <p>{tx("Only the first observed outbound click in each session is connected to the flow.", "한 세션에서 처음 관측된 외부 클릭 한 번만 흐름에 연결합니다.")}</p>
@@ -375,7 +375,7 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
                 <section className={styles.panel} aria-labelledby="sources-title">
                   <div className={styles.panelHeading}>
                     <div>
-                      <p className={styles.kicker}>Inbound paths</p>
+                      <p className={styles.kicker}>{tx("Inbound paths", "유입 경로")}</p>
                       <h2 id="sources-title">{tx("Inbound paths", "유입 경로")}</h2>
                     </div>
                     <p>{tx("Classifies session sources using share IDs, UTM parameters, and referrer domains.", "공유 식별자, UTM, 리퍼러 도메인 순으로 세션 시작 출처를 분류합니다.")}</p>
@@ -386,7 +386,7 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
                 <section className={styles.panel} aria-labelledby="outbound-title">
                   <div className={styles.panelHeading}>
                     <div>
-                      <p className={styles.kicker}>Outbound links</p>
+                      <p className={styles.kicker}>{tx("Outbound links", "외부 링크")}</p>
                       <h2 id="outbound-title">{tx("Outbound links", "외부로 나간 링크")}</h2>
                     </div>
                     <p>{tx("Separates first-click sessions from total clicks, including repeats.", "첫 클릭 세션과 반복 클릭을 포함한 전체 클릭을 구분합니다.")}</p>
