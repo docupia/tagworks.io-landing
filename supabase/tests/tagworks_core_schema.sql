@@ -14,9 +14,12 @@ begin
     values
       ('analytics_events'),
       ('analytics_sessions'),
+      ('billing_accounts'),
       ('page_links'),
       ('pages'),
       ('page_versions'),
+      ('paypal_payments'),
+      ('paypal_webhook_events'),
       ('upload_reservations')
   ) as expected(name)
   where to_regclass('public.' || expected.name) is null;
@@ -93,6 +96,9 @@ begin
     'pages',
     'page_versions',
     'upload_reservations',
+    'billing_accounts',
+    'paypal_payments',
+    'paypal_webhook_events',
     'page_links',
     'analytics_sessions',
     'analytics_events'
@@ -123,8 +129,22 @@ begin
     or has_table_privilege('authenticated', 'public.page_links', 'SELECT,INSERT,UPDATE,DELETE')
     or has_table_privilege('authenticated', 'public.analytics_sessions', 'SELECT,INSERT,UPDATE,DELETE')
     or has_table_privilege('authenticated', 'public.analytics_events', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('authenticated', 'public.billing_accounts', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('authenticated', 'public.paypal_payments', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('authenticated', 'public.paypal_webhook_events', 'SELECT,INSERT,UPDATE,DELETE')
     or has_table_privilege('authenticated', 'public.upload_reservations', 'SELECT') then
     raise exception 'anon must not have direct SELECT access to application tables';
+  end if;
+
+  if has_table_privilege('tagworks_ingest', 'public.billing_accounts', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('tagworks_ingest', 'public.paypal_payments', 'SELECT,INSERT,UPDATE,DELETE')
+    or has_table_privilege('tagworks_ingest', 'public.paypal_webhook_events', 'SELECT,INSERT,UPDATE,DELETE')
+    or not has_function_privilege(
+      'tagworks_ingest',
+      'public.reserve_upload_quota(uuid,uuid,text)',
+      'EXECUTE'
+    ) then
+    raise exception 'billing data must be available only through the restricted function surface';
   end if;
 
   if has_table_privilege('authenticated', 'public.pages', 'INSERT,UPDATE,DELETE')

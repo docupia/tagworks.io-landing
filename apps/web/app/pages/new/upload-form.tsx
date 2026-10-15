@@ -21,7 +21,7 @@ const ENGLISH_WARNINGS: Record<string, string> = {
   "HTTP 외부 리소스는 HTTPS 공개 페이지에서 브라우저가 차단할 수 있습니다.": "Browsers may block HTTP resources on the HTTPS public page.",
 };
 
-export function UploadForm({ locale }: { locale: Locale }) {
+export function UploadForm({ locale, disabled = false }: { locale: Locale; disabled?: boolean }) {
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -167,7 +167,7 @@ export function UploadForm({ locale }: { locale: Locale }) {
         </div>
       ) : null}
 
-      <button className={styles.submit} type="submit" disabled={pending}>
+      <button className={styles.submit} type="submit" disabled={pending || disabled}>
         {pending ? tx("Checking and publishing…", "안전 검사 후 게시 중…") : tx("Upload and create permanent link", "업로드하고 고정 링크 만들기")}
       </button>
     </form>

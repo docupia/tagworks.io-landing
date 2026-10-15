@@ -34,7 +34,9 @@ npm run dev:publisher
 실제 값은 Git에 커밋하지 말고 각 앱의 `.env.local`에 둡니다. 웹 앱에는
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
 `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_PUBLISHER_URL`, `SUPABASE_DATABASE_URL`,
-`SUPABASE_ANALYTICS_DATABASE_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`이
+`SUPABASE_ANALYTICS_DATABASE_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`,
+`PAYPAL_ENV`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
+`PAYPAL_MONTHLY_PLAN_ID`, `PAYPAL_WEBHOOK_ID`가
 필요합니다. 퍼블리셔에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
 `TAGWORKS_ANALYTICS_EVENTS_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`만 필요합니다.
 퍼블리셔는 PostgreSQL에 직접 접속하지 않습니다. 공개 페이지에 삽입된 스크립트는
@@ -55,6 +57,8 @@ psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
 psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/migrations/202609230003_upload_reservations.sql
 psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f supabase/migrations/202610150001_billing_and_upload_quotas.sql
+psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/tests/tagworks_core_schema.sql
 psql "$SUPABASE_ADMIN_DATABASE_URL" -c '\password tagworks_ingest'
 ```
@@ -63,6 +67,12 @@ psql "$SUPABASE_ADMIN_DATABASE_URL" -c '\password tagworks_ingest'
 사용합니다. `\password`가 비밀번호를 가려서 두 번 입력받으므로 셸 기록에 남지 않습니다.
 설정 후 `tagworks_ingest` 역할의 Transaction pooler URL만 웹 앱에 넣고, 관리자 URL은
 Vercel에 절대 등록하지 않습니다.
+
+PayPal 비밀키는 웹 앱의 서버 환경 변수에만 저장합니다. 월간 플랜은 PayPal의
+상품/구독 플랜 ID를 `PAYPAL_MONTHLY_PLAN_ID`에 넣고, 운영 웹훅 주소는
+`https://tagworks.io/api/paypal/webhook`으로 등록한 뒤 반환된 ID를
+`PAYPAL_WEBHOOK_ID`에 설정합니다. 무료 계정은 총 1회, 월간 플랜은 결제월마다
+50회, 선불 팩은 결제 1회당 만료 없는 300회의 업로드 권한을 받습니다.
 
 Supabase Auth의 Site URL과 Redirect URLs에는 로컬 웹 주소와 실제 Vercel 웹 주소의
 `/auth/callback`을 등록해야 이메일 확인 후 대시보드로 돌아옵니다.

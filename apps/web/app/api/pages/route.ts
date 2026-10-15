@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
+import { releaseUploadQuota, reserveUploadQuota } from "@/lib/billing";
 import { getDatabase } from "@/lib/database";
 import { getPublisherUrl } from "@/lib/env";
 import {
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
   const tr = (english: string, korean: string) => text(locale, english, korean);
   let objectPath: string | null = null;
   let reservationId: string | null = null;
+  let ownerId: string | null = null;
   let storageClient: Awaited<ReturnType<typeof createClient>> | null = null;
 
   try {
@@ -62,6 +64,7 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) throw new RequestError(tr("Log in to continue.", "로그인이 필요합니다."), 401);
+    ownerId = user.id;
 
     const formData = await request.formData();
     const fields = validateUploadFields(formData);
@@ -109,38 +112,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    await sql.begin(async (transaction) => {
-      // postgres.js currently loses the callable signature from TransactionSql
-      // under TypeScript 5.9; the runtime object is the same tagged SQL client.
-      const tx = transaction as unknown as typeof sql;
-
-      await tx`select pg_advisory_xact_lock(hashtextextended(${user.id}, 0))`;
-      await tx`
-        delete from public.upload_reservations
-        where owner_id = ${user.id}::uuid
-          and consumed_at is not null
-          and created_at < now() - interval '24 hours'
-      `;
-      const [rate] = await tx<{ count: number }[]>`
-        select count(id)::int as count
-        from public.upload_reservations
-        where owner_id = ${user.id}::uuid
-          and created_at > now() - interval '1 hour'
-      `;
-      if ((rate?.count ?? 0) >= 20) {
-        throw new RequestError(tr("You can publish up to 20 pages per hour.", "한 시간에 최대 20개까지 게시할 수 있습니다."), 429);
-      }
-
-      await tx`
-        insert into public.upload_reservations (
-          id, owner_id, object_path
-        ) values (
-          ${reservationId}::uuid,
-          ${user.id}::uuid,
-          ${objectPath}
-        )
-      `;
-    });
+    const quota = await reserveUploadQuota(user.id, reservationId, objectPath);
+    if (!quota.allowed) {
+      throw new RequestError(
+        tr(
+          "Your upload allowance is used up. Choose a plan to continue.",
+          "업로드 이용량을 모두 사용했습니다. 계속하려면 플랜을 선택해 주세요.",
+        ),
+        402,
+      );
+    }
 
     const bytes = new Uint8Array(await file.arrayBuffer());
     let source: string;
@@ -236,12 +217,18 @@ export async function POST(request: NextRequest) {
         where id = ${pageId}::uuid
           and owner_id = ${user.id}::uuid
       `;
-      await tx`
-        update public.upload_reservations
-        set consumed_at = now()
-        where id = ${reservationId}::uuid
-          and owner_id = ${user.id}::uuid
+      const [consumption] = await tx<{ consumed: boolean }[]>`
+        select public.consume_upload_quota(
+          ${user.id}::uuid,
+          ${reservationId}::uuid
+        ) as consumed
       `;
+      if (!consumption?.consumed) {
+        throw new RequestError(
+          tr("The upload took too long. Please try again.", "업로드 시간이 초과되었습니다. 다시 시도해 주세요."),
+          409,
+        );
+      }
     });
 
     return NextResponse.json(
@@ -256,16 +243,11 @@ export async function POST(request: NextRequest) {
     if (objectPath && storageClient) {
       await storageClient.storage.from("page-originals").remove([objectPath]);
     }
-    if (reservationId) {
+    if (reservationId && ownerId) {
       try {
-        const sql = getDatabase();
-        await sql`
-          update public.upload_reservations
-          set consumed_at = coalesce(consumed_at, now())
-          where id = ${reservationId}::uuid
-        `;
+        await releaseUploadQuota(ownerId, reservationId);
       } catch {
-        // The reservation expires automatically; preserve the original error.
+        // The reservation expires and is released by the next quota check.
       }
     }
     return errorResponse(reason, locale);

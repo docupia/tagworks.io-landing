@@ -12,26 +12,33 @@ const field = (formData: FormData, name: string) => {
 };
 
 const withMessage = (path: string, key: "error" | "message", message: string) =>
-  `${path}?${key}=${encodeURIComponent(message)}`;
+  `${path}${path.includes("?") ? "&" : "?"}${key}=${encodeURIComponent(message)}`;
+
+const safeNext = (formData: FormData) => {
+  const next = field(formData, "next");
+  return next === "/billing" ? next : "/dashboard";
+};
 
 export async function signIn(formData: FormData) {
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const email = field(formData, "email").toLowerCase();
   const password = field(formData, "password");
+  const next = safeNext(formData);
+  const loginPath = next === "/dashboard" ? "/login" : `/login?next=${encodeURIComponent(next)}`;
 
   if (!email || !password) {
-    redirect(withMessage("/login", "error", tx("Enter your email and password.", "이메일과 비밀번호를 입력해 주세요.")));
+    redirect(withMessage(loginPath, "error", tx("Enter your email and password.", "이메일과 비밀번호를 입력해 주세요.")));
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    redirect(withMessage("/login", "error", tx("Check your email and password.", "로그인 정보를 확인해 주세요.")));
+    redirect(withMessage(loginPath, "error", tx("Check your email and password.", "로그인 정보를 확인해 주세요.")));
   }
 
-  redirect("/dashboard");
+  redirect(next);
 }
 
 export async function signUp(formData: FormData) {

@@ -20,6 +20,26 @@ export const getSiteUrl = () =>
 export const getPublisherUrl = () =>
   (process.env.NEXT_PUBLIC_PUBLISHER_URL ?? "http://localhost:3001").replace(/\/$/, "");
 
+export const getPayPalEnv = () => {
+  const value = required("PAYPAL_ENV", process.env.PAYPAL_ENV);
+  if (value !== "sandbox" && value !== "live") {
+    throw new Error("PAYPAL_ENV must be either sandbox or live.");
+  }
+  return value;
+};
+
+export const getPayPalApiConfig = () => ({
+  environment: getPayPalEnv(),
+  clientId: required("PAYPAL_CLIENT_ID", process.env.PAYPAL_CLIENT_ID),
+  clientSecret: required("PAYPAL_CLIENT_SECRET", process.env.PAYPAL_CLIENT_SECRET),
+});
+
+export const getPayPalMonthlyPlanId = () =>
+  required("PAYPAL_MONTHLY_PLAN_ID", process.env.PAYPAL_MONTHLY_PLAN_ID);
+
+export const getPayPalWebhookId = () =>
+  required("PAYPAL_WEBHOOK_ID", process.env.PAYPAL_WEBHOOK_ID);
+
 export const getDatabaseUrl = () => {
   const value = required("SUPABASE_DATABASE_URL", process.env.SUPABASE_DATABASE_URL);
   const parsed = new URL(value);

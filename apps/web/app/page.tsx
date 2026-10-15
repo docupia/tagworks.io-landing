@@ -334,7 +334,7 @@ export default async function HomePage() {
           </a>
           <p>{tx("The simplest way to turn HTML into a public link.", "HTML을 공개 링크로 바꾸는 가장 단순한 방법.")}</p>
           <LanguageSwitcher locale={locale} />
-          <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><a href="#faq">FAQ</a></div>
+          <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link href="/pricing">{tx("Pricing", "요금제")}</Link><a href="#faq">FAQ</a></div>
           <span>© {new Date().getFullYear()} TagWorks</span>
         </div>
       </footer>

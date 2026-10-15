@@ -14,16 +14,16 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: text(locale, "Log in", "로그인") };
 }
 
-type SearchParams = Promise<{ error?: string; message?: string }>;
+type SearchParams = Promise<{ error?: string; message?: string; next?: string }>;
 
 export default async function LoginPage({ searchParams }: { searchParams: SearchParams }) {
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (data.user) redirect("/dashboard");
-
   const params = await searchParams;
+  const next = params.next === "/billing" ? "/billing" : "/dashboard";
+  const { data } = await supabase.auth.getUser();
+  if (data.user) redirect(next);
 
   return (
     <main className={styles.page}>
@@ -41,6 +41,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
         {params.message ? <p className={styles.notice}>{params.message}</p> : null}
         {params.error ? <p className={styles.error}>{params.error}</p> : null}
         <form className={styles.form} action={signIn}>
+          <input name="next" type="hidden" value={next} />
           <label className={styles.field}>
             {tx("Email", "이메일")}
             <input name="email" type="email" autoComplete="email" required maxLength={254} />

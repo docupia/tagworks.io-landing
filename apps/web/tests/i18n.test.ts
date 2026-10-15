@@ -31,3 +31,10 @@ test("localizes dynamic ranges and provides locale-aware number tags", () => {
   assert.equal(LOCALE_TAGS.de, "de-DE");
   assert.equal(LOCALE_TAGS.zh, "zh-CN");
 });
+
+test("localizes pricing and dynamic upload allowance copy", () => {
+  assert.equal(text("ja", "Pricing", "요금제"), "料金");
+  assert.equal(text("es", "3 uploads available", "3개 업로드 가능"), "3 cargas disponibles");
+  assert.equal(text("de", "No expiration date", "사용 기간 제한 없음"), "Kein Ablaufdatum");
+  assert.equal(text("zh", "Subscribe with PayPal", "PayPal로 구독"), "使用 PayPal 订阅");
+});

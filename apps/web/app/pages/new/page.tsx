@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import styles from "@/app/dashboard/dashboard.module.css";
 import { LanguageSwitcher } from "@/app/components/language-switcher";
 import { UploadForm } from "./upload-form";
+import { getUploadEntitlement } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
 import { text } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
@@ -21,6 +22,7 @@ export default async function NewPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const entitlement = await getUploadEntitlement(user.id);
 
   return (
     <div className={styles.shell}>
@@ -45,8 +47,17 @@ export default async function NewPage() {
           <p className={styles.subtitle}>
             {tx("Your original is stored privately and served from an isolated public URL.", "원본은 비공개로 보관하고, 별도 주소의 격리된 환경에서 공개합니다.")}
           </p>
-          <div aria-hidden="true" style={{ height: 28 }} />
-          <UploadForm locale={locale} />
+          <div className={styles.quotaBanner}>
+            <div>
+              <strong>{tx("Upload allowance", "업로드 이용량")}</strong>
+              <span>{tx(`${entitlement.totalRemaining} uploads available`, `${entitlement.totalRemaining}개 업로드 가능`)}</span>
+            </div>
+            <Link href="/billing">{entitlement.canUpload ? tx("View plan", "플랜 보기") : tx("Choose a plan", "플랜 선택")}</Link>
+          </div>
+          {!entitlement.canUpload ? (
+            <p className={styles.error}>{tx("Your upload allowance is used up. Choose a plan to publish more pages.", "업로드 이용량을 모두 사용했습니다. 더 게시하려면 플랜을 선택해 주세요.")}</p>
+          ) : null}
+          <UploadForm locale={locale} disabled={!entitlement.canUpload} />
         </section>
       </main>
     </div>

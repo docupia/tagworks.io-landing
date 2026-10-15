@@ -77,6 +77,7 @@ export default async function DashboardPage() {
         </Link>
         <div className={styles.topActions}>
           <LanguageSwitcher locale={locale} />
+          <Link className={styles.planLink} href="/billing">{tx("Plans", "요금제")}</Link>
           <span className={styles.account}>{user.email}</span>
           <form action="/auth/signout" method="post">
             <button className={styles.signout} type="submit">{tx("Log out", "로그아웃")}</button>

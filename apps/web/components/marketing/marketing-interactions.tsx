@@ -111,6 +111,7 @@ export function MarketingHeader({ locale }: { locale: Locale }) {
           <a href="#workflow">{tx("How it works", "작동 방식")}</a>
           <a href="#product-view">{tx("Product", "제품 화면")}</a>
           <a href="#principles">{tx("What we support", "지원 범위")}</a>
+          <Link href="/pricing">{tx("Pricing", "요금제")}</Link>
         </nav>
 
         <div className="header-actions">
