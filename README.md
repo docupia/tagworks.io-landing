@@ -59,6 +59,8 @@ psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
 psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/migrations/202610150001_billing_and_upload_quotas.sql
 psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f supabase/migrations/202610150002_super_admin_unlimited_uploads.sql
+psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f supabase/tests/tagworks_core_schema.sql
 psql "$SUPABASE_ADMIN_DATABASE_URL" -c '\password tagworks_ingest'
 ```

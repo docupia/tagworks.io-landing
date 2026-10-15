@@ -130,6 +130,33 @@ begin
   if not quota.allowed or quota.quota_source <> 'monthly' then
     raise exception 'active monthly allowance must be consumed before prepaid credits';
   end if;
+
+  update public.billing_accounts
+  set is_super_admin = true,
+      monthly_uploads_used = 50,
+      prepaid_uploads_remaining = 0
+  where owner_id = '71000000-0000-4000-8000-000000000001'::uuid;
+
+  select * into entitlement
+  from public.get_upload_entitlement('71000000-0000-4000-8000-000000000001'::uuid);
+  if entitlement.tier <> 'admin' or not entitlement.can_upload then
+    raise exception 'super administrator must have unlimited upload access';
+  end if;
+
+  select * into quota from public.reserve_upload_quota(
+    '71000000-0000-4000-8000-000000000001'::uuid,
+    '72000000-0000-4000-8000-000000000005'::uuid,
+    '71000000-0000-4000-8000-000000000001/page/version/admin.html'
+  );
+  if not quota.allowed or quota.quota_source <> 'admin' then
+    raise exception 'super administrator upload must be reserved without a paid balance';
+  end if;
+
+  select * into entitlement
+  from public.get_upload_entitlement('71000000-0000-4000-8000-000000000001'::uuid);
+  if entitlement.tier <> 'admin' or entitlement.total_remaining <> 2147483647 then
+    raise exception 'super administrator allowance must remain unlimited after a reservation';
+  end if;
 end;
 $$;
 

@@ -1,7 +1,7 @@
 import { getDatabase } from "@/lib/database";
 
 export type UploadEntitlement = {
-  tier: "free" | "monthly" | "prepaid";
+  tier: "free" | "monthly" | "prepaid" | "admin";
   paidCustomer: boolean;
   subscriptionStatus: string | null;
   subscriptionPeriodEnd: string | null;

@@ -23,6 +23,7 @@ export default async function PricingPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const entitlement = user ? await getUploadEntitlement(user.id) : null;
   const activeMonthly = entitlement?.tier === "monthly";
+  const isSuperAdmin = entitlement?.tier === "admin";
 
   return (
     <div className={styles.page}>
@@ -45,6 +46,7 @@ export default async function PricingPage() {
         </div>
 
         {activeMonthly ? <div className={styles.notice}>{tx("Your $20 monthly plan is active.", "$20 월간 플랜을 이용 중입니다.")}</div> : null}
+        {isSuperAdmin ? <div className={styles.notice}>{tx("Super administrator access is active with unlimited uploads.", "최고관리자 권한으로 무제한 업로드를 이용 중입니다.")}</div> : null}
 
         <section className={styles.plans} aria-label={tx("TagWorks plans", "TagWorks 요금제")}>
           <article className={styles.plan}>
@@ -71,7 +73,9 @@ export default async function PricingPage() {
               <li>{tx("Renews monthly until canceled", "해지 전까지 매월 자동 결제")}</li>
               <li>{tx("Unused monthly uploads do not roll over", "남은 월간 업로드는 이월되지 않음")}</li>
             </ul>
-            {activeMonthly ? (
+            {isSuperAdmin ? (
+              <Link className={`${styles.action} ${styles.secondary}`} href="/pages/new">{tx("Upload HTML", "HTML 업로드")}</Link>
+            ) : activeMonthly ? (
               <Link className={`${styles.action} ${styles.secondary}`} href="/billing">{tx("Current plan", "현재 플랜")}</Link>
             ) : user ? (
               <PayPalCheckoutButton plan="monthly" locale={locale} label={tx("Subscribe for $20", "$20 월간 구독")} className={styles.paypalButton} />
@@ -89,7 +93,9 @@ export default async function PricingPage() {
               <li>{tx("No expiration date", "사용 기간 제한 없음")}</li>
               <li>{tx("Additional packs add another 300 uploads", "추가 구매 시 300개씩 누적")}</li>
             </ul>
-            {user ? (
+            {isSuperAdmin ? (
+              <Link className={`${styles.action} ${styles.secondary}`} href="/pages/new">{tx("Upload HTML", "HTML 업로드")}</Link>
+            ) : user ? (
               <PayPalCheckoutButton plan="prepaid" locale={locale} label={tx("Buy 300 uploads", "업로드 300개 구매")} className={styles.paypalButton} />
             ) : (
               <Link className={styles.action} href="/login?next=/billing">{tx("Log in to buy", "로그인하고 구매")}</Link>

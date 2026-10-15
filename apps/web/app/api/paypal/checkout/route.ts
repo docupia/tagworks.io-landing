@@ -33,8 +33,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const entitlement = await getUploadEntitlement(user.id);
+    if (entitlement.tier === "admin") {
+      return NextResponse.json(
+        { error: tx("Your administrator account already has unlimited uploads.", "관리자 계정에는 이미 무제한 업로드 권한이 있습니다.") },
+        { status: 409 },
+      );
+    }
+
     if (body.plan === "monthly") {
-      const entitlement = await getUploadEntitlement(user.id);
       if (
         entitlement.subscriptionStatus === "ACTIVE"
         && entitlement.subscriptionPeriodEnd

@@ -33,6 +33,7 @@ export default async function BillingPage({
   if (!user) redirect("/login");
 
   const entitlement = await getUploadEntitlement(user.id);
+  const isSuperAdmin = entitlement.tier === "admin";
   const { payment } = await searchParams;
   const message = payment && messages[payment] ? messages[payment] : null;
   const periodEnd = entitlement.subscriptionPeriodEnd
@@ -60,8 +61,8 @@ export default async function BillingPage({
         {message ? <div className={styles.notice}>{tx(message[0], message[1])}</div> : null}
 
         <section className={styles.usage} aria-label={tx("Current allowance", "현재 업로드 권한")}>
-          <article><span>{tx("Current plan", "현재 플랜")}</span><strong>{entitlement.tier === "monthly" ? tx("Pro monthly", "프로 월간") : entitlement.paidCustomer ? tx("Prepaid pack", "선불 팩") : tx("Free", "무료")}</strong></article>
-          <article><span>{tx("Uploads available now", "현재 업로드 가능")}</span><strong>{entitlement.totalRemaining.toLocaleString(LOCALE_TAGS[locale])}</strong></article>
+          <article><span>{tx("Current plan", "현재 플랜")}</span><strong>{isSuperAdmin ? tx("Super administrator", "최고관리자") : entitlement.tier === "monthly" ? tx("Pro monthly", "프로 월간") : entitlement.paidCustomer ? tx("Prepaid pack", "선불 팩") : tx("Free", "무료")}</strong></article>
+          <article><span>{tx("Uploads available now", "현재 업로드 가능")}</span><strong>{isSuperAdmin ? tx("Unlimited", "무제한") : entitlement.totalRemaining.toLocaleString(LOCALE_TAGS[locale])}</strong></article>
           <article><span>{tx("Prepaid uploads remaining", "남은 선불 업로드")}</span><strong>{entitlement.prepaidRemaining.toLocaleString(LOCALE_TAGS[locale])}</strong></article>
         </section>
 
@@ -72,6 +73,12 @@ export default async function BillingPage({
           </div>
         ) : null}
 
+        {isSuperAdmin ? (
+          <div className={styles.notice}>
+            {tx("Super administrator access is active. HTML uploads do not consume an allowance.", "최고관리자 권한이 활성화되어 있습니다. HTML 업로드 시 이용량이 차감되지 않습니다.")} {" "}
+            <Link href="/pages/new">{tx("Upload HTML", "HTML 업로드")}</Link>
+          </div>
+        ) : (
         <section className={styles.plans} style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", maxWidth: 780, margin: "0 auto" }}>
           <article className={`${styles.plan} ${styles.featured}`} style={{ minHeight: 360 }}>
             <p className={styles.planName}>{tx("Pro monthly", "프로 월간")}</p>
@@ -86,6 +93,7 @@ export default async function BillingPage({
             <PayPalCheckoutButton plan="prepaid" locale={locale} label={tx("Buy with PayPal", "PayPal로 구매")} className={styles.paypalButton} />
           </article>
         </section>
+        )}
       </main>
     </div>
   );

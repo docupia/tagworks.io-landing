@@ -50,7 +50,11 @@ export default async function NewPage() {
           <div className={styles.quotaBanner}>
             <div>
               <strong>{tx("Upload allowance", "업로드 이용량")}</strong>
-              <span>{tx(`${entitlement.totalRemaining} uploads available`, `${entitlement.totalRemaining}개 업로드 가능`)}</span>
+              <span>
+                {entitlement.tier === "admin"
+                  ? tx("Unlimited uploads", "무제한 업로드")
+                  : tx(`${entitlement.totalRemaining} uploads available`, `${entitlement.totalRemaining}개 업로드 가능`)}
+              </span>
             </div>
             <Link href="/billing">{entitlement.canUpload ? tx("View plan", "플랜 보기") : tx("Choose a plan", "플랜 선택")}</Link>
           </div>
