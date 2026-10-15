@@ -4,15 +4,18 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import styles from "@/app/dashboard/dashboard.module.css";
+import { text, type Locale } from "@/lib/i18n";
 
 type PageQrCodeProps = {
   compact?: boolean;
   fileName: string;
   title: string;
   url: string;
+  locale: Locale;
 };
 
-export function PageQrCode({ compact = false, fileName, title, url }: PageQrCodeProps) {
+export function PageQrCode({ compact = false, fileName, title, url, locale }: PageQrCodeProps) {
+  const tx = (english: string, korean: string) => text(locale, english, korean);
   const [dataUrl, setDataUrl] = useState("");
   const [failed, setFailed] = useState(false);
   const size = compact ? 104 : 168;
@@ -49,22 +52,22 @@ export function PageQrCode({ compact = false, fileName, title, url }: PageQrCode
           width={size}
           height={size}
           unoptimized
-          alt={`${title} 페이지로 연결되는 QR 코드`}
+          alt={tx(`QR code for ${title}`, `${title} 페이지로 연결되는 QR 코드`)}
         />
       ) : (
         <div
           className={styles.qrPlaceholder}
           style={{ width: size, height: size }}
-          aria-label={failed ? "QR 코드를 만들지 못했습니다." : "QR 코드 생성 중"}
+          aria-label={failed ? tx("Could not create the QR code.", "QR 코드를 만들지 못했습니다.") : tx("Creating QR code", "QR 코드 생성 중")}
         >
-          {failed ? "QR 오류" : "QR 생성 중"}
+          {failed ? tx("QR error", "QR 오류") : tx("Creating QR…", "QR 생성 중")}
         </div>
       )}
       <div className={styles.qrMeta}>
-        <span>{compact ? "페이지 QR" : "휴대폰 카메라로 바로 열기"}</span>
+        <span>{compact ? tx("Page QR", "페이지 QR") : tx("Open with your phone camera", "휴대폰 카메라로 바로 열기")}</span>
         {dataUrl ? (
           <a href={dataUrl} download={fileName}>
-            PNG 다운로드
+            {tx("Download PNG", "PNG 다운로드")}
           </a>
         ) : null}
       </div>

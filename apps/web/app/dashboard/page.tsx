@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import styles from "./dashboard.module.css";
+import { LanguageSwitcher } from "@/app/components/language-switcher";
 import { PageQrCode } from "@/app/components/page-qr-code";
 import { getPublisherUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { text } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 
-export const metadata: Metadata = { title: "내 페이지" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return { title: text(locale, "My pages", "내 페이지") };
+}
 
 type PageRow = {
   id: string;
@@ -25,18 +31,19 @@ type PageAnalyticsSummary = {
   total_clicks: number;
 };
 
-const date = new Intl.DateTimeFormat("ko-KR", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-});
-
-const displayCount = (value: unknown) => {
+const displayCount = (value: unknown, locale: "en" | "ko") => {
   const count = Number(value);
-  return Number.isFinite(count) && count > 0 ? Math.floor(count).toLocaleString("ko-KR") : "0";
+  return Number.isFinite(count) && count > 0 ? Math.floor(count).toLocaleString(locale === "ko" ? "ko-KR" : "en-US") : "0";
 };
 
 export default async function DashboardPage() {
+  const locale = await getLocale();
+  const tx = (english: string, korean: string) => text(locale, english, korean);
+  const date = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
   const supabase = await createClient();
   const {
     data: { user },
@@ -69,9 +76,10 @@ export default async function DashboardPage() {
           TagWorks
         </Link>
         <div className={styles.topActions}>
+          <LanguageSwitcher locale={locale} />
           <span className={styles.account}>{user.email}</span>
           <form action="/auth/signout" method="post">
-            <button className={styles.signout} type="submit">로그아웃</button>
+            <button className={styles.signout} type="submit">{tx("Log out", "로그아웃")}</button>
           </form>
         </div>
       </header>
@@ -79,14 +87,14 @@ export default async function DashboardPage() {
         <div className={styles.headingRow}>
           <div>
             <p className={styles.eyebrow}>My pages</p>
-            <h1 className={styles.title}>내 페이지</h1>
-            <p className={styles.subtitle}>업로드한 HTML과 고정 링크를 한곳에서 확인하세요.</p>
+            <h1 className={styles.title}>{tx("My pages", "내 페이지")}</h1>
+            <p className={styles.subtitle}>{tx("Manage your uploaded HTML and permanent links in one place.", "업로드한 HTML과 고정 링크를 한곳에서 확인하세요.")}</p>
           </div>
-          <Link className={styles.primaryButton} href="/pages/new">새 HTML 업로드</Link>
+          <Link className={styles.primaryButton} href="/pages/new">{tx("Upload new HTML", "새 HTML 업로드")}</Link>
         </div>
 
         {error ? (
-          <p className={styles.error}>페이지 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</p>
+          <p className={styles.error}>{tx("We could not load your pages. Please try again shortly.", "페이지 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.")}</p>
         ) : pages.length ? (
           <div className={styles.grid}>
             {pages.map((page) => {
@@ -104,23 +112,23 @@ export default async function DashboardPage() {
                     {page.description ? <p className={styles.description}>{page.description}</p> : null}
                     <div className={styles.meta}>
                       <span className={styles.badge}>
-                        {page.status === "published" ? "게시 중" : "비공개"}
+                        {page.status === "published" ? tx("Published", "게시 중") : tx("Private", "비공개")}
                       </span>
-                      <span>{date.format(new Date(page.created_at))} 생성</span>
+                      <span>{tx(`Created ${date.format(new Date(page.created_at))}`, `${date.format(new Date(page.created_at))} 생성`)}</span>
                       <span>/{page.slug}</span>
                     </div>
-                    <div className={styles.miniAnalytics} aria-label="최근 7일 분석 요약">
-                      <span>최근 7일</span>
+                    <div className={styles.miniAnalytics} aria-label={tx("Analytics summary for the last 7 days", "최근 7일 분석 요약")}>
+                      <span>{tx("Last 7 days", "최근 7일")}</span>
                       {summary ? (
                         <>
-                          <strong>{displayCount(summary.sessions)} 방문</strong>
+                          <strong>{displayCount(summary.sessions, locale)} {tx("visits", "방문")}</strong>
                           <i aria-hidden="true" />
-                          <strong>{displayCount(summary.click_sessions)} 외부 클릭 세션</strong>
+                          <strong>{displayCount(summary.click_sessions, locale)} {tx("outbound click sessions", "외부 클릭 세션")}</strong>
                           <i aria-hidden="true" />
-                          <strong>{displayCount(summary.total_clicks)}회 클릭</strong>
+                          <strong>{tx(`${displayCount(summary.total_clicks, locale)} clicks`, `${displayCount(summary.total_clicks, locale)}회 클릭`)}</strong>
                         </>
                       ) : (
-                        <strong>통계 —</strong>
+                        <strong>{tx("Stats —", "통계 —")}</strong>
                       )}
                     </div>
                   </div>
@@ -131,15 +139,16 @@ export default async function DashboardPage() {
                         fileName={`tagworks-${page.slug}-qr.png`}
                         title={page.title}
                         url={href}
+                        locale={locale}
                       />
                     ) : null}
                     <div className={styles.cardActions}>
                       <Link className={styles.analyticsButton} href={`/pages/${page.id}/analytics`}>
-                        분석 보기
+                        {tx("View analytics", "분석 보기")}
                       </Link>
                       {page.status === "published" ? (
                         <a className={styles.secondaryButton} href={href} target="_blank" rel="noreferrer">
-                          고정 링크 열기
+                          {tx("Open permanent link", "고정 링크 열기")}
                         </a>
                       ) : null}
                     </div>
@@ -151,9 +160,9 @@ export default async function DashboardPage() {
         ) : (
           <section className={styles.empty}>
             <span className={styles.emptyIcon} aria-hidden="true">↗</span>
-            <h2>아직 업로드한 페이지가 없어요.</h2>
-            <p>첫 HTML 파일을 올리면 공유 가능한 고정 링크가 바로 만들어집니다.</p>
-            <Link className={styles.primaryButton} href="/pages/new">첫 페이지 만들기</Link>
+            <h2>{tx("You haven't uploaded a page yet.", "아직 업로드한 페이지가 없어요.")}</h2>
+            <p>{tx("Upload your first HTML file to create a permanent link you can share.", "첫 HTML 파일을 올리면 공유 가능한 고정 링크가 바로 만들어집니다.")}</p>
+            <Link className={styles.primaryButton} href="/pages/new">{tx("Create first page", "첫 페이지 만들기")}</Link>
           </section>
         )}
       </main>

@@ -2381,3 +2381,32 @@ svg {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   [data-reveal] { opacity: 1; transform: none; }
 }
+
+.language-switcher {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgba(79, 91, 62, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 253, 247, 0.78);
+}
+
+.language-switcher button {
+  min-height: 27px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  color: #68705c;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.language-switcher button.is-active {
+  color: #fffdf7;
+  background: #4f5b3e;
+}

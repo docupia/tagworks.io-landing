@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { LanguageSwitcher } from "@/app/components/language-switcher";
+import { text, type Locale } from "@/lib/i18n";
 import { BrandMark } from "./brand-mark";
 
 type SourceKey = "all" | "instagram" | "blog" | "tagworks";
@@ -25,7 +27,7 @@ type AnalyticsRow = {
 
 const analyticsData: Record<SourceKey, AnalyticsRow> = {
   all: {
-    label: "전체 채널 · 300",
+    label: "All channels · 300",
     visits: 300,
     clickSessions: 165,
     rate: 55,
@@ -40,7 +42,7 @@ const analyticsData: Record<SourceKey, AnalyticsRow> = {
     none: 135,
   },
   instagram: {
-    label: "인스타그램 · 120",
+    label: "Instagram · 120",
     visits: 120,
     clickSessions: 72,
     rate: 60,
@@ -55,7 +57,7 @@ const analyticsData: Record<SourceKey, AnalyticsRow> = {
     none: 48,
   },
   blog: {
-    label: "블로그 · 80",
+    label: "Blog · 80",
     visits: 80,
     clickSessions: 40,
     rate: 50,
@@ -70,7 +72,7 @@ const analyticsData: Record<SourceKey, AnalyticsRow> = {
     none: 40,
   },
   tagworks: {
-    label: "태그웍스 탐색 · 60",
+    label: "TagWorks discovery · 60",
     visits: 60,
     clickSessions: 36,
     rate: 60,
@@ -86,10 +88,9 @@ const analyticsData: Record<SourceKey, AnalyticsRow> = {
   },
 };
 
-const format = new Intl.NumberFormat("ko-KR");
-
-export function MarketingHeader() {
+export function MarketingHeader({ locale }: { locale: Locale }) {
   const [scrolled, setScrolled] = useState(false);
+  const tx = (english: string, korean: string) => text(locale, english, korean);
 
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 18);
@@ -101,23 +102,24 @@ export function MarketingHeader() {
   return (
     <header className={`site-header${scrolled ? " is-scrolled" : ""}`}>
       <div className="nav-shell">
-        <Link className="brand" href="/#top" aria-label="TagWorks 홈">
+        <Link className="brand" href="/#top" aria-label={tx("TagWorks home", "TagWorks 홈")}>
           <BrandMark />
           <span>TagWorks</span>
         </Link>
 
-        <nav className="desktop-nav" aria-label="주요 메뉴">
-          <a href="#workflow">작동 방식</a>
-          <a href="#product-view">제품 화면</a>
-          <a href="#principles">지원 범위</a>
+        <nav className="desktop-nav" aria-label={tx("Main navigation", "주요 메뉴")}>
+          <a href="#workflow">{tx("How it works", "작동 방식")}</a>
+          <a href="#product-view">{tx("Product", "제품 화면")}</a>
+          <a href="#principles">{tx("What we support", "지원 범위")}</a>
         </nav>
 
         <div className="header-actions">
+          <LanguageSwitcher locale={locale} />
           <Link className="header-login" href="/login">
-            로그인
+            {tx("Log in", "로그인")}
           </Link>
           <Link className="button button-small button-primary" href="/signup">
-            무료로 시작하기
+            {tx("Start free", "무료로 시작하기")}
             <ArrowIcon />
           </Link>
         </div>
@@ -164,38 +166,40 @@ function railHeight(value: number, values: number[], maxHeight: number) {
   return Math.round(13 + (value / maximum) * maxHeight);
 }
 
-function FlowNode({ tone, label, value }: { tone: string; label: string; value: number }) {
+function FlowNode({ tone, label, value, locale }: { tone: string; label: string; value: number; locale: Locale }) {
   return (
     <div className={`flow-node ${tone}${value === 0 ? " is-zero" : ""}`}>
       <span>{label}</span>
-      <strong>{format.format(value)}</strong>
+      <strong>{value.toLocaleString(locale === "ko" ? "ko-KR" : "en-US")}</strong>
     </div>
   );
 }
 
-export function AnalyticsDemo() {
+export function AnalyticsDemo({ locale }: { locale: Locale }) {
   const [source, setSource] = useState<SourceKey>("all");
+  const tx = (english: string, korean: string) => text(locale, english, korean);
+  const format = new Intl.NumberFormat(locale === "ko" ? "ko-KR" : "en-US");
   const data = analyticsData[source];
   const sourceValues = [data.instagram, data.blog, data.tagworks, data.direct];
   const targetValues = [data.purchase, data.inquiry, data.youtube, data.none];
   const filters: Array<[SourceKey, string]> = [
-    ["all", "전체"],
-    ["instagram", "인스타그램"],
-    ["blog", "블로그"],
-    ["tagworks", "태그웍스"],
+    ["all", tx("All", "전체")],
+    ["instagram", tx("Instagram", "인스타그램")],
+    ["blog", tx("Blog", "블로그")],
+    ["tagworks", tx("TagWorks", "태그웍스")],
   ];
 
   return (
     <div className="analytics-window" data-reveal>
       <div className="analytics-toolbar">
         <div className="analytics-title-group">
-          <span className="sample-badge">분석 화면 예시 · 샘플 데이터</span>
+          <span className="sample-badge">{tx("Analytics preview · Sample data", "분석 화면 예시 · 샘플 데이터")}</span>
           <div>
-            <h3>봄 클래스 모집 페이지</h3>
-            <span>예시 기간 · 최근 7일</span>
+            <h3>{tx("Spring class signup page", "봄 클래스 모집 페이지")}</h3>
+            <span>{tx("Example period · Last 7 days", "예시 기간 · 최근 7일")}</span>
           </div>
         </div>
-        <div className="source-filters" aria-label="유입 출처 필터">
+        <div className="source-filters" aria-label={tx("Inbound source filter", "유입 출처 필터")}>
           {filters.map(([key, label]) => (
             <button
               className={source === key ? "is-active" : undefined}
@@ -212,48 +216,48 @@ export function AnalyticsDemo() {
 
       <div className="metric-grid" aria-live="polite">
         <article className="metric-card metric-visits">
-          <span>방문 세션</span>
+          <span>{tx("Visit sessions", "방문 세션")}</span>
           <strong>{format.format(data.visits)}</strong>
-          <small>선택한 기간에 시작된 세션</small>
+          <small>{tx("Sessions started in this period", "선택한 기간에 시작된 세션")}</small>
         </article>
         <article className="metric-card metric-clicks">
-          <span>외부 클릭 세션</span>
+          <span>{tx("Outbound click sessions", "외부 클릭 세션")}</span>
           <strong>{format.format(data.clickSessions)}</strong>
-          <small>한 번 이상 외부 링크 클릭</small>
+          <small>{tx("Clicked an external link at least once", "한 번 이상 외부 링크 클릭")}</small>
         </article>
         <article className="metric-card metric-rate">
-          <span>외부 클릭 비율</span>
+          <span>{tx("Outbound click rate", "외부 클릭 비율")}</span>
           <strong>
             {data.rate}
             <em>%</em>
           </strong>
-          <small>클릭 세션 ÷ 방문 세션</small>
+          <small>{tx("Click sessions ÷ visit sessions", "클릭 세션 ÷ 방문 세션")}</small>
         </article>
         <article className="metric-card metric-contribution">
-          <span>태그웍스 기여 방문</span>
+          <span>{tx("TagWorks-attributed visits", "태그웍스 기여 방문")}</span>
           <strong>{format.format(data.contribution)}</strong>
-          <small>탐색·태그 목록에서 유입</small>
+          <small>{tx("Arrivals from discovery and tag lists", "탐색·태그 목록에서 유입")}</small>
         </article>
       </div>
 
       <div className="flow-panel">
         <div className="flow-panel-head">
           <div>
-            <h4>출처 → 페이지 → 첫 외부 클릭</h4>
-            <p>세션마다 처음 관측된 외부 클릭 한 번만 연결합니다.</p>
+            <h4>{tx("Source → page → first outbound click", "출처 → 페이지 → 첫 외부 클릭")}</h4>
+            <p>{tx("Each session is connected to its first observed outbound click.", "세션마다 처음 관측된 외부 클릭 한 번만 연결합니다.")}</p>
           </div>
           <span className="updated-chip">
-            <i aria-hidden="true" /> 페이지별 분석 예시
+            <i aria-hidden="true" /> {tx("Per-page analytics example", "페이지별 분석 예시")}
           </span>
         </div>
 
-        <div className="flow-map" aria-label="유입 출처에서 페이지를 거쳐 첫 외부 클릭으로 이어지는 샘플 흐름">
+        <div className="flow-map" aria-label={tx("Sample flow from inbound source through page to first outbound click", "유입 출처에서 페이지를 거쳐 첫 외부 클릭으로 이어지는 샘플 흐름")}>
           <div className="flow-column flow-sources">
-            <span className="flow-column-label">유입 출처</span>
-            <FlowNode tone="peach-node" label="인스타그램" value={data.instagram} />
-            <FlowNode tone="sky-node" label="블로그" value={data.blog} />
-            <FlowNode tone="lilac-node" label="태그웍스 탐색" value={data.tagworks} />
-            <FlowNode tone="khaki-node" label="직접·출처 불명" value={data.direct} />
+            <span className="flow-column-label">{tx("Inbound source", "유입 출처")}</span>
+            <FlowNode tone="peach-node" label={tx("Instagram", "인스타그램")} value={data.instagram} locale={locale} />
+            <FlowNode tone="sky-node" label={tx("Blog", "블로그")} value={data.blog} locale={locale} />
+            <FlowNode tone="lilac-node" label={tx("TagWorks discovery", "태그웍스 탐색")} value={data.tagworks} locale={locale} />
+            <FlowNode tone="khaki-node" label={tx("Direct · unknown", "직접·출처 불명")} value={data.direct} locale={locale} />
           </div>
 
           <div className="flow-rail flow-rail-left" aria-hidden="true">
@@ -267,10 +271,10 @@ export function AnalyticsDemo() {
           </div>
 
           <div className="flow-center">
-            <span className="flow-column-label">공개 페이지</span>
+            <span className="flow-column-label">{tx("Published page", "공개 페이지")}</span>
             <div className="page-node">
-              <span>봄 클래스 모집</span>
-              <strong>{format.format(data.visits)} 세션</strong>
+              <span>{tx("Spring class signup", "봄 클래스 모집")}</span>
+              <strong>{format.format(data.visits)} {tx("sessions", "세션")}</strong>
               <code>/p/spring-class</code>
             </div>
           </div>
@@ -286,45 +290,45 @@ export function AnalyticsDemo() {
           </div>
 
           <div className="flow-column flow-targets">
-            <span className="flow-column-label">첫 외부 클릭 결과</span>
-            <FlowNode tone="sage-node" label="신청하기" value={data.purchase} />
-            <FlowNode tone="peach-node" label="문의하기" value={data.inquiry} />
-            <FlowNode tone="sky-node" label="소개 영상" value={data.youtube} />
-            <FlowNode tone="empty-node" label="외부 클릭 미관측" value={data.none} />
+            <span className="flow-column-label">{tx("First outbound click", "첫 외부 클릭 결과")}</span>
+            <FlowNode tone="sage-node" label={tx("Apply", "신청하기")} value={data.purchase} locale={locale} />
+            <FlowNode tone="peach-node" label={tx("Contact", "문의하기")} value={data.inquiry} locale={locale} />
+            <FlowNode tone="sky-node" label={tx("Intro video", "소개 영상")} value={data.youtube} locale={locale} />
+            <FlowNode tone="empty-node" label={tx("No outbound click", "외부 클릭 미관측")} value={data.none} locale={locale} />
           </div>
         </div>
 
-        <div className="mobile-flow" aria-label="모바일 방문 흐름 요약">
+        <div className="mobile-flow" aria-label={tx("Mobile visit flow summary", "모바일 방문 흐름 요약")}>
           <div className="mobile-flow-stage">
-            <span>선택한 출처</span>
-            <strong>{data.label}</strong>
+            <span>{tx("Selected source", "선택한 출처")}</span>
+            <strong>{locale === "ko" ? data.label.replace("All channels", "전체 채널").replace("Instagram", "인스타그램").replace("Blog", "블로그").replace("TagWorks discovery", "태그웍스 탐색") : data.label}</strong>
           </div>
           <span className="mobile-flow-arrow" aria-hidden="true">↓</span>
           <div className="mobile-flow-stage mobile-page-stage">
-            <span>공개 페이지</span>
-            <strong>봄 클래스 모집</strong>
+            <span>{tx("Published page", "공개 페이지")}</span>
+            <strong>{tx("Spring class signup", "봄 클래스 모집")}</strong>
           </div>
           <span className="mobile-flow-arrow" aria-hidden="true">↓</span>
           <div className="mobile-result-grid">
-            <div><span>신청하기</span><strong>{data.purchase}</strong></div>
-            <div><span>문의하기</span><strong>{data.inquiry}</strong></div>
-            <div><span>소개 영상</span><strong>{data.youtube}</strong></div>
-            <div><span>클릭 미관측</span><strong>{data.none}</strong></div>
+            <div><span>{tx("Apply", "신청하기")}</span><strong>{data.purchase}</strong></div>
+            <div><span>{tx("Contact", "문의하기")}</span><strong>{data.inquiry}</strong></div>
+            <div><span>{tx("Intro video", "소개 영상")}</span><strong>{data.youtube}</strong></div>
+            <div><span>{tx("No click", "클릭 미관측")}</span><strong>{data.none}</strong></div>
           </div>
         </div>
 
         <details className="data-table-details">
-          <summary>같은 데이터를 표로 보기</summary>
+          <summary>{tx("View the same data as a table", "같은 데이터를 표로 보기")}</summary>
           <div className="table-scroll">
             <table>
-              <caption>첫 외부 클릭 결과 샘플 데이터</caption>
-              <thead><tr><th scope="col">결과</th><th scope="col">세션 수</th><th scope="col">비율</th></tr></thead>
+              <caption>{tx("Sample first outbound click data", "첫 외부 클릭 결과 샘플 데이터")}</caption>
+              <thead><tr><th scope="col">{tx("Result", "결과")}</th><th scope="col">{tx("Sessions", "세션 수")}</th><th scope="col">{tx("Rate", "비율")}</th></tr></thead>
               <tbody>
                 {[
-                  ["신청하기", data.purchase],
-                  ["문의하기", data.inquiry],
-                  ["소개 영상", data.youtube],
-                  ["외부 클릭 미관측", data.none],
+                  [tx("Apply", "신청하기"), data.purchase],
+                  [tx("Contact", "문의하기"), data.inquiry],
+                  [tx("Intro video", "소개 영상"), data.youtube],
+                  [tx("No outbound click", "외부 클릭 미관측"), data.none],
                 ].map(([label, value]) => (
                   <tr key={String(label)}>
                     <th scope="row">{label}</th>
@@ -340,7 +344,7 @@ export function AnalyticsDemo() {
 
       <p className="analytics-note">
         <span aria-hidden="true">i</span>
-        위 숫자는 화면 이해를 위한 샘플입니다. 로그인 후 내 페이지에서 실제 방문과 외부 클릭 분석을 확인할 수 있습니다.
+        {tx("These numbers are sample data. Log in to see real visits and outbound click analytics for your pages.", "위 숫자는 화면 이해를 위한 샘플입니다. 로그인 후 내 페이지에서 실제 방문과 외부 클릭 분석을 확인할 수 있습니다.")}
       </p>
     </div>
   );

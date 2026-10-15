@@ -10,6 +10,7 @@ import {
 import { isSameOriginMutation } from "@/lib/request-security";
 import { createClient } from "@/lib/supabase/server";
 import { validateUploadFields } from "@/lib/validation";
+import { LOCALE_COOKIE, normalizeLocale, text, type Locale } from "@/lib/i18n";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,31 +27,33 @@ class RequestError extends Error {
 const allowedTypes = new Set(["", "text/html", "application/xhtml+xml"]);
 const maxMultipartBytes = MAX_HTML_BYTES + 128 * 1024;
 
-function errorResponse(reason: unknown) {
+function errorResponse(reason: unknown, locale: Locale) {
   if (reason instanceof RequestError) {
     return NextResponse.json({ error: reason.message }, { status: reason.status });
   }
 
   console.error("Page publishing failed", reason instanceof Error ? reason.message : "unknown error");
   return NextResponse.json(
-    { error: "페이지를 게시하지 못했습니다. 잠시 후 다시 시도해 주세요." },
+    { error: text(locale, "Could not publish the page. Please try again shortly.", "페이지를 게시하지 못했습니다. 잠시 후 다시 시도해 주세요.") },
     { status: 500 },
   );
 }
 
 export async function POST(request: NextRequest) {
+  const locale = normalizeLocale(request.cookies.get(LOCALE_COOKIE)?.value);
+  const tr = (english: string, korean: string) => text(locale, english, korean);
   let objectPath: string | null = null;
   let reservationId: string | null = null;
   let storageClient: Awaited<ReturnType<typeof createClient>> | null = null;
 
   try {
     if (!isSameOriginMutation(request)) {
-      throw new RequestError("허용되지 않은 요청입니다.", 403);
+      throw new RequestError(tr("This request is not allowed.", "허용되지 않은 요청입니다."), 403);
     }
 
     const contentLength = Number(request.headers.get("content-length") ?? "0");
     if (contentLength > maxMultipartBytes) {
-      throw new RequestError("HTML 파일은 1MiB 이하만 업로드할 수 있습니다.", 413);
+      throw new RequestError(tr("HTML files must be 1 MiB or smaller.", "HTML 파일은 1MiB 이하만 업로드할 수 있습니다."), 413);
     }
 
     const supabase = await createClient();
@@ -58,20 +61,20 @@ export async function POST(request: NextRequest) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) throw new RequestError("로그인이 필요합니다.", 401);
+    if (!user) throw new RequestError(tr("Log in to continue.", "로그인이 필요합니다."), 401);
 
     const formData = await request.formData();
     const fields = validateUploadFields(formData);
     const file = formData.get("file");
 
     if (!(file instanceof File) || file.size === 0) {
-      throw new RequestError("HTML 파일을 선택해 주세요.", 400);
+      throw new RequestError(tr("Choose an HTML file.", "HTML 파일을 선택해 주세요."), 400);
     }
     if (file.size > MAX_HTML_BYTES) {
-      throw new RequestError("HTML 파일은 1MiB 이하만 업로드할 수 있습니다.", 413);
+      throw new RequestError(tr("HTML files must be 1 MiB or smaller.", "HTML 파일은 1MiB 이하만 업로드할 수 있습니다."), 413);
     }
     if (!/\.html?$/i.test(file.name) || !allowedTypes.has(file.type.toLowerCase())) {
-      throw new RequestError(".html 또는 .htm 파일만 업로드할 수 있습니다.", 415);
+      throw new RequestError(tr("Only .html or .htm files can be uploaded.", ".html 또는 .htm 파일만 업로드할 수 있습니다."), 415);
     }
 
     const pageId = randomUUID();
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
           and created_at > now() - interval '1 hour'
       `;
       if ((rate?.count ?? 0) >= 20) {
-        throw new RequestError("한 시간에 최대 20개까지 게시할 수 있습니다.", 429);
+        throw new RequestError(tr("You can publish up to 20 pages per hour.", "한 시간에 최대 20개까지 게시할 수 있습니다."), 429);
       }
 
       await tx`
@@ -144,10 +147,10 @@ export async function POST(request: NextRequest) {
     try {
       source = new TextDecoder("utf-8", { fatal: true }).decode(bytes).replace(/^\uFEFF/, "");
     } catch {
-      throw new RequestError("UTF-8로 저장된 HTML 파일만 업로드할 수 있습니다.", 400);
+      throw new RequestError(tr("Only UTF-8 encoded HTML files can be uploaded.", "UTF-8로 저장된 HTML 파일만 업로드할 수 있습니다."), 400);
     }
     if (source.includes("\0") || !/<[a-z!][^>]*>/i.test(source)) {
-      throw new RequestError("올바른 HTML 문서를 선택해 주세요.", 400);
+      throw new RequestError(tr("Choose a valid HTML document.", "올바른 HTML 문서를 선택해 주세요."), 400);
     }
 
     const published = prepareOriginalPublishedHtml(source, {
@@ -162,7 +165,7 @@ export async function POST(request: NextRequest) {
         contentType: "text/html",
         upsert: false,
       });
-    if (uploadError) throw new RequestError("원본 파일을 안전하게 보관하지 못했습니다.", 503);
+    if (uploadError) throw new RequestError(tr("Could not store the original file safely.", "원본 파일을 안전하게 보관하지 못했습니다."), 503);
 
     const sha256 = createHash("sha256").update(bytes).digest("hex");
     await sql.begin(async (transaction) => {
@@ -265,6 +268,6 @@ export async function POST(request: NextRequest) {
         // The reservation expires automatically; preserve the original error.
       }
     }
-    return errorResponse(reason);
+    return errorResponse(reason, locale);
   }
 }
