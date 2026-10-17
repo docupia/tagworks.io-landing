@@ -3,6 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseBrowserEnv } from "@/lib/env";
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/api/mcp" || request.nextUrl.pathname.startsWith("/api/v1/")) {
+    return NextResponse.next();
+  }
   let response = NextResponse.next({ request });
   const { url, publishableKey } = getSupabaseBrowserEnv();
 

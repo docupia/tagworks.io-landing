@@ -119,3 +119,84 @@ Vercel이 `/vercel/path0/.next`를 찾는 오류는 Root Directory가 저장소 
 모든 환경변수는 Development, Preview, Production에 동일한 Supabase 프로젝트 값을
 사용합니다. 단, 로컬 테스트도 같은 운영 데이터에 반영되므로 테스트 페이지 이름을
 구분해 사용하는 것을 권장합니다.
+
+## Personal API Keys and MCP
+
+Apply `supabase/migrations/202610170001_personal_api_keys.sql` with the local-only
+admin connection before deploying this release. The web runtime continues to use
+only `tagworks_ingest`; no Supabase service-role key is needed.
+
+Sign in and open **Dashboard → API & MCP** (`/dashboard/api-keys`). Create a named
+Personal API Key and copy it immediately. Only its SHA-256 hash is stored. Each
+account can have 10 active keys, and an owner can revoke any of their keys.
+Keys authorize publishing and reading allowance only; they do not authorize
+access to other users' pages, billing changes or key management.
+
+```sh
+curl https://tagworks.io/api/v1/deploy \
+  -H "Authorization: Bearer $TAGWORKS_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Example","html":"<!doctype html><html><head></head><body><h1>Hello</h1></body></html>"}'
+```
+
+The response contains `page`, `publicUrl`, `pathUrl`, `subdomainUrl` and `warnings`.
+`title` is required (1–100 characters), `description` is optional (up to 300), and
+`html` accepts at most 1 MiB of UTF-8. Vercel additionally imposes its platform
+request-body limit, including JSON escaping overhead. Each successful call
+creates a **new** page and consumes one upload. There is no automatic retry or
+idempotency key: after a network timeout, check the dashboard before retrying.
+Limits apply to API and browser uploads equally, including the super-admin
+exemption. Requests are limited to 120 per minute per owner across all keys.
+Errors use HTTP 400/413/415 for invalid bodies, 401 for invalid/revoked keys,
+402 for exhausted allowance, 429 for rate limits, and 503 for service failure.
+API originals are stored in immutable `page_versions.original_html` with
+`source_storage='database'`; their `source_object_path` is a logical identifier,
+not an object in the Storage bucket. Browser uploads continue to use Storage.
+
+The authenticated MCP endpoint is `/api/mcp`, using stateless Streamable HTTP
+with JSON responses, pinned to protocol revisions `2025-11-25`, `2025-06-18`,
+and `2025-03-26`. It provides `deploy_html` and `get_upload_allowance`, plus
+`initialize`, `ping` and `tools/list`. Configure a compatible MCP client with:
+
+```json
+{
+  "mcpServers": {
+    "tagworks": {
+      "url": "https://tagworks.io/api/mcp",
+      "headers": { "Authorization": "Bearer YOUR_API_KEY" }
+    }
+  }
+}
+```
+
+Client configuration syntax varies. Supply the key through the client's secret
+store or environment interpolation where supported. This is Personal API Key
+authentication, not OAuth; OAuth-only clients cannot connect. POST requests must
+accept both `application/json` and `text/event-stream`. GET returns 405 because
+this server does not provide a standalone SSE stream. No session ID is required.
+Transport reference: [MCP Streamable HTTP specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).
+
+### Optional per-page subdomains
+
+By default deployments return the existing isolated publisher `/p/<slug>` URL.
+To activate `https://<slug>.<publishing-domain>`, attach a wildcard domain such as
+`*.pages.example.net` to the **publisher** Vercel project, configure its DNS and
+TLS, then set `TAGWORKS_PUBLISHING_DOMAIN=pages.example.net` in both web and
+publisher environments. Prefer a separate registrable domain from the
+authenticated application. Never route uploaded HTML to the web app project.
+Domain registration, DNS and wildcard certificates are external prerequisites;
+setting the environment variable alone does not provision them.
+
+The publisher rewrites each subdomain root to its assigned slug while preserving
+query strings and the existing HTML sandbox, analytics relay and corner link.
+`pathUrl` remains available as a fallback. The default does not fabricate an
+unconfigured or unreachable subdomain URL.
+
+Run `supabase/tests/personal_api_keys_behavior.sql` using the admin connection to
+check key owner isolation, hash privacy and immediate revocation in a rolled-back
+transaction.
+
+The HTTP integration check is `scripts/e2e-api.mjs` (requires a built web server
+on port 3110, publisher on 3111, and the local E2E database credentials). It seeds
+and removes a disposable account, verifies API-key creation and revocation,
+publishing, original-source retention, plan enforcement and MCP tool calls.
