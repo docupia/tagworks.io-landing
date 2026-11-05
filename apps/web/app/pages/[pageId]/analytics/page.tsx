@@ -47,6 +47,7 @@ function sourceTypeLabel(type: string, locale: Locale) {
     internal: ["TagWorks", "태그웍스"],
     tagworks: ["TagWorks", "태그웍스"],
     utm: ["UTM", "UTM"],
+    parameter: ["Parameter", "파라미터"],
     referrer: ["Referrer", "리퍼러"],
     direct: ["Direct", "직접"],
   };
@@ -378,7 +379,7 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
                       <p className={styles.kicker}>{tx("Inbound paths", "유입 경로")}</p>
                       <h2 id="sources-title">{tx("Inbound paths", "유입 경로")}</h2>
                     </div>
-                    <p>{tx("Classifies session sources using share IDs, UTM parameters, and referrer domains.", "공유 식별자, UTM, 리퍼러 도메인 순으로 세션 시작 출처를 분류합니다.")}</p>
+                    <p>{tx("Groups visits by the first query parameter value when present, otherwise by inbound source.", "URL의 첫 번째 파라미터 값을 기준으로 방문자를 집계합니다. 파라미터가 없으면 기존 유입 경로로 분류합니다.")}</p>
                   </div>
                   {analytics.sources.length ? <SourceTable sources={analytics.sources} locale={locale} /> : <p className={styles.noRows}>{tx("No inbound paths have been classified.", "분류된 유입 경로가 없습니다.")}</p>}
                 </section>

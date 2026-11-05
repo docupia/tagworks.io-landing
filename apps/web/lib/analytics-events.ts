@@ -17,7 +17,7 @@ export type AnalyticsEventPayload = {
   page_version_id: string;
   session_id: string | null;
   source_label: string;
-  source_type: "direct" | "referrer" | "utm";
+  source_type: "direct" | "referrer" | "utm" | "parameter";
   utm_campaign: string | null;
   utm_medium: string | null;
   utm_source: string | null;
@@ -132,7 +132,7 @@ export function parseAnalyticsEvent(value: unknown): AnalyticsEventPayload | nul
     typeof record.page_version_id !== "string" ||
     !UUID_PATTERN.test(record.page_version_id) ||
     (eventType !== "page_view" && eventType !== "outbound_click") ||
-    (sourceType !== "direct" && sourceType !== "referrer" && sourceType !== "utm") ||
+    (sourceType !== "direct" && sourceType !== "referrer" && sourceType !== "utm" && sourceType !== "parameter") ||
     (excludedReason !== null && excludedReason !== "bot" && excludedReason !== "prefetch") ||
     (sessionId !== null && (typeof sessionId !== "string" || !UUID_PATTERN.test(sessionId))) ||
     typeof record.source_label !== "string" ||
@@ -160,6 +160,7 @@ export function parseAnalyticsEvent(value: unknown): AnalyticsEventPayload | nul
     (sourceType === "direct" && (record.source_label !== "direct" || hasCampaignFields)) ||
     (sourceType === "utm" &&
       (typeof record.utm_source !== "string" || record.source_label !== record.utm_source)) ||
+    (sourceType === "parameter" && hasCampaignFields) ||
     (sourceType === "referrer" &&
       (hasCampaignFields || !isNormalizedHostname(record.source_label)))
   ) {

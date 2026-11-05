@@ -18,7 +18,7 @@ export type PublishedLink = {
 
 export type AnalyticsSource = {
   sourceLabel: string;
-  sourceType: "direct" | "referrer" | "utm";
+  sourceType: "direct" | "referrer" | "utm" | "parameter";
   utmCampaign: string | null;
   utmMedium: string | null;
   utmSource: string | null;
@@ -191,6 +191,17 @@ export function classifyAnalyticsSource(
   referer: string | null,
 ): AnalyticsSource {
   const target = new URL(requestUrl);
+  const firstValue = target.searchParams.values().next().value;
+  if (typeof firstValue === "string" && firstValue.trim().length > 0 &&
+      firstValue.length <= 253 && !/[\u0000-\u001f\u007f]/.test(firstValue)) {
+    return {
+      sourceLabel: firstValue.trim(),
+      sourceType: "parameter",
+      utmCampaign: null,
+      utmMedium: null,
+      utmSource: null,
+    };
+  }
   const utmSource = safeUtmValue(target.searchParams.get("utm_source"));
   const utmMedium = safeUtmValue(target.searchParams.get("utm_medium"));
   const utmCampaign = safeUtmValue(target.searchParams.get("utm_campaign"));
@@ -389,7 +400,7 @@ export function parseAnalyticsEvent(value: unknown): AnalyticsEventPayload | nul
     !isPageSlug(record.page_slug) ||
     !isUuid(record.page_version_id) ||
     (eventType !== "page_view" && eventType !== "outbound_click") ||
-    (sourceType !== "direct" && sourceType !== "referrer" && sourceType !== "utm") ||
+    (sourceType !== "direct" && sourceType !== "referrer" && sourceType !== "utm" && sourceType !== "parameter") ||
     (excludedReason !== null && excludedReason !== "bot" && excludedReason !== "prefetch") ||
     (sessionId !== null && !isUuid(sessionId)) ||
     typeof record.source_label !== "string" ||
@@ -423,6 +434,7 @@ export function parseAnalyticsEvent(value: unknown): AnalyticsEventPayload | nul
     (sourceType === "direct" && (record.source_label !== "direct" || hasCampaignFields)) ||
     (sourceType === "utm" &&
       (typeof record.utm_source !== "string" || record.source_label !== record.utm_source)) ||
+    (sourceType === "parameter" && hasCampaignFields) ||
     (sourceType === "referrer" &&
       (hasCampaignFields || !isNormalizedHostname(record.source_label)))
   ) {
