@@ -61,7 +61,7 @@ export default async function NewPage() {
           {!entitlement.canUpload ? (
             <p className={styles.error}>{tx("Your upload allowance is used up. Choose a plan to publish more pages.", "업로드 이용량을 모두 사용했습니다. 더 게시하려면 플랜을 선택해 주세요.")}</p>
           ) : null}
-          <UploadForm locale={locale} disabled={!entitlement.canUpload} />
+          <UploadForm locale={locale} disabled={!entitlement.canUpload} canAttachImages={entitlement.paidCustomer} />
         </section>
       </main>
     </div>

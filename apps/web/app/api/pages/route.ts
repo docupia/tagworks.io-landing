@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { releaseUploadQuota, reserveUploadQuota } from "@/lib/billing";
+import { getUploadEntitlement, releaseUploadQuota, reserveUploadQuota } from "@/lib/billing";
 import { getDatabase } from "@/lib/database";
 import { getPublisherUrl } from "@/lib/env";
 import {
@@ -8,6 +8,7 @@ import {
   SANITIZER_VERSION,
   prepareOriginalPublishedHtml,
 } from "@/lib/html-sanitizer";
+import { MAX_IMAGE_BYTES, MAX_IMAGES, rewriteUploadedImages } from "@/lib/upload-images";
 import { isSameOriginMutation } from "@/lib/request-security";
 import { createClient } from "@/lib/supabase/server";
 import { validateUploadFields } from "@/lib/validation";
@@ -26,7 +27,7 @@ class RequestError extends Error {
 }
 
 const allowedTypes = new Set(["", "text/html", "application/xhtml+xml"]);
-const maxMultipartBytes = MAX_HTML_BYTES + 128 * 1024;
+const maxMultipartBytes = MAX_HTML_BYTES + MAX_IMAGE_BYTES + 128 * 1024;
 
 function errorResponse(reason: unknown, locale: Locale) {
   if (reason instanceof RequestError) {
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
   const locale = normalizeLocale(request.cookies.get(LOCALE_COOKIE)?.value);
   const tr = (english: string, korean: string) => text(locale, english, korean);
   let objectPath: string | null = null;
+  const imagePaths: string[] = [];
   let reservationId: string | null = null;
   let ownerId: string | null = null;
   let storageClient: Awaited<ReturnType<typeof createClient>> | null = null;
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     const contentLength = Number(request.headers.get("content-length") ?? "0");
     if (contentLength > maxMultipartBytes) {
-      throw new RequestError(tr("HTML files must be 1 MiB or smaller.", "HTML 파일은 1MiB 이하만 업로드할 수 있습니다."), 413);
+      throw new RequestError(tr("The upload is too large.", "전체 업로드 용량이 너무 큽니다."), 413);
     }
 
     const supabase = await createClient();
@@ -78,6 +80,19 @@ export async function POST(request: NextRequest) {
     }
     if (!/\.html?$/i.test(file.name) || !allowedTypes.has(file.type.toLowerCase())) {
       throw new RequestError(tr("Only .html or .htm files can be uploaded.", ".html 또는 .htm 파일만 업로드할 수 있습니다."), 415);
+    }
+
+    const images = formData.getAll("images").filter(
+      (entry): entry is File => entry instanceof File && Boolean(entry.name),
+    );
+    if (images.length && !(await getUploadEntitlement(user.id)).paidCustomer) {
+      throw new RequestError(tr("Image attachments are available to paid members.", "이미지 첨부는 유료 회원만 이용할 수 있습니다."), 403);
+    }
+    if (images.length > MAX_IMAGES || images.reduce((sum, image) => sum + image.size, 0) > MAX_IMAGE_BYTES) {
+      throw new RequestError(tr("Choose up to 12 images totaling 3 MiB.", "이미지는 최대 12장, 총 3MiB까지 선택할 수 있습니다."), 413);
+    }
+    if (new Set(images.map((image) => image.name)).size !== images.length) {
+      throw new RequestError(tr("Image filenames must be unique.", "이미지 파일명이 서로 달라야 합니다."), 400);
     }
 
     const pageId = randomUUID();
@@ -134,7 +149,35 @@ export async function POST(request: NextRequest) {
       throw new RequestError(tr("Choose a valid HTML document.", "올바른 HTML 문서를 선택해 주세요."), 400);
     }
 
-    const published = prepareOriginalPublishedHtml(source, {
+    const username = String(user.user_metadata?.user_name ?? user.user_metadata?.username ?? "")
+      .toLowerCase().replace(/[^a-z0-9_-]/g, "-").slice(0, 64) || user.id;
+    const imageBucket = supabase.storage.from("page-images");
+    const imageUrls = new Map<string, string>();
+    for (const [index, image] of images.entries()) {
+      const data = Buffer.from(await image.arrayBuffer());
+      let extension: string;
+      let contentType: string;
+      if (/\.png$/i.test(image.name) && data.subarray(0, 8).equals(Buffer.from("89504e470d0a1a0a", "hex"))) {
+        extension = "png";
+        contentType = "image/png";
+      } else if (/\.jpe?g$/i.test(image.name) && data.subarray(0, 3).equals(Buffer.from("ffd8ff", "hex"))) {
+        extension = "jpg";
+        contentType = "image/jpeg";
+      } else if (/\.webp$/i.test(image.name) && data.toString("ascii", 0, 4) === "RIFF" && data.toString("ascii", 8, 12) === "WEBP") {
+        extension = "webp";
+        contentType = "image/webp";
+      } else {
+        throw new RequestError(tr("Choose valid PNG, JPEG, or WebP images.", "올바른 PNG, JPEG 또는 WebP 이미지를 선택해 주세요."), 415);
+      }
+      const path = `${username}/${user.id}/${pageId}/${versionId}/${index}.${extension}`;
+      imagePaths.push(path);
+      const { error } = await imageBucket.upload(path, data, { contentType, upsert: false });
+      if (error) throw new RequestError(tr("Could not store an image.", "이미지를 저장하지 못했습니다."), 503);
+      imageUrls.set(image.name, imageBucket.getPublicUrl(path).data.publicUrl);
+    }
+
+    const rewritten = rewriteUploadedImages(source, imageUrls);
+    const published = prepareOriginalPublishedHtml(rewritten.html, {
       fallbackTitle: fields.title,
       versionId,
     });
@@ -240,6 +283,9 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (reason) {
+    if (imagePaths.length && storageClient) {
+      await storageClient.storage.from("page-images").remove(imagePaths);
+    }
     if (objectPath && storageClient) {
       await storageClient.storage.from("page-originals").remove([objectPath]);
     }
