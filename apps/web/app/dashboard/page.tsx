@@ -145,6 +145,11 @@ export default async function DashboardPage() {
                       />
                     ) : null}
                     <div className={styles.cardActions}>
+                      {page.status === "published" ? (
+                        <Link className={styles.secondaryButton} href={`/pages/new?edit=${page.id}`}>
+                          {tx("Replace HTML", "HTML 수정 업로드")}
+                        </Link>
+                      ) : null}
                       <Link className={styles.analyticsButton} href={`/pages/${page.id}/analytics`}>
                         {tx("View analytics", "분석 보기")}
                       </Link>

@@ -9,6 +9,7 @@ import {
   prepareOriginalPublishedHtml,
 } from "@/lib/html-sanitizer";
 import { MAX_IMAGE_BYTES, MAX_IMAGES, rewriteUploadedImages } from "@/lib/upload-images";
+import { MAX_PAGE_REVISIONS, PAGE_ID_PATTERN } from "@/lib/page-revisions";
 import { isSameOriginMutation } from "@/lib/request-security";
 import { createClient } from "@/lib/supabase/server";
 import { validateUploadFields } from "@/lib/validation";
@@ -41,7 +42,15 @@ function errorResponse(reason: unknown, locale: Locale) {
   );
 }
 
-export async function POST(request: NextRequest) {
+export function POST(request: NextRequest) {
+  return publish(request, false);
+}
+
+export function PATCH(request: NextRequest) {
+  return publish(request, true);
+}
+
+async function publish(request: NextRequest, revision: boolean) {
   const locale = normalizeLocale(request.cookies.get(LOCALE_COOKIE)?.value);
   const tr = (english: string, korean: string) => text(locale, english, korean);
   let objectPath: string | null = null;
@@ -69,7 +78,28 @@ export async function POST(request: NextRequest) {
     ownerId = user.id;
 
     const formData = await request.formData();
-    const fields = validateUploadFields(formData);
+    let existingPage: { id: string; slug: string; title: string; revision_count: number } | null = null;
+    const revisionLimitMessage = tr("This page has used all 3 revisions.", "이 페이지는 수정 업로드 3회를 모두 사용했습니다.");
+    if (revision) {
+      const target = formData.get("pageId");
+      if (typeof target !== "string" || !PAGE_ID_PATTERN.test(target)) {
+        throw new RequestError(tr("Choose a valid page.", "올바른 페이지를 선택해 주세요."), 400);
+      }
+      const { data, error } = await supabase.from("pages")
+        .select("id,slug,title,revision_count")
+        .eq("id", target)
+        .eq("owner_id", user.id)
+        .eq("status", "published")
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new RequestError(tr("Published page not found.", "게시된 페이지를 찾을 수 없습니다."), 404);
+      if (data.revision_count >= MAX_PAGE_REVISIONS) {
+        throw new RequestError(revisionLimitMessage, 409);
+      }
+      existingPage = data;
+    }
+    const fields = existingPage ? { title: existingPage.title, description: null } : validateUploadFields(formData);
     const file = formData.get("file");
 
     if (!(file instanceof File) || file.size === 0) {
@@ -95,10 +125,10 @@ export async function POST(request: NextRequest) {
       throw new RequestError(tr("Image filenames must be unique.", "이미지 파일명이 서로 달라야 합니다."), 400);
     }
 
-    const pageId = randomUUID();
+    const pageId = existingPage?.id ?? randomUUID();
     const versionId = randomUUID();
-    reservationId = randomUUID();
-    const slug = `page-${randomBytes(6).toString("hex")}`;
+    const slug = existingPage?.slug ?? `page-${randomBytes(6).toString("hex")}`;
+    const publicUrl = `${getPublisherUrl()}/p/${slug}`;
     objectPath = `${user.id}/${pageId}/${versionId}/original.html`;
 
     const sql = getDatabase();
@@ -127,15 +157,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const quota = await reserveUploadQuota(user.id, reservationId, objectPath);
-    if (!quota.allowed) {
-      throw new RequestError(
-        tr(
-          "Your upload allowance is used up. Choose a plan to continue.",
-          "업로드 이용량을 모두 사용했습니다. 계속하려면 플랜을 선택해 주세요.",
-        ),
-        402,
-      );
+    reservationId = randomUUID();
+    if (revision) {
+      await sql`
+        insert into public.upload_reservations (id, owner_id, object_path)
+        values (${reservationId}::uuid, ${user.id}::uuid, ${objectPath})
+      `;
+    } else {
+      const quota = await reserveUploadQuota(user.id, reservationId, objectPath);
+      if (!quota.allowed) {
+        throw new RequestError(
+          tr(
+            "Your upload allowance is used up. Choose a plan to continue.",
+            "업로드 이용량을 모두 사용했습니다. 계속하려면 플랜을 선택해 주세요.",
+          ),
+          402,
+        );
+      }
     }
 
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -195,18 +233,20 @@ export async function POST(request: NextRequest) {
     await sql.begin(async (transaction) => {
       const tx = transaction as unknown as typeof sql;
 
-      await tx`
-        insert into public.pages (
-          id, owner_id, slug, title, description, status
-        ) values (
-          ${pageId}::uuid,
-          ${user.id}::uuid,
-          ${slug},
-          ${fields.title},
-          ${fields.description},
-          'draft'
-        )
-      `;
+      if (!revision) {
+        await tx`
+          insert into public.pages (
+            id, owner_id, slug, title, description, status
+          ) values (
+            ${pageId}::uuid,
+            ${user.id}::uuid,
+            ${slug},
+            ${fields.title},
+            ${fields.description},
+            'draft'
+          )
+        `;
+      }
       await tx`
         insert into public.page_versions (
           id,
@@ -251,15 +291,32 @@ export async function POST(request: NextRequest) {
           )}
         `;
       }
-      await tx`
-        update public.pages
-        set status = 'published',
-            published_version_id = ${versionId}::uuid,
-            published_at = now(),
-            updated_at = now()
-        where id = ${pageId}::uuid
-          and owner_id = ${user.id}::uuid
-      `;
+      if (revision) {
+        const [updated] = await tx<{ id: string }[]>`
+          update public.pages
+          set published_version_id = ${versionId}::uuid,
+              revision_count = revision_count + 1
+          where id = ${pageId}::uuid
+            and owner_id = ${user.id}::uuid
+            and status = 'published'
+            and deleted_at is null
+            and revision_count < ${MAX_PAGE_REVISIONS}
+          returning id
+        `;
+        if (!updated) {
+          throw new RequestError(tr("The page is no longer available for revision.", "이 페이지는 더 이상 수정 업로드할 수 없습니다."), 409);
+        }
+      } else {
+        await tx`
+          update public.pages
+          set status = 'published',
+              published_version_id = ${versionId}::uuid,
+              published_at = now(),
+              updated_at = now()
+          where id = ${pageId}::uuid
+            and owner_id = ${user.id}::uuid
+        `;
+      }
       const [consumption] = await tx<{ consumed: boolean }[]>`
         select public.consume_upload_quota(
           ${user.id}::uuid,
@@ -277,7 +334,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         page: { id: pageId, slug, title: fields.title },
-        publicUrl: `${getPublisherUrl()}/p/${slug}`,
+        publicUrl,
         warnings: published.warnings,
       },
       { status: 201 },

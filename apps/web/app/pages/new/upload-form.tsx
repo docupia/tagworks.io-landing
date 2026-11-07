@@ -33,10 +33,11 @@ const ENGLISH_WARNINGS: Record<string, string> = {
   "HTTP 외부 리소스는 HTTPS 공개 페이지에서 브라우저가 차단할 수 있습니다.": "Browsers may block HTTP resources on the HTTPS public page.",
 };
 
-export function UploadForm({ locale, disabled = false, canAttachImages }: {
+export function UploadForm({ locale, disabled = false, canAttachImages, revisionPageId }: {
   locale: Locale;
   disabled?: boolean;
   canAttachImages: boolean;
+  revisionPageId?: string;
 }) {
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const router = useRouter();
@@ -117,6 +118,7 @@ export function UploadForm({ locale, disabled = false, canAttachImages }: {
     setResult(null);
 
     const formData = new FormData(event.currentTarget);
+    if (revisionPageId) formData.set("pageId", revisionPageId);
     const file = formData.get("file");
     if (!(file instanceof File) || !file.size) {
       setError(tx("Choose an HTML file to upload.", "업로드할 HTML 파일을 선택해 주세요."));
@@ -130,7 +132,7 @@ export function UploadForm({ locale, disabled = false, canAttachImages }: {
     }
 
     try {
-      const response = await fetch("/api/pages", { method: "POST", body: formData });
+      const response = await fetch("/api/pages", { method: revisionPageId ? "PATCH" : "POST", body: formData });
       const body = (await response.json()) as UploadResult & { error?: string };
       if (!response.ok) throw new Error(body.error || tx("Could not complete the upload.", "업로드를 완료하지 못했습니다."));
 
@@ -161,7 +163,7 @@ export function UploadForm({ locale, disabled = false, canAttachImages }: {
     const file = event.target.files?.[0];
     const selection = ++fileSelection.current;
     setFileName(file?.name ?? "");
-    if (!file || titleWasEdited.current) return;
+    if (!file || revisionPageId || titleWasEdited.current) return;
 
     // Give immediate feedback, then replace it with the document title once the
     // file has been read. A user edit made while reading always wins.
@@ -179,34 +181,43 @@ export function UploadForm({ locale, disabled = false, canAttachImages }: {
 
   return (
     <form ref={formRef} className={styles.form} onSubmit={submit}>
-      <label className={styles.field}>
-        {tx("Management title", "관리용 제목")} <span className={styles.hint}>{tx("Filled from the document title", "원본 문서 제목을 자동 입력")}</span>
-        <input
-          name="title"
-          required
-          maxLength={100}
-          placeholder={tx("Select an HTML file to fill this automatically.", "HTML 파일을 선택하면 자동으로 입력됩니다.")}
-          value={title}
-          onChange={(event) => {
-            titleWasEdited.current = true;
-            setTitle(event.target.value);
-          }}
-        />
-        <span className={styles.hint}>
-          {tx("Shown in your page list and the published page's browser tab.", "내 페이지 목록과 공개 페이지의 브라우저 탭 제목에 표시됩니다.")}
-        </span>
-      </label>
-      <label className={styles.field}>
-        {tx("Description", "설명")} <span className={styles.hint}>{tx("Optional · up to 300 characters", "선택 · 최대 300자")}</span>
-        <textarea name="description" rows={3} maxLength={300} placeholder={tx("Briefly describe what this page is for.", "페이지 용도를 짧게 적어 주세요.")} />
-      </label>
+      {revisionPageId ? (
+        <p className={styles.hint}>{tx(
+          "The permanent link stays the same. Attach again any local images the new HTML uses.",
+          "고정 링크는 그대로 유지됩니다. 새 HTML에서 사용하는 로컬 이미지는 다시 첨부해 주세요.",
+        )}</p>
+      ) : (
+        <>
+          <label className={styles.field}>
+            {tx("Management title", "관리용 제목")} <span className={styles.hint}>{tx("Filled from the document title", "원본 문서 제목을 자동 입력")}</span>
+            <input
+              name="title"
+              required
+              maxLength={100}
+              placeholder={tx("Select an HTML file to fill this automatically.", "HTML 파일을 선택하면 자동으로 입력됩니다.")}
+              value={title}
+              onChange={(event) => {
+                titleWasEdited.current = true;
+                setTitle(event.target.value);
+              }}
+            />
+            <span className={styles.hint}>
+              {tx("Shown in your page list and the published page's browser tab.", "내 페이지 목록과 공개 페이지의 브라우저 탭 제목에 표시됩니다.")}
+            </span>
+          </label>
+          <label className={styles.field}>
+            {tx("Description", "설명")} <span className={styles.hint}>{tx("Optional · up to 300 characters", "선택 · 최대 300자")}</span>
+            <textarea name="description" rows={3} maxLength={300} placeholder={tx("Briefly describe what this page is for.", "페이지 용도를 짧게 적어 주세요.")} />
+          </label>
+        </>
+      )}
       <label className={styles.dropzone}>
         <input
           name="file"
           type="file"
           accept=".html,.htm,text/html"
           required
-          disabled={pending}
+          disabled={pending || disabled}
           onChange={selectFile}
         />
         <span aria-hidden="true">↑</span>
@@ -219,7 +230,7 @@ export function UploadForm({ locale, disabled = false, canAttachImages }: {
       {canAttachImages ? (
         <label className={styles.field}>
           {tx("Attach images", "이미지 첨부")}
-          <input name="images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple onChange={invalidatePreview} disabled={pending} />
+          <input name="images" type="file" accept=".png,.jpg,.jpeg,.webp" multiple onChange={invalidatePreview} disabled={pending || disabled} />
           <span className={styles.hint}>{tx("PNG, JPEG, WebP · up to 12 images, 3 MiB total", "PNG, JPEG, WebP · 최대 12장, 총 3MiB")}</span>
         </label>
       ) : (
@@ -249,7 +260,7 @@ export function UploadForm({ locale, disabled = false, canAttachImages }: {
       {error ? <div className={styles.error} role="alert">{error}</div> : null}
       {result ? (
         <div className={styles.success} role="status">
-          <strong>{tx("Your permanent link is ready.", "고정 링크가 만들어졌습니다.")}</strong>
+          <strong>{revisionPageId ? tx("The revised page is live.", "수정한 페이지가 게시되었습니다.") : tx("Your permanent link is ready.", "고정 링크가 만들어졌습니다.")}</strong>
           <div className={styles.publicLink}>
             <a href={result.publicUrl} target="_blank" rel="noreferrer">{result.publicUrl}</a>
             <button className={styles.copy} type="button" onClick={copyLink}>
@@ -271,7 +282,7 @@ export function UploadForm({ locale, disabled = false, canAttachImages }: {
       ) : null}
 
       <button className={styles.submit} type="submit" disabled={pending || disabled || !preview}>
-        {pending ? tx("Checking and publishing…", "안전 검사 후 게시 중…") : tx("Upload and create permanent link", "업로드하고 고정 링크 만들기")}
+        {pending ? tx("Checking and publishing…", "안전 검사 후 게시 중…") : revisionPageId ? tx("Publish revision", "수정본 게시") : tx("Upload and create permanent link", "업로드하고 고정 링크 만들기")}
       </button>
     </form>
   );
