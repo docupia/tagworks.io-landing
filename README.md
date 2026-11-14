@@ -38,7 +38,8 @@ npm run dev:publisher
 `PAYPAL_ENV`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
 `PAYPAL_MONTHLY_PLAN_ID`, `PAYPAL_WEBHOOK_ID`가
 필요합니다. 퍼블리셔에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
-`TAGWORKS_ANALYTICS_EVENTS_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`만 필요합니다.
+`TAGWORKS_ANALYTICS_EVENTS_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`을 설정합니다.
+이벤트 전달에 사용하는 대표 퍼블리셔 주소인 `NEXT_PUBLIC_PUBLISHER_URL`은 두 프로젝트에 동일하게 설정합니다.
 퍼블리셔는 PostgreSQL에 직접 접속하지 않습니다. 공개 페이지에 삽입된 스크립트는
 서명된 이벤트를 퍼블리셔의 무상태 릴레이로 보내고, 릴레이가 운영 웹의 `/api/events`로
 전달합니다. 운영 API는 퍼블리셔 도메인의 리퍼러와 서명을 모두 검증한 뒤

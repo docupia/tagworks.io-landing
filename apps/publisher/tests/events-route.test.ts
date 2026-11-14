@@ -62,3 +62,42 @@ test("publisher relay rejects invalid event signatures", async () => {
     }
   }
 });
+
+test("forwards a signed subdomain visit using the configured canonical publisher", async (t) => {
+  const { POST } = await import("../app/api/events/route");
+  const { createAnalyticsEventToken } = await import("../lib/analytics");
+  const slug = "page-0123456789abcdef";
+  const env = { ...process.env };
+  process.env.TAGWORKS_ANALYTICS_EVENT_SECRET = "test-only-event-secret";
+  process.env.NEXT_PUBLIC_PUBLISHER_URL = "https://publisher.example";
+  t.after(() => { process.env = env; });
+  const upstream = t.mock.method(globalThis, "fetch", async (_url: RequestInfo | URL, init?: RequestInit) => {
+    const headers = new Headers(init?.headers);
+    assert.equal(headers.get("origin"), "https://publisher.example");
+    assert.equal(headers.get("referer"), `https://publisher.example/p/${slug}`);
+    return new Response(null, { status: 204 });
+  });
+
+  const response = await POST(new Request(`https://${slug}.pages.example/api/events`, {
+    method: "POST",
+    headers: { origin: "null", "sec-fetch-site": "cross-site", "content-type": "text/plain" },
+    body: JSON.stringify({
+      event_token: createAnalyticsEventToken(slug, VERSION_ID),
+      event_id: "2a6d9e68-d1bf-4f3f-9714-4d01382a3dca",
+      event_type: "page_view",
+      excluded_reason: null,
+      link_id: null,
+      page_slug: slug,
+      page_version_id: VERSION_ID,
+      session_id: "65916e09-50a4-46e9-8520-0b78f2a65a18",
+      source_label: "direct",
+      source_type: "direct",
+      utm_campaign: null,
+      utm_medium: null,
+      utm_source: null,
+    }),
+  }));
+
+  assert.equal(response.status, 204);
+  assert.equal(upstream.mock.callCount(), 1);
+});

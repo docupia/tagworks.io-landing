@@ -8,8 +8,6 @@ import { getAnalyticsEventsUrl } from "../../../lib/env";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const PUBLISHER_ORIGIN = "https://tagworks-publisher.vercel.app";
-
 const RESPONSE_HEADERS: Readonly<Record<string, string>> = {
   "Access-Control-Allow-Origin": "null",
   "Cache-Control": "no-store, max-age=0",
@@ -65,14 +63,22 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
+    // The ingest route authenticates the relay against the canonical publisher,
+    // including for visits served on a per-page subdomain.
+    const publisherOrigin = new URL(
+      process.env.NEXT_PUBLIC_PUBLISHER_URL?.trim() ||
+      (process.env.NODE_ENV === "production"
+        ? "https://tagworks-publisher.vercel.app"
+        : "http://localhost:3001"),
+    ).origin;
     const upstream = await fetch(getAnalyticsEventsUrl(), {
       method: "POST",
       body,
       cache: "no-store",
       headers: {
         "content-type": "text/plain;charset=UTF-8",
-        origin: PUBLISHER_ORIGIN,
-        referer: `${PUBLISHER_ORIGIN}/p/${event.page_slug}`,
+        origin: publisherOrigin,
+        referer: `${publisherOrigin}/p/${event.page_slug}`,
         "sec-fetch-site": "cross-site",
         "user-agent": request.headers.get("user-agent") ?? "Tagworks publisher relay",
       },

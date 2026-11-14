@@ -1,3 +1,4 @@
+import { publicationSlug } from "../../../lib/subdomain";
 import { randomBytes } from "node:crypto";
 
 import {
@@ -189,9 +190,14 @@ export async function GET(
       if (isolatedOriginal && !eventToken) {
         return htmlResponse(renderDocument(data), 200, undefined, true);
       }
+      const publishingDomain = process.env.TAGWORKS_PUBLISHING_DOMAIN?.toLowerCase();
+      const onPageSubdomain = publicationSlug(request.headers.get("host") ?? "", publishingDomain) === slug;
+      const eventEndpoint = onPageSubdomain
+        ? `https://${slug}.${publishingDomain}/api/events`
+        : new URL("/api/events", request.url).toString();
       const tracker = renderTrackerScript(
         {
-          eventEndpoint: new URL("/api/events", request.url).toString(),
+          eventEndpoint,
           eventToken,
           excludedReason: analyticsExclusionReason(request.headers),
           links: links.map((link) => ({ id: link.link_id, ordinal: link.ordinal })),
