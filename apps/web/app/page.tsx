@@ -357,6 +357,15 @@ export default async function HomePage() {
           <LanguageSwitcher locale={locale} />
           <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link href="/pricing">{tx("Pricing", "요금제")}</Link><a href="#api-mcp">API &amp; MCP</a><a href="#faq">FAQ</a></div>
           <span>© {new Date().getFullYear()} TagWorks</span>
+          <a href="https://peerpush.com/p/tagworks" target="_blank" rel="noopener" className="footer-peerpush">
+            <img
+              src="https://peerpush.com/p/tagworks/badge.png"
+              alt="TagWorks on PeerPush"
+              width={230}
+              height={65}
+              loading="lazy"
+            />
+          </a>
         </div>
       </footer>
     </>

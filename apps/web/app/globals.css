@@ -1930,6 +1930,18 @@ svg {
   font-size: 0.76rem;
 }
 
+.footer-peerpush {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.footer-peerpush img {
+  display: block;
+  width: 230px;
+  max-width: 100%;
+  height: auto;
+}
+
 .footer-links {
   display: flex;
   align-items: center;
