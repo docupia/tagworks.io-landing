@@ -68,6 +68,17 @@ export default async function DashboardPage() {
     : null;
   const publisherUrl = getPublisherUrl();
 
+  const accountActions = (
+    <>
+      <Link className={styles.planLink} href="/dashboard/api-keys">API & MCP</Link>
+      <Link className={styles.planLink} href="/billing">{tx("Plans", "요금제")}</Link>
+      <span className={styles.account}>{user.email}</span>
+      <form action="/auth/signout" method="post">
+        <button className={styles.signout} type="submit">{tx("Log out", "로그아웃")}</button>
+      </form>
+    </>
+  );
+
   return (
     <div className={styles.shell}>
       <header className={styles.topbar}>
@@ -77,13 +88,15 @@ export default async function DashboardPage() {
         </Link>
         <div className={styles.topActions}>
           <LanguageSwitcher locale={locale} />
-          <Link className={styles.planLink} href="/dashboard/api-keys">API & MCP</Link>
-          <Link className={styles.planLink} href="/billing">{tx("Plans", "요금제")}</Link>
-          <span className={styles.account}>{user.email}</span>
-          <form action="/auth/signout" method="post">
-            <button className={styles.signout} type="submit">{tx("Log out", "로그아웃")}</button>
-          </form>
+          {accountActions}
         </div>
+        <details className={styles.mobileMenu}>
+          <summary className={styles.signout}>{tx("Menu", "메뉴")}</summary>
+          <div className={styles.mobileMenuActions}>
+            <LanguageSwitcher locale={locale} />
+            {accountActions}
+          </div>
+        </details>
       </header>
       <main className={styles.main}>
         <div className={styles.headingRow}>

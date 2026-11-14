@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="노트북 거치대, 책상 조명, 케이블 정리 용품을 한곳에서 찾아보세요.">
+<title>책상 정리 가이드 | Tagworks 데모</title>
+<style>
+:root { color-scheme: light; font-family: system-ui, sans-serif; background: #f5f0e7; color: #211d18; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { width: min(68rem, calc(100% - 2rem)); margin: auto; }
+header { padding: clamp(2rem, 8vw, 6rem) 0 2.5rem; }
+h1 { font-size: clamp(2.2rem, 8vw, 6rem); line-height: 1.06; letter-spacing: -.065em; margin: 0; }
+p { line-height: 1.65; }
+header p { max-width: 37rem; margin: 1.25rem 0 0; }
+section { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
+article { border: 1px solid #c9bcac; border-radius: 1rem; padding: 1.4rem; background: #fffaf3; display: flex; flex-direction: column; }
+article:nth-child(2) { background: #f9e4d4; }
+article:nth-child(3) { background: #e4ebd9; }
+h2 { margin: 0; font-size: 1.35rem; }
+article p { margin: .75rem 0 1.2rem; }
+.links { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: auto; }
+a { color: inherit; text-underline-offset: .2em; }
+.links a { display: inline-flex; align-items: center; min-height: 44px; padding: .5rem .75rem; border: 1px solid; border-radius: .5rem; font-weight: 650; }
+.links a:hover { background: #211d18; color: #fffaf3; }
+a:focus-visible { outline: 3px solid #8e3a23; outline-offset: 3px; }
+footer { margin: 2rem 0; padding: 1rem 0; border-top: 1px solid #c9bcac; font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>일하기 편한<br>책상 만들기</h1>
+    <p>노트북 화면을 높이고, 필요한 곳을 비추고, 케이블을 정리해 보세요. 세 가지 아이템을 아마존과 쿠팡에서 찾아볼 수 있습니다.</p>
+  </header>
+  <section aria-label="책상 정리 용품">
+    <article>
+      <h2>노트북 거치대</h2>
+      <p>화면을 눈높이에 맞출 수 있도록 높이 조절 범위와 노트북 크기 호환 여부를 확인하세요.</p>
+      <div class="links">
+        <a href="https://www.amazon.com/s?k=adjustable+laptop+stand" aria-label="아마존에서 노트북 거치대 검색">아마존 검색</a>
+        <a href="https://www.coupang.com/np/search?q=노트북+거치대" aria-label="쿠팡에서 노트북 거치대 검색">쿠팡 검색</a>
+      </div>
+    </article>
+    <article>
+      <h2>책상 조명</h2>
+      <p>빛이 화면에 반사되지 않도록 밝기와 조명 각도를 조절할 수 있는 제품을 찾아보세요.</p>
+      <div class="links">
+        <a href="https://www.amazon.com/s?k=adjustable+desk+lamp" aria-label="아마존에서 책상 조명 검색">아마존 검색</a>
+        <a href="https://www.coupang.com/np/search?q=책상+스탠드+조명" aria-label="쿠팡에서 책상 조명 검색">쿠팡 검색</a>
+      </div>
+    </article>
+    <article>
+      <h2>케이블 정리 클립</h2>
+      <p>충전선이 책상 아래로 떨어지지 않도록 선 굵기에 맞는 클립을 고르세요.</p>
+      <div class="links">
+        <a href="https://www.amazon.com/s?k=desk+cable+clips" aria-label="아마존에서 케이블 정리 클립 검색">아마존 검색</a>
+        <a href="https://www.coupang.com/np/search?q=케이블+정리+클립" aria-label="쿠팡에서 케이블 정리 클립 검색">쿠팡 검색</a>
+      </div>
+    </article>
+  </section>
+  <footer>
+    <p>쇼핑 링크는 상품 검색 예시입니다. 이 랜딩 페이지는 <a href="https://tagworks.io/">Tagworks</a>에서 별도 도메인 구매 없이 공개한 데모입니다.</p>
+  </footer>
+</main>
+</body>
+</html>

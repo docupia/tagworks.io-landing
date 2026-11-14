@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Publish a Free Profile Page</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: transparent;
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --text-main: #f8fafc;
+            --text-sub: #cbd5e1;
+            --accent: #38bdf8;
+            --border: rgba(51, 65, 85, 0.8);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            word-break: keep-all;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
+            background-color: #000;
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        /* Fixed Matrix background canvas */
+        #matrix {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            display: block;
+        }
+
+        /* Main content layer */
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            min-height: 100vh;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.4); /* Translucent overlay for readability */
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 90px 0 60px;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(79, 70, 229, 0.3);
+            color: var(--accent);
+            border: 1px solid var(--primary);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            backdrop-filter: blur(4px);
+        }
+
+        .hero h1 {
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+            text-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text-sub);
+            max-width: 620px;
+            margin: 0 auto 36px;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background-color: var(--primary);
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 16px 36px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+        }
+
+        .cta-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Preview Card */
+        .preview-box {
+            margin-top: 48px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            text-align: left;
+            backdrop-filter: blur(8px);
+        }
+
+        .terminal-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ef4444; }
+        .dot-yellow { background: #eab308; }
+        .dot-green { background: #22c55e; }
+
+        .terminal-code {
+            font-family: monospace;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .terminal-code .highlight {
+            color: var(--accent);
+        }
+
+        /* Features */
+        .features {
+            padding: 70px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            backdrop-filter: blur(8px);
+        }
+
+        .card-icon {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .card p {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+        }
+
+        /* Steps */
+        .steps {
+            padding: 60px 0;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+
+        .steps h2 {
+            font-size: 2rem;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .step-list {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            text-align: left;
+        }
+
+        .step-item {
+            flex: 1;
+            min-width: 220px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+        }
+
+        .step-num {
+            font-weight: 800;
+            color: var(--accent);
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .step-item h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .step-item p {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+        }
+
+        /* Final CTA */
+        .bottom-cta {
+            padding: 80px 0;
+            text-align: center;
+            background: linear-gradient(180deg, transparent 0%, rgba(79, 70, 229, 0.2) 100%);
+            border-top: 1px solid var(--border);
+        }
+
+        .bottom-cta h2 {
+            font-size: 2.2rem;
+            margin-bottom: 16px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .bottom-cta p {
+            color: var(--text-sub);
+            margin-bottom: 30px;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 30px 0;
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 0.85rem;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        footer a {
+            color: var(--text-sub);
+            text-decoration: none;
+        }
+
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 2rem; }
+            .hero p { font-size: 1rem; }
+            .preview-box { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Matrix digital rain background canvas -->
+    <canvas id="matrix"></canvas>
+
+    <!-- Landing page content -->
+    <div class="content-wrapper">
+        <!-- Hero Section -->
+        <header class="hero">
+            <div class="container">
+                <div class="badge">🚀 One-click web hosting and analytics</div>
+                <h1>Publish your social bio link<br>with <span>one HTML file</span></h1>
+                <p>Upload a custom HTML page for your Instagram, LinkedIn, or Threads bio. Publish it instantly and track where visitors come from in real time.</p>
+                <a href="https://tagworks.io" class="cta-btn" target="_blank" rel="noopener">Publish my profile for free ➔</a>
+
+                
+            </div>
+        </header>
+
+        <!-- Key Features Section -->
+        <section class="features container">
+            <div class="card">
+                <div class="card-icon">⚡</div>
+                <h3>Go live in 3 seconds</h3>
+                <p>Get a unique URL as soon as you submit your HTML code or file. There’s no server or domain to configure.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🎨</div>
+                <h3>Full design freedom</h3>
+                <p>Bring your own layouts, styles, and interactive designs, including pages created with AI.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">📈</div>
+                <h3>Traffic and click analytics</h3>
+                <p>See whether visitors came from Instagram, LinkedIn, or Threads and which links they clicked, in real time.</p>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="steps container">
+            <h2>How does it work?</h2>
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-num">STEP 1</div>
+                    <h4>Prepare your HTML</h4>
+                    <p>Create your profile page in HTML with ChatGPT or Claude, or write it yourself.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">STEP 2</div>
+                    <h4>Upload to Tagworks</h4>
+                    <p>Drag and drop your file into the dashboard, or publish it through the API or MCP.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-num">STEP 3</div>
+                    <h4>Add the link to your bio</h4>
+                    <p>Paste your new URL into your social bio and track incoming traffic in the dashboard.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom CTA Section -->
+        <section class="bottom-cta">
+            <div class="container">
+                <h2>Publish a profile page that feels like yours</h2>
+                <p>Get started today with one free hosted page.</p>
+                <a href="https://tagworks.io" class="cta-btn" target="_blank" rel="noopener">Visit tagworks.io</a>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <p>© 2026 Tagworks.io. All rights reserved.</p>
+                <p style="margin-top: 8px;">
+                    <a href="https://tagworks.io">Explore Tagworks</a> · 
+                    <a href="https://tagworks.io">Terms of Service</a> · 
+                    <a href="https://tagworks.io">Privacy Policy</a>
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Matrix digital rain animation -->
+    <script>
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        //const katakana = 'ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        const katakana = 'tagworks.ioTAGWORKSPROFILEHOSTINGANALYTICS';
+        const alphabet = katakana.split('');
+
+        const fontSize = 16;
+        let columns = Math.floor(canvas.width / fontSize);
+
+        const rainDrops = [];
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = Math.random() * -100;
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet[Math.floor(Math.random() * alphabet.length)];
+                const x = i * fontSize;
+                const y = rainDrops[i] * fontSize;
+
+                if (Math.random() > 0.98) {
+                    ctx.fillStyle = '#fff';
+                } else {
+                    ctx.fillStyle = '#0F0';
+                }
+
+                ctx.fillText(text, x, y);
+
+                if (y > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+
+                rainDrops[i]++;
+            }
+        }
+
+        setInterval(draw, 33);
+    </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Tagworks HTML 배포 API용 샘플 페이지입니다.">
+  <title>Tagworks 배포 데모</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #172d26; background: #f3f5eb; }
+    body { margin: 0; }
+    main { max-width: 68rem; margin: auto; padding: clamp(1rem, 5vw, 4rem); }
+    header { padding: clamp(2rem, 7vw, 6rem); background: #173c30; color: #f7faed; border-radius: 1.5rem; }
+    header p { max-width: 34rem; line-height: 1.75; }
+    h1 { margin: 1.5rem 0 1rem; font-size: clamp(2.5rem, 7vw, 5rem); line-height: 1.08; letter-spacing: -.055em; }
+    a { color: inherit; text-underline-offset: .22em; }
+    .action { display: inline-block; margin-top: 1rem; padding: .8rem 1.2rem; border-radius: 2rem; background: #dcf58e; color: #173c30; font-weight: 700; }
+    section { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 1rem; margin-top: 1rem; }
+    article { border: 1px solid #d8e1d5; border-radius: 1.25rem; background: #fff; padding: 1.5rem; }
+    h2 { font-size: 1.2rem; margin-top: 0; }
+    article p { margin-bottom: 0; line-height: 1.65; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <strong>Tagworks 배포 데모</strong>
+      <h1>HTML 파일 하나로<br>웹페이지 만들기</h1>
+      <p>Tagworks의 HTML 배포 API에서 사용할 수 있는 샘플입니다. 모바일과 데스크톱 화면에 맞춰 레이아웃이 조정됩니다.</p>
+      <a class="action" href="https://tagworks.io/">Tagworks 열기</a>
+    </header>
+    <section aria-label="샘플 구성">
+      <article>
+        <h2>단일 HTML 파일</h2>
+        <p>페이지 콘텐츠와 스타일을 한 파일에 담았습니다.</p>
+      </article>
+      <article>
+        <h2>외부 링크</h2>
+        <p>상단 버튼으로 Tagworks 홈페이지 이동을 확인할 수 있습니다.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

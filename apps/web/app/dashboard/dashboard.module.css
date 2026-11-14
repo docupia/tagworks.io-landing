@@ -47,6 +47,10 @@
   gap: 10px;
 }
 
+.mobileMenu {
+  display: none;
+}
+
 .account {
   max-width: 260px;
   overflow: hidden;
@@ -516,8 +520,49 @@
 }
 
 @media (max-width: 680px) {
-  .account {
+  .topbar {
+    position: relative;
+    z-index: 1;
+  }
+
+  .topActions,
+  .mobileMenuActions .account {
     display: none;
+  }
+
+  .mobileMenu {
+    position: relative;
+    display: block;
+  }
+
+  .mobileMenu summary {
+    min-height: 44px;
+    align-content: center;
+  }
+
+  .mobileMenuActions {
+    position: absolute;
+    inset-block-start: calc(100% + 8px);
+    inset-inline-end: 0;
+    display: grid;
+    width: min(180px, calc(100vw - 40px));
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid #cbc4b2;
+    border-radius: 12px;
+    background: #fffdf8;
+    box-shadow: 0 8px 24px rgba(49, 56, 42, 0.14);
+  }
+
+  .mobileMenuActions .planLink,
+  .mobileMenuActions .signout {
+    min-height: 44px;
+    align-content: center;
+  }
+
+  .mobileMenuActions .signout {
+    width: 100%;
+    text-align: start;
   }
 
   .main {
