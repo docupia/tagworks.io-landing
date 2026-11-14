@@ -63,7 +63,7 @@ test("publisher relay rejects invalid event signatures", async () => {
   }
 });
 
-test("forwards a signed subdomain visit using the configured canonical publisher", async (t) => {
+test("forwards signed visits from opaque and same-origin published documents", async (t) => {
   const { POST } = await import("../app/api/events/route");
   const { createAnalyticsEventToken } = await import("../lib/analytics");
   const slug = "page-0123456789abcdef";
@@ -99,5 +99,26 @@ test("forwards a signed subdomain visit using the configured canonical publisher
   }));
 
   assert.equal(response.status, 204);
-  assert.equal(upstream.mock.callCount(), 1);
+  const legacyOrigin = "https://tagworks-publisher.vercel.app";
+  const legacy = await POST(new Request(`${legacyOrigin}/api/events`, {
+    method: "POST",
+    headers: { origin: legacyOrigin, "sec-fetch-site": "same-origin", "content-type": "text/plain" },
+    body: JSON.stringify({
+      event_token: createAnalyticsEventToken(slug, VERSION_ID),
+      event_id: "5a6d9e68-d1bf-4f3f-9714-4d01382a3dca",
+      event_type: "page_view",
+      excluded_reason: null,
+      link_id: null,
+      page_slug: slug,
+      page_version_id: VERSION_ID,
+      session_id: "65916e09-50a4-46e9-8520-0b78f2a65a18",
+      source_label: "direct",
+      source_type: "direct",
+      utm_campaign: null,
+      utm_medium: null,
+      utm_source: null,
+    }),
+  }));
+  assert.equal(legacy.status, 204);
+  assert.equal(upstream.mock.callCount(), 2);
 });

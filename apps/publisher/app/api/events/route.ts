@@ -24,9 +24,15 @@ function response(status: number, message?: string): Response {
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const origin = request.headers.get("origin");
+  const fetchSite = request.headers.get("sec-fetch-site");
+  // Legacy documents retain their origin. Original documents run in an opaque sandbox.
+  const fromPublishedDocument =
+    (origin === "null" && fetchSite === "cross-site") ||
+    (origin === new URL(request.url).origin && fetchSite === "same-origin");
+
   if (
-    request.headers.get("origin") !== "null" ||
-    request.headers.get("sec-fetch-site") !== "cross-site" ||
+    !fromPublishedDocument ||
     !request.headers.get("content-type")?.toLowerCase().startsWith("text/plain")
   ) {
     return response(403, "허용되지 않은 요청입니다.");
