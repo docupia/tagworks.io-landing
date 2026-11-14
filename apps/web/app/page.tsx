@@ -285,6 +285,27 @@ export default async function HomePage() {
           </div>
         </section>
 
+        <section className="section faq" id="api-mcp" aria-labelledby="api-mcp-title">
+          <div className="shell faq-grid">
+            <div className="faq-heading" data-reveal>
+              <h2 id="api-mcp-title">API &amp; MCP</h2>
+            </div>
+            <div data-reveal>
+              <p>{tx("Publish HTML from your own scripts with the REST API, or from a compatible AI client with MCP. Both return a link you can share.", "REST API로 스크립트에서, MCP로 호환되는 AI 도구에서 HTML을 게시하고 공유 링크를 받을 수 있습니다.")}</p>
+              <dl>
+                <dt>MCP · Streamable HTTP</dt>
+                <dd><code>https://tagworks.io/api/mcp</code></dd>
+                <dt>{tx("HTML publishing API", "HTML 게시 API")}</dt>
+                <dd><code>POST https://tagworks.io/api/v1/deploy</code></dd>
+              </dl>
+              <p>{tx("Both require a personal API key. Sign in to create one under Dashboard → API & MCP.", "두 기능 모두 개인 API 키가 필요합니다. 로그인 후 대시보드 → API & MCP에서 키를 발급할 수 있습니다.")}</p>
+              <Link className="text-link" href="/login?next=%2Fdashboard%2Fapi-keys">
+                {tx("Log in to manage API keys", "로그인하여 API 키 관리")}
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <section className="section faq" id="faq" aria-labelledby="faq-title">
           <div className="shell faq-grid">
             <div className="faq-heading" data-reveal>
@@ -334,7 +355,7 @@ export default async function HomePage() {
           </a>
           <p>{tx("The simplest way to turn HTML into a public link.", "HTML을 공개 링크로 바꾸는 가장 단순한 방법.")}</p>
           <LanguageSwitcher locale={locale} />
-          <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link href="/pricing">{tx("Pricing", "요금제")}</Link><a href="#faq">FAQ</a></div>
+          <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link href="/pricing">{tx("Pricing", "요금제")}</Link><a href="#api-mcp">API &amp; MCP</a><a href="#faq">FAQ</a></div>
           <span>© {new Date().getFullYear()} TagWorks</span>
         </div>
       </footer>
