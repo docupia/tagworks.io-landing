@@ -1932,7 +1932,8 @@ svg {
 
 .footer-peerpush {
   grid-column: 1 / -1;
-  justify-self: start;
+  justify-self: center;
+  margin-block-end: clamp(16px, 4vw, 40px);
 }
 
 .footer-peerpush img {
