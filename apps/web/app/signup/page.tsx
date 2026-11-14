@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -29,9 +30,8 @@ export default async function SignupPage({ searchParams }: { searchParams: Searc
     <main className={styles.page}>
       <section className={styles.card}>
         <div className={styles.authTopline}>
-        <Link className={styles.brand} href="/" aria-label={tx("TagWorks home", "TagWorks 홈")}>
-          <span className={styles.brandMark}>T</span>
-          TagWorks
+        <Link className="brand" href="/" aria-label={tx("TagWorks home", "TagWorks 홈")}>
+          <BrandMark /><span>TagWorks</span>
         </Link>
         <LanguageSwitcher locale={locale} />
         </div>

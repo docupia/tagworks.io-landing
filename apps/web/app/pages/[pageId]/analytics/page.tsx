@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -236,9 +237,8 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
   return (
     <div className={dashboardStyles.shell}>
       <header className={dashboardStyles.topbar}>
-        <Link className={dashboardStyles.brand} href="/">
-          <span className={dashboardStyles.brandMark}>T</span>
-          TagWorks
+        <Link className="brand" href="/">
+          <BrandMark /><span>TagWorks</span>
         </Link>
         <div className={dashboardStyles.topActions}>
           <LanguageSwitcher locale={locale} />

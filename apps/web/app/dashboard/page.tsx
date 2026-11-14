@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -82,9 +83,8 @@ export default async function DashboardPage() {
   return (
     <div className={styles.shell}>
       <header className={styles.topbar}>
-        <Link className={styles.brand} href="/">
-          <span className={styles.brandMark}>T</span>
-          TagWorks
+        <Link className="brand" href="/">
+          <BrandMark /><span>TagWorks</span>
         </Link>
         <div className={styles.topActions}>
           <LanguageSwitcher locale={locale} />

@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/app/components/language-switcher";
@@ -28,7 +29,7 @@ export default async function PricingPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <Link className={styles.brand} href="/"><span className={styles.brandMark}>T</span>TagWorks</Link>
+        <Link className="brand" href="/"><BrandMark /><span>TagWorks</span></Link>
         <div className={styles.headerActions}>
           <LanguageSwitcher locale={locale} />
           <Link className={styles.textLink} href={user ? "/dashboard" : "/login"}>

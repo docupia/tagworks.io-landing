@@ -225,6 +225,8 @@ svg {
   gap: 14px;
 }
 
+.header-mobile-menu { display: none; }
+
 .header-login {
   min-height: 44px;
   padding-inline: 4px;
@@ -2115,7 +2117,44 @@ svg {
   .site-header.is-scrolled { padding: 7px 0; }
   .desktop-nav { display: none; }
   .header-actions { gap: 8px; }
-  .header-login { display: none; }
+  .header-login,
+  .header-language { display: none; }
+
+  .header-mobile-menu {
+    position: relative;
+    display: block;
+  }
+
+  .header-mobile-menu summary {
+    border-color: var(--line);
+    cursor: pointer;
+  }
+
+  .header-mobile-menu summary::-webkit-details-marker { display: none; }
+
+  .header-mobile-menu-panel {
+    position: absolute;
+    inset-block-start: calc(100% + 8px);
+    inset-inline-end: 0;
+    display: grid;
+    width: 164px;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 8px 24px rgba(49, 56, 42, 0.14);
+  }
+
+  .header-mobile-menu-panel select { width: 100%; }
+
+  .header-mobile-menu-panel a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 10px;
+    font-weight: 720;
+  }
   .button-small { padding-inline: 15px; }
   .button-small svg { display: none; }
 
@@ -2368,7 +2407,7 @@ svg {
 
 @media (max-width: 430px) {
   .brand span { font-size: 1rem; }
-  .site-header .button-small { display: none; }
+  .site-header .header-actions > .button-small { display: none; }
   .hero h1 { font-size: 2.48rem; }
   .eyebrow { font-size: 0.71rem; }
   .publish-line { align-items: flex-start; flex-direction: column; }

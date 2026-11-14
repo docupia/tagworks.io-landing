@@ -115,7 +115,7 @@ export function MarketingHeader({ locale }: { locale: Locale }) {
         </nav>
 
         <div className="header-actions">
-          <LanguageSwitcher locale={locale} />
+          <div className="header-language"><LanguageSwitcher locale={locale} /></div>
           <Link className="header-login" href="/login">
             {tx("Log in", "로그인")}
           </Link>
@@ -123,6 +123,13 @@ export function MarketingHeader({ locale }: { locale: Locale }) {
             {tx("Start free", "무료로 시작하기")}
             <ArrowIcon />
           </Link>
+          <details className="header-mobile-menu">
+            <summary className="button button-small">{tx("Menu", "메뉴")}</summary>
+            <div className="header-mobile-menu-panel">
+              <LanguageSwitcher locale={locale} />
+              <Link href="/login">{tx("Log in", "로그인")}</Link>
+            </div>
+          </details>
         </div>
       </div>
     </header>

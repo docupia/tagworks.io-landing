@@ -18,16 +18,6 @@
   box-shadow: 0 24px 70px rgba(79, 91, 62, 0.12);
 }
 
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 0;
-  color: #4f5b3e;
-  font-weight: 800;
-  text-decoration: none;
-  letter-spacing: -0.03em;
-}
 
 .authTopline {
   display: flex;
@@ -37,15 +27,6 @@
   margin-bottom: 30px;
 }
 
-.brandMark {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 11px;
-  color: #fffdf7;
-  background: #4f5b3e;
-}
 
 .eyebrow {
   margin: 0 0 8px;
