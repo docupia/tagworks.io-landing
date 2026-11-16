@@ -2,7 +2,7 @@ import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { signIn } from "@/app/auth-actions";
+import { signIn, signInWithGoogle } from "@/app/auth-actions";
 import { LanguageSwitcher } from "@/app/components/language-switcher";
 import styles from "@/app/auth.module.css";
 import { AuthSubmitButton } from "@/components/auth-submit-button";
@@ -40,6 +40,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
         <p className={styles.description}>{tx("Log in to manage your uploaded pages and permanent links.", "로그인하고 업로드한 페이지와 고정 링크를 관리하세요.")}</p>
         {params.message ? <p className={styles.notice}>{params.message}</p> : null}
         {params.error ? <p className={styles.error}>{params.error}</p> : null}
+        <form action={signInWithGoogle}>
+          <input type="hidden" name="screen" value="login" />
+          <input type="hidden" name="next" value={next} />
+          <button type="submit" className={styles.googleButton}>
+            {tx("Continue with Google", "Google로 계속하기")}
+          </button>
+        </form>
+
         <form className={styles.form} action={signIn}>
           <input name="next" type="hidden" value={next} />
           <label className={styles.field}>

@@ -2,7 +2,7 @@ import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { signUp } from "@/app/auth-actions";
+import { signUp, signInWithGoogle } from "@/app/auth-actions";
 import { LanguageSwitcher } from "@/app/components/language-switcher";
 import styles from "@/app/auth.module.css";
 import { AuthSubmitButton } from "@/components/auth-submit-button";
@@ -39,6 +39,14 @@ export default async function SignupPage({ searchParams }: { searchParams: Searc
         <h1 className={styles.title}>{tx("Ready to publish your first page?", "첫 페이지를 올려볼까요?")}</h1>
         <p className={styles.description}>{tx("Create an account, upload HTML, and get a permanent link right away.", "계정을 만들고 HTML을 업로드하면 바로 고정 링크가 생깁니다.")}</p>
         {params.error ? <p className={styles.error}>{params.error}</p> : null}
+        <form action={signInWithGoogle}>
+          <input type="hidden" name="screen" value="signup" />
+          <input type="hidden" name="next" value="/dashboard" />
+          <button type="submit" className={styles.googleButton}>
+            {tx("Continue with Google", "Google로 계속하기")}
+          </button>
+        </form>
+
         <form className={styles.form} action={signUp}>
           <label className={styles.field}>
             {tx("Email", "이메일")}

@@ -79,6 +79,19 @@
   box-shadow: 0 0 0 4px rgba(116, 128, 95, 0.13);
 }
 
+.googleButton {
+  width: 100%;
+  min-height: 46px;
+  margin-bottom: 16px;
+  border: 1px solid #cbc4b2;
+  border-radius: 10px;
+  background: #fff;
+  color: #31382a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .submit {
   min-height: 50px;
   border: 0;

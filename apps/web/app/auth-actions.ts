@@ -19,6 +19,28 @@ const safeNext = (formData: FormData) => {
   return next === "/billing" ? next : "/dashboard";
 };
 
+export async function signInWithGoogle(formData: FormData) {
+  const locale = await getLocale();
+  const next = safeNext(formData);
+  const fromSignup = field(formData, "screen") === "signup";
+  const callback = new URL("/auth/callback", getSiteUrl());
+  callback.searchParams.set("next", next);
+  callback.searchParams.set("flow", fromSignup ? "google-signup" : "google-login");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: callback.href },
+  });
+
+  if (error || !data.url) {
+    const path = fromSignup ? "/signup" : `/login?next=${encodeURIComponent(next)}`;
+    redirect(withMessage(path, "error", text(locale, "Could not start Google sign-in.", "Google 로그인을 시작하지 못했습니다.")));
+  }
+
+  redirect(data.url);
+}
+
 export async function signIn(formData: FormData) {
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
