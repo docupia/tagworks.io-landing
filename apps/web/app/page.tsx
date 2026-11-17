@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { LanguageSwitcher } from "./components/language-switcher";
 import { BrandMark } from "../components/marketing/brand-mark";
@@ -11,7 +12,14 @@ import {
 import { text } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: {
+  searchParams: Promise<{ code?: string | string[] }>;
+}) {
+  const { code } = await searchParams;
+  // Supabase can return to the Site URL when it cannot use the requested callback.
+  if (typeof code === "string" && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(code)) {
+    redirect(`/auth/callback?code=${encodeURIComponent(code)}`);
+  }
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
   return (

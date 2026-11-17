@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/env";
@@ -24,8 +25,6 @@ export async function signInWithGoogle(formData: FormData) {
   const next = safeNext(formData);
   const fromSignup = field(formData, "screen") === "signup";
   const callback = new URL("/auth/callback", getSiteUrl());
-  callback.searchParams.set("next", next);
-  callback.searchParams.set("flow", fromSignup ? "google-signup" : "google-login");
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -38,6 +37,13 @@ export async function signInWithGoogle(formData: FormData) {
     redirect(withMessage(path, "error", text(locale, "Could not start Google sign-in.", "Google 로그인을 시작하지 못했습니다.")));
   }
 
+  (await cookies()).set("tagworks-google-flow", fromSignup ? "signup" : next === "/billing" ? "billing" : "login", {
+    httpOnly: true,
+    secure: callback.protocol === "https:",
+    sameSite: "lax",
+    path: "/auth/callback",
+    maxAge: 600,
+  });
   redirect(data.url);
 }
 
