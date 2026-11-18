@@ -1,9 +1,7 @@
-import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import styles from "@/app/dashboard/dashboard.module.css";
-import { LanguageSwitcher } from "@/app/components/language-switcher";
 import { UploadForm } from "./upload-form";
 import { getUploadEntitlement } from "@/lib/billing";
 import { MAX_PAGE_REVISIONS, PAGE_ID_PATTERN } from "@/lib/page-revisions";
@@ -47,18 +45,6 @@ export default async function NewPage({ searchParams }: NewPageProps) {
 
   return (
     <div className={styles.shell}>
-      <header className={styles.topbar}>
-        <Link className="brand" href="/">
-          <BrandMark /><span>TagWorks</span>
-        </Link>
-        <div className={styles.topActions}>
-          <LanguageSwitcher locale={locale} />
-          <span className={styles.account}>{user.email}</span>
-          <form action="/auth/signout" method="post">
-            <button className={styles.signout} type="submit">{tx("Log out", "로그아웃")}</button>
-          </form>
-        </div>
-      </header>
       <main className={styles.main}>
         <section className={styles.uploadCard}>
           <Link className={styles.back} href="/dashboard">← {tx("Back to my pages", "내 페이지로 돌아가기")}</Link>

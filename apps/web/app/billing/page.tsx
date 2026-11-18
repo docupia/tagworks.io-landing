@@ -1,8 +1,6 @@
-import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LanguageSwitcher } from "@/app/components/language-switcher";
 import { PayPalCheckoutButton } from "@/app/components/paypal-checkout-button";
 import { getUploadEntitlement } from "@/lib/billing";
 import { LOCALE_TAGS, text } from "@/lib/i18n";
@@ -43,14 +41,6 @@ export default async function BillingPage({
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <Link className="brand" href="/"><BrandMark /><span>TagWorks</span></Link>
-        <div className={styles.headerActions}>
-          <LanguageSwitcher locale={locale} />
-          <Link className={styles.textLink} href="/dashboard">{tx("Dashboard", "대시보드")}</Link>
-          <form action="/auth/signout" method="post"><button className={styles.textLink} style={{ border: 0, background: "none", cursor: "pointer" }} type="submit">{tx("Log out", "로그아웃")}</button></form>
-        </div>
-      </header>
 
       <main className={styles.main}>
         <div className={styles.intro}>

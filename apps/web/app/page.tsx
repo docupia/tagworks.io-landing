@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MemberShell } from "./components/member-shell";
 import { createClient } from "@/lib/supabase/server";
 import { PricingSection } from "./pricing/section";
 import { AffiliateSection } from "./affiliates/section";
@@ -26,7 +27,7 @@ export default async function HomePage({ searchParams }: {
   const locale = await getLocale();
   const { data: { user } } = await (await createClient()).auth.getUser();
   const tx = (english: string, korean: string) => text(locale, english, korean);
-  return (
+  const content = (
     <>
       <a className="skip-link" href="#main">{tx("Skip to content", "본문으로 바로가기")}</a>
       <MarketingHeader locale={locale} member={user ? user.email ?? "Member" : undefined} />
@@ -385,4 +386,5 @@ export default async function HomePage({ searchParams }: {
       </footer>
     </>
   );
+  return user ? <MemberShell>{content}</MemberShell> : content;
 }

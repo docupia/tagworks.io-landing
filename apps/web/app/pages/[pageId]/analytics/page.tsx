@@ -1,9 +1,7 @@
-import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import dashboardStyles from "@/app/dashboard/dashboard.module.css";
-import { LanguageSwitcher } from "@/app/components/language-switcher";
 import {
   ANALYTICS_RANGE_OPTIONS,
   parseAnalyticsRange,
@@ -236,18 +234,6 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
 
   return (
     <div className={dashboardStyles.shell}>
-      <header className={dashboardStyles.topbar}>
-        <Link className="brand" href="/">
-          <BrandMark /><span>TagWorks</span>
-        </Link>
-        <div className={dashboardStyles.topActions}>
-          <LanguageSwitcher locale={locale} />
-          <span className={dashboardStyles.account}>{user.email}</span>
-          <form action="/auth/signout" method="post">
-            <button className={dashboardStyles.signout} type="submit">{tx("Log out", "로그아웃")}</button>
-          </form>
-        </div>
-      </header>
 
       <main className={`${dashboardStyles.main} ${styles.main}`}>
         <Link className={dashboardStyles.back} href="/dashboard">← {tx("Back to my pages", "내 페이지로 돌아가기")}</Link>

@@ -1,9 +1,7 @@
-import { BrandMark } from "@/components/marketing/brand-mark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import styles from "./dashboard.module.css";
-import { LanguageSwitcher } from "@/app/components/language-switcher";
 import { PageQrCode } from "@/app/components/page-qr-code";
 import { getPublisherUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
@@ -69,36 +67,8 @@ export default async function DashboardPage() {
     : null;
   const publisherUrl = getPublisherUrl();
 
-  const accountActions = (
-    <>
-      <Link className={styles.planLink} href="/dashboard/affiliates">어필리에이트</Link>
-      <Link className={styles.planLink} href="/dashboard/api-keys">API & MCP</Link>
-      <Link className={styles.planLink} href="/billing">{tx("Plans", "요금제")}</Link>
-      <span className={styles.account}>{user.email}</span>
-      <form action="/auth/signout" method="post">
-        <button className={styles.signout} type="submit">{tx("Log out", "로그아웃")}</button>
-      </form>
-    </>
-  );
-
   return (
     <div className={styles.shell}>
-      <header className={styles.topbar}>
-        <Link className="brand" href="/">
-          <BrandMark /><span>TagWorks</span>
-        </Link>
-        <div className={styles.topActions}>
-          <LanguageSwitcher locale={locale} />
-          {accountActions}
-        </div>
-        <details className={styles.mobileMenu}>
-          <summary className={styles.signout}>{tx("Menu", "메뉴")}</summary>
-          <div className={styles.mobileMenuActions}>
-            <LanguageSwitcher locale={locale} />
-            {accountActions}
-          </div>
-        </details>
-      </header>
       <main className={styles.main}>
         <div className={styles.headingRow}>
           <div>
