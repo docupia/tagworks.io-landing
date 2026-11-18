@@ -1,0 +1,26 @@
+.page {
+  max-width: 76rem;
+  margin: auto;
+  padding: clamp(1rem, 4vw, 4rem);
+  color: #201c18;
+  line-height: 1.7;
+}
+.nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.page a { text-underline-offset: .2em; }
+.hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; align-items: center; padding: 4rem 0; }
+.hero h1 { font-size: clamp(2.4rem, 5vw, 5rem); line-height: 1.13; letter-spacing: -.05em; }
+.page h2 { font-size: 1.8rem; }
+.ticket { background: #ee6744; padding: 2rem; border-radius: 1rem; }
+.rate { font-size: clamp(5rem, 12vw, 10rem); font-weight: 800; line-height: 1.1; letter-spacing: -.08em; }
+.cta { display: inline-flex; min-height: 48px; align-items: center; padding: .7rem 1.1rem; background: #201c18; color: #fff; border-radius: .4rem; text-decoration: none; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.steps article { border-top: 2px solid #201c18; padding-top: 1rem; }
+.page section { margin: 3rem 0; scroll-margin-top: 2rem; }
+.page details { padding: 1rem 0; border-bottom: 1px solid #cdc6b9; }
+.page summary { cursor: pointer; }
+.page footer { padding: 2rem 0; border-top: 1px solid #cdc6b9; }
+.page a:focus-visible, .page summary:focus-visible { outline: 3px solid #b43c1d; outline-offset: 4px; }
+@media (max-width: 680px) {
+  .hero, .steps { grid-template-columns: 1fr; }
+  .hero { padding: 2rem 0; gap: 1rem; }
+}

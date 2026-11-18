@@ -18,7 +18,7 @@ const withMessage = (path: string, key: "error" | "message", message: string) =>
 
 const safeNext = (formData: FormData) => {
   const next = field(formData, "next");
-  return next === "/billing" ? next : "/dashboard";
+  return ["/billing", "/dashboard/affiliates"].includes(next) ? next : "/dashboard";
 };
 
 export async function signInWithGoogle(formData: FormData) {
@@ -38,7 +38,7 @@ export async function signInWithGoogle(formData: FormData) {
     redirect(withMessage(path, "error", text(locale, "Could not start Google sign-in.", "Google 로그인을 시작하지 못했습니다.")));
   }
 
-  (await cookies()).set("tagworks-google-flow", fromSignup ? "signup" : next === "/billing" ? "billing" : "login", {
+  (await cookies()).set("tagworks-google-flow", fromSignup ? "signup" : next === "/billing" ? "billing" : next === "/dashboard/affiliates" ? "affiliates" : "login", {
     httpOnly: true,
     secure: callback.protocol === "https:",
     sameSite: "lax",

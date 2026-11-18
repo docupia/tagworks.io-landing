@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const supabase = await createClient();
   const params = await searchParams;
-  const next = params.next === "/billing" ? "/billing" : "/dashboard";
+  const next = params.next === "/billing" || params.next === "/dashboard/affiliates" ? params.next : "/dashboard";
   const { data } = await supabase.auth.getUser();
   if (data.user) redirect(next);
 
