@@ -88,7 +88,7 @@ const analyticsData: Record<SourceKey, AnalyticsRow> = {
   },
 };
 
-export function MarketingHeader({ locale }: { locale: Locale }) {
+export function MarketingHeader({ locale, member }: { locale: Locale; member?: string }) {
   const [scrolled, setScrolled] = useState(false);
   const tx = (english: string, korean: string) => text(locale, english, korean);
 
@@ -111,23 +111,31 @@ export function MarketingHeader({ locale }: { locale: Locale }) {
           <a href="#workflow">{tx("How it works", "작동 방식")}</a>
           <a href="#product-view">{tx("Product", "제품 화면")}</a>
           <a href="#principles">{tx("What we support", "지원 범위")}</a>
-          <Link href="/pricing">{tx("Pricing", "요금제")}</Link>
+          <a href="#pricing">{tx("Pricing", "요금제")}</a>
+          <a href="#affiliates">Affiliate</a>
         </nav>
 
         <div className="header-actions">
           <div className="header-language"><LanguageSwitcher locale={locale} /></div>
-          <Link className="header-login" href="/login">
-            {tx("Log in", "로그인")}
-          </Link>
-          <Link className="button button-small button-primary" href="/signup">
-            {tx("Start free", "무료로 시작하기")}
-            <ArrowIcon />
-          </Link>
+          {member ? (
+            <Link className="header-member" href="/dashboard" title={member}>
+              {tx("My pages", "내 페이지")} · {member}
+            </Link>
+          ) : (
+            <>
+              <Link className="header-login" href="/login">{tx("Log in", "로그인")}</Link>
+              <Link className="button button-small button-primary" href="/signup">
+                {tx("Start free", "무료로 시작하기")}<ArrowIcon />
+              </Link>
+            </>
+          )}
           <details className="header-mobile-menu">
             <summary className="button button-small">{tx("Menu", "메뉴")}</summary>
             <div className="header-mobile-menu-panel">
               <LanguageSwitcher locale={locale} />
-              <Link href="/login">{tx("Log in", "로그인")}</Link>
+              <a href="#pricing">{tx("Pricing", "요금제")}</a>
+              <a href="#affiliates">Affiliate</a>
+              <Link href={member ? "/dashboard" : "/login"}>{member ? member : tx("Log in", "로그인")}</Link>
             </div>
           </details>
         </div>

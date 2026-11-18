@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { PricingSection } from "./pricing/section";
+import { AffiliateSection } from "./affiliates/section";
 import { redirect } from "next/navigation";
 
 import { LanguageSwitcher } from "./components/language-switcher";
@@ -21,11 +24,12 @@ export default async function HomePage({ searchParams }: {
     redirect(`/auth/callback?code=${encodeURIComponent(code)}`);
   }
   const locale = await getLocale();
+  const { data: { user } } = await (await createClient()).auth.getUser();
   const tx = (english: string, korean: string) => text(locale, english, korean);
   return (
     <>
       <a className="skip-link" href="#main">{tx("Skip to content", "본문으로 바로가기")}</a>
-      <MarketingHeader locale={locale} />
+      <MarketingHeader locale={locale} member={user ? user.email ?? "Member" : undefined} />
       <RevealController />
 
       <main id="main">
@@ -293,6 +297,9 @@ export default async function HomePage({ searchParams }: {
           </div>
         </section>
 
+        <PricingSection />
+        <AffiliateSection />
+
         <section className="section faq" id="api-mcp" aria-labelledby="api-mcp-title">
           <div className="shell faq-grid">
             <div className="faq-heading" data-reveal>
@@ -363,7 +370,7 @@ export default async function HomePage({ searchParams }: {
           </a>
           <p>{tx("The simplest way to turn HTML into a public link.", "HTML을 공개 링크로 바꾸는 가장 단순한 방법.")}</p>
           <LanguageSwitcher locale={locale} />
-          <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link href="/pricing">{tx("Pricing", "요금제")}</Link><Link href="/affiliates">Affiliate</Link><a href="#api-mcp">API &amp; MCP</a><a href="#faq">FAQ</a></div>
+          <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link href="#pricing">{tx("Pricing", "요금제")}</Link><Link href="#affiliates">Affiliate</Link><a href="#api-mcp">API &amp; MCP</a><a href="#faq">FAQ</a></div>
           <span>© {new Date().getFullYear()} TagWorks</span>
           <a href="https://peerpush.com/p/tagworks" target="_blank" rel="noopener" className="footer-peerpush">
             <img

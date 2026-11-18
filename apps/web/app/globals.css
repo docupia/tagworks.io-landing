@@ -2471,3 +2471,16 @@ svg {
   white-space: nowrap;
   border: 0;
 }
+
+
+.header-member {
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .88rem;
+  font-weight: 720;
+}
+@media (max-width: 760px) {
+  .header-member { max-width: 120px; }
+}

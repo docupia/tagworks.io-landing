@@ -35,6 +35,7 @@
 }
 
 .main {
+  scroll-margin-top: 100px;
   width: min(1140px, calc(100% - 40px));
   margin: 0 auto;
   padding: clamp(58px, 8vw, 100px) 0 90px;
@@ -55,7 +56,7 @@
   text-transform: uppercase;
 }
 
-.intro h1 {
+.intro h2 {
   margin: 0;
   font-size: clamp(2.25rem, 6vw, 4.4rem);
   letter-spacing: -.065em;
