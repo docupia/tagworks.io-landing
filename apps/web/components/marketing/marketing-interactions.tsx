@@ -112,7 +112,7 @@ export function MarketingHeader({ locale, member }: { locale: Locale; member?: s
           <a href="#product-view">{tx("Product", "제품 화면")}</a>
           <a href="#principles">{tx("What we support", "지원 범위")}</a>
           <a href="#pricing">{tx("Pricing", "요금제")}</a>
-          <a href="#affiliates">Affiliate</a>
+          <a href="#affiliates">{tx("Affiliate", "어필리에이트")}</a>
         </nav>
 
         <div className="header-actions">
@@ -134,7 +134,7 @@ export function MarketingHeader({ locale, member }: { locale: Locale; member?: s
             <div className="header-mobile-menu-panel">
               <LanguageSwitcher locale={locale} />
               <a href="#pricing">{tx("Pricing", "요금제")}</a>
-              <a href="#affiliates">Affiliate</a>
+              <a href="#affiliates">{tx("Affiliate", "어필리에이트")}</a>
               <Link href={member ? "/dashboard" : "/login"}>{member ? member : tx("Log in", "로그인")}</Link>
             </div>
           </details>

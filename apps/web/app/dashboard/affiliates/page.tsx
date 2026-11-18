@@ -4,7 +4,6 @@ import { copy as introduction } from "@/app/affiliates/copy";
 import Link from "next/link";
 import { affiliateUser } from "@/lib/affiliates";
 import { getDatabase } from "@/lib/database";
-import { getSiteUrl } from "@/lib/env";
 import { applyAffiliate, recordAffiliatePayout, reviewAffiliate } from "./actions";
 import styles from "../dashboard.module.css";
 
@@ -48,7 +47,7 @@ export default async function AffiliatePage() {
             </form>
           ) : null}
           <p>{t("신청 상태")} · {t(account.status)} / {t("추천 가입")} · {String(account.referrals)}</p>
-          <p>{t("추천 링크")} <a href={`${getSiteUrl()}/?ref=${account.code}`}>{`${getSiteUrl()}/?ref=${account.code}`}</a></p>
+          <p>{t("추천 링크")} <a href={`https://tagworks.io/?ref=${account.code}`}>{`https://tagworks.io/?ref=${account.code}`}</a></p>
           <table>
             <thead><tr><th>{t("월")}</th><th>{t("통화")}</th><th>{t("매출")}</th><th>{t("수당")}</th><th>{t("이월 잔액")}</th><th>{t("미지급 잔액")}</th><th>{t("지급 기록")}</th></tr></thead>
             <tbody>{revenue.filter(row => row.affiliate_id === account.owner_id).map(row => {
