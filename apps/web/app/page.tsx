@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MemberShell } from "./components/member-shell";
 import { createClient } from "@/lib/supabase/server";
 import { PricingSection } from "./pricing/section";
 import { AffiliateSection } from "./affiliates/section";
@@ -386,5 +385,5 @@ export default async function HomePage({ searchParams }: {
       </footer>
     </>
   );
-  return user ? <MemberShell>{content}</MemberShell> : content;
+  return content;
 }

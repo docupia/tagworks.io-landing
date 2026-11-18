@@ -5,6 +5,15 @@
 .sidebar nav a, .sidebar button { display: block; width: 100%; padding: 12px; border: 0; border-radius: 8px; background: transparent; color: #4f5b3e; text-align: start; font: inherit; font-weight: 650; cursor: pointer; }
 .sidebar nav a:hover, .sidebar button:hover { background: #f0eddf; }
 .sidebar form { margin: 0; }
+.sidebar :global(.language-switcher) {
+  padding: 0;
+  background: #4f5b3e;
+}
+.sidebar :global(.language-switcher select) {
+  width: 100%;
+  max-width: none;
+  min-height: 36px;
+}
 .content { min-width: 0; }
 @media (max-width: 760px) {
   .shell { grid-template-columns: 1fr; }
