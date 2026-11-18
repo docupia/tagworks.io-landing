@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { attachReferral } from "@/lib/affiliates";
 import { createClient } from "@/lib/supabase/server";
 import { LOCALE_COOKIE, normalizeLocale, text } from "@/lib/i18n";
 
@@ -19,8 +20,11 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return redirectTo(new URL(next, request.url));
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      if (data.user) await attachReferral(data.user.id);
+      return redirectTo(new URL(next, request.url));
+    }
   }
 
   const flow = request.nextUrl.searchParams.get("flow") ?? (pendingFlow === "signup" ? "google-signup" : pendingFlow ? "google-login" : null);

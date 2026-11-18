@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { attachReferral } from "@/lib/affiliates";
 import { getSiteUrl } from "@/lib/env";
 import { text } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
@@ -112,6 +113,7 @@ export async function signUp(formData: FormData) {
     redirect(withMessage("/signup", "error", tx("We could not create your account. Please try again shortly.", "회원가입을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.")));
   }
 
+  if (data.user) await attachReferral(data.user.id);
   if (data.session) redirect("/dashboard");
 
   redirect(

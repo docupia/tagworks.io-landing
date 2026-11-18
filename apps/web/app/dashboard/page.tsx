@@ -71,6 +71,7 @@ export default async function DashboardPage() {
 
   const accountActions = (
     <>
+      <Link className={styles.planLink} href="/dashboard/affiliates">어필리에이트</Link>
       <Link className={styles.planLink} href="/dashboard/api-keys">API & MCP</Link>
       <Link className={styles.planLink} href="/billing">{tx("Plans", "요금제")}</Link>
       <span className={styles.account}>{user.email}</span>

@@ -25,6 +25,13 @@ export async function proxy(request: NextRequest) {
   // Do not remove this call: it refreshes an expired access token when possible.
   await supabase.auth.getUser();
 
+  const referral = request.nextUrl.searchParams.get("ref");
+  if (referral && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(referral)) {
+    response.cookies.set("tagworks-ref", referral, {
+      httpOnly: true, secure: request.nextUrl.protocol === "https:", sameSite: "lax",
+      path: "/", maxAge: 30 * 24 * 60 * 60,
+    });
+  }
   return response;
 }
 
