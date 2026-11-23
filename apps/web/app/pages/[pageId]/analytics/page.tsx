@@ -1,3 +1,5 @@
+import { publicationUrls } from "@/lib/publication-url";
+import { getPublicUsername } from "@/lib/public-username";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -227,7 +229,7 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
     { target_page_id: page.id, range_days: rangeDays },
   );
   const analytics = analyticsError ? null : parsePageAnalytics(analyticsData, rangeDays);
-  const publicUrl = `${getPublisherUrl()}/p/${page.slug}`;
+  const { publicUrl } = publicationUrls(page.slug, getPublisherUrl(), process.env.TAGWORKS_PUBLISHING_DOMAIN, await getPublicUsername(user.id));
   const isEmpty = analytics?.summary.sessions === 0;
   const updatedAt = analytics?.updatedAt ? new Date(analytics.updatedAt) : null;
   const validUpdatedAt = updatedAt && !Number.isNaN(updatedAt.getTime()) ? updatedAt : null;

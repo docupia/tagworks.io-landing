@@ -23,6 +23,10 @@ export async function MemberShell({ children }: { children: ReactNode }) {
     <aside className={styles.sidebar}>
       <Link className="brand" href="/"><BrandMark /><span>TagWorks</span></Link>
       <span className={styles.email}>{user.email}</span>
+      <Link href="/dashboard/profile">{{
+        en: "Public username", ko: "공개 사용자명", ja: "公開ユーザー名",
+        es: "Nombre público", de: "Öffentlicher Benutzername", zh: "公开用户名",
+      }[locale]}</Link>
       <nav aria-label={labels[0]}>
         {["/dashboard", "/dashboard/api-keys", "/billing", "/dashboard/affiliates"].map((href, i) =>
           <Link key={href} href={href}>{labels[i]}</Link>)}

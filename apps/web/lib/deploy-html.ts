@@ -1,3 +1,4 @@
+import { getPublicUsername } from "@/lib/public-username";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { getDatabase } from "@/lib/database";
 import { ApiError } from "@/lib/api-http";
@@ -10,7 +11,7 @@ export async function deployHtml(ownerId: string, input: unknown) {
   const fields = validateDeploymentInput(input);
   const id = randomUUID(), versionId = randomUUID(), reservationId = randomUUID();
   const slug = `page-${randomBytes(8).toString("hex")}`;
-  const urls = publicationUrls(slug, getPublisherUrl(), process.env.TAGWORKS_PUBLISHING_DOMAIN);
+  const urls = publicationUrls(slug, getPublisherUrl(), process.env.TAGWORKS_PUBLISHING_DOMAIN, await getPublicUsername(ownerId));
   const sourcePath = `${ownerId}/${id}/${versionId}/original.html`;
   const published = prepareOriginalPublishedHtml(fields.html, { fallbackTitle: fields.title, versionId });
   const sql = getDatabase();

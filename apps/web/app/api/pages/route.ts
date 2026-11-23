@@ -1,3 +1,5 @@
+import { publicationUrls } from "@/lib/publication-url";
+import { getPublicUsername } from "@/lib/public-username";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { getUploadEntitlement, releaseUploadQuota, reserveUploadQuota } from "@/lib/billing";
@@ -128,7 +130,7 @@ async function publish(request: NextRequest, revision: boolean) {
     const pageId = existingPage?.id ?? randomUUID();
     const versionId = randomUUID();
     const slug = existingPage?.slug ?? `page-${randomBytes(6).toString("hex")}`;
-    const publicUrl = `${getPublisherUrl()}/p/${slug}`;
+    const { publicUrl } = publicationUrls(slug, getPublisherUrl(), process.env.TAGWORKS_PUBLISHING_DOMAIN, await getPublicUsername(user.id));
     objectPath = `${user.id}/${pageId}/${versionId}/original.html`;
 
     const sql = getDatabase();

@@ -1,3 +1,5 @@
+import { publicationUrls } from "@/lib/publication-url";
+import { getPublicUsername } from "@/lib/public-username";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -66,6 +68,7 @@ export default async function DashboardPage() {
     ? new Map(summaryRows.map((summary) => [summary.page_id, summary]))
     : null;
   const publisherUrl = getPublisherUrl();
+  const publicUsername = await getPublicUsername(user.id);
 
   return (
     <div className={styles.shell}>
@@ -84,7 +87,7 @@ export default async function DashboardPage() {
         ) : pages.length ? (
           <div className={styles.grid}>
             {pages.map((page) => {
-              const href = `${publisherUrl}/p/${page.slug}`;
+              const { publicUrl: href } = publicationUrls(page.slug, publisherUrl, process.env.TAGWORKS_PUBLISHING_DOMAIN, publicUsername);
               const summary = summaries?.get(page.id) ?? (summaries ? {
                 page_id: page.id,
                 sessions: 0,

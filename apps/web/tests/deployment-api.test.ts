@@ -53,3 +53,16 @@ test("MCP tool errors do not leak server internals", async () => {
   assert.ok(!JSON.stringify(value).includes("secret"));
   assert.equal((value as { result: { isError: boolean } }).result.isError, true);
 });
+
+test("public usernames appear consistently in share URLs without removing legacy subdomains", () => {
+  assert.deepEqual(publicationUrls("page-a", "https://publisher.example/", undefined, "alice"), {
+    publicUrl: "https://publisher.example/p/alice/page-a",
+    pathUrl: "https://publisher.example/p/alice/page-a",
+    subdomainUrl: null,
+  });
+  assert.deepEqual(publicationUrls("page-a", "https://publisher.example", "pages.example.net", "alice"), {
+    publicUrl: "https://publisher.example/p/alice/page-a",
+    pathUrl: "https://publisher.example/p/alice/page-a",
+    subdomainUrl: "https://page-a.pages.example.net",
+  });
+});
