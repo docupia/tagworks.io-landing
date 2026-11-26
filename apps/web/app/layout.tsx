@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getLocale } from "@/lib/i18n-server";
 import { brandCopy } from "@/lib/brand-copy";
+import { SiteVisitBeacon } from "./components/site-visit-beacon";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,7 +21,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const locale = await getLocale();
   return (
     <html lang={locale} data-scroll-behavior="smooth">
-      <body>{children}</body>
+      <body>{children}<SiteVisitBeacon /></body>
     </html>
   );
 }

@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { text } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicUsername } from "@/lib/public-username";
 import { getLocale } from "@/lib/i18n-server";
@@ -22,6 +24,7 @@ export default async function ProfilePage({ searchParams }: {
   const username = await getPublicUsername(user.id);
   const params = await searchParams;
   return <main className={styles.main}>
+    <Link className={styles.backLink} href="/dashboard">← {text(locale, "My pages", "내 페이지")}</Link>
     <h1>{labels[0]}</h1>
     <p>{labels[1]}</p>
     {params.error ? <p className={styles.error} role="alert">{params.error === "taken" ? labels[3] : labels[4]}</p> : null}

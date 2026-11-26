@@ -549,3 +549,53 @@
     justify-self: start;
   }
 }
+
+.usernameRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.usernameRow strong { color: var(--ink); font-weight: 750; overflow-wrap: anywhere; }
+.usernameRow a { color: var(--olive); font-weight: 750; }
+
+.siteVisits {
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.siteVisits h2 { margin: 0 0 14px; font-size: 1rem; }
+
+.siteVisitGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.siteVisitGrid dl {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+
+.siteVisitGrid dt { color: var(--muted); font-size: 0.76rem; font-weight: 750; }
+.siteVisitGrid dd { margin: 0; font-size: 1.25rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+
+.backLink { display: inline-block; margin-bottom: 12px; color: var(--olive); font-weight: 750; }
+
+@media (max-width: 680px) {
+  .siteVisits { padding: 16px; margin-bottom: 18px; }
+  .siteVisitGrid { gap: 8px; }
+  .siteVisitGrid dl { padding: 10px; }
+  .siteVisitGrid dd { font-size: 1.1rem; }
+}

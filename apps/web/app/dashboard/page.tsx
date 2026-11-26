@@ -10,6 +10,8 @@ import { createClient } from "@/lib/supabase/server";
 import { LOCALE_TAGS, text, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { statusLabel } from "@/lib/page-status";
+import { getDatabase } from "@/lib/database";
+import { canViewSiteVisits, type SiteVisitSummary } from "@/lib/site-visits";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -70,6 +72,8 @@ export default async function DashboardPage() {
     : null;
   const publisherUrl = getPublisherUrl();
   const publicUsername = await getPublicUsername(user.id);
+  const siteVisits = canViewSiteVisits(user) ? await loadSiteVisits() : undefined;
+  const rangeLabel = (days: number) => days === 1 ? tx("Today", "오늘") : days === 7 ? tx("Last 7 days", "최근 7일") : tx("Last 30 days", "최근 30일");
 
   return (
     <div className={styles.shell}>
@@ -78,9 +82,33 @@ export default async function DashboardPage() {
           <div>
             <h1 className={styles.title}>{tx("My pages", "내 페이지")}</h1>
             <p className={styles.subtitle}>{tx("Manage your uploaded HTML and permanent links in one place.", "업로드한 HTML과 고정 링크를 한곳에서 확인하세요.")}</p>
+            <p className={styles.usernameRow}>
+              <span>{tx("Public username", "공개 사용자명")}</span>
+              <strong>{publicUsername ? `@${publicUsername}` : tx("Not set", "미설정")}</strong>
+              <Link href="/dashboard/profile">{publicUsername ? tx("Change", "변경") : tx("Set up", "설정")}</Link>
+            </p>
           </div>
           <Link className={styles.primaryButton} href="/pages/new">{tx("Upload new HTML", "새 HTML 업로드")}</Link>
         </div>
+
+        {siteVisits !== undefined ? (
+          <section className={styles.siteVisits} aria-labelledby="site-visits-title">
+            <h2 id="site-visits-title">{tx("tagworks.io unique visitors", "tagworks.io 순방문자")}</h2>
+            {siteVisits ? (
+              <div className={styles.siteVisitGrid}>
+                {siteVisits.map((row) => (
+                  <dl key={row.range_days}>
+                    <dt>{rangeLabel(Number(row.range_days))}</dt>
+                    <dd>{displayCount(row.visitors, locale)}</dd>
+                  </dl>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.error}>{tx("We could not load visitor counts. Please try again shortly.", "방문자 수를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.")}</p>
+            )}
+            <p className={styles.statsCaption}>{tx("Unique visitors, counted once per browser (Korea time). Only you can see this.", "브라우저 기준 순방문자 수입니다(한국 시간 기준). 이 정보는 나만 볼 수 있습니다.")}</p>
+          </section>
+        ) : null}
 
         {error ? (
           <p className={styles.error}>{tx("We could not load your pages. Please try again shortly.", "페이지 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.")}</p>
@@ -157,4 +185,13 @@ export default async function DashboardPage() {
       </main>
     </div>
   );
+}
+
+async function loadSiteVisits(): Promise<SiteVisitSummary[] | null> {
+  try {
+    return await getDatabase()<SiteVisitSummary[]>`select * from public.get_site_visit_summary()`;
+  } catch (error) {
+    console.error("Could not load site visits", error);
+    return null;
+  }
 }
