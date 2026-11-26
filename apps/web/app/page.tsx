@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { brandCopy } from "@/lib/brand-copy";
 import { createClient } from "@/lib/supabase/server";
 import { PricingSection } from "./pricing/section";
 import { AffiliateSection } from "./affiliates/section";
@@ -24,6 +25,7 @@ export default async function HomePage({ searchParams }: {
     redirect(`/auth/callback?code=${encodeURIComponent(code)}`);
   }
   const locale = await getLocale();
+  const brand = brandCopy[locale];
   const { data: { user } } = await (await createClient()).auth.getUser();
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const content = (
@@ -40,17 +42,14 @@ export default async function HomePage({ searchParams }: {
             <div className="hero-copy" data-reveal>
               <div className="eyebrow">
                 <span className="eyebrow-dot" aria-hidden="true" />
-                {tx("Your AI-made HTML is ready to share", "AI로 만든 HTML, 이제 공유할 차례")}
+                {brand.eyebrow}
               </div>
               <h1 id="hero-title">
-                {tx("Upload your HTML and publish it", "만든 HTML을 올리고,")}<br />
-                <span>{tx("with one permanent link.", "하나의 링크로 공개하세요.")}</span>
+                {brand.firstLine}<br />
+                <span>{brand.secondLine}</span>
               </h1>
               <p className="hero-description">
-                {tx(
-                  "TagWorks publishes your HTML at a permanent URL. Create an account, upload your file, and share it—no server setup required.",
-                  "태그웍스는 홍보용 HTML을 안전하게 검사해 고정 링크로 공개합니다. 별도 서버 설정 없이 가입하고, 파일을 올리고, 바로 공유하세요.",
-                )}
+                {brand.description}
               </p>
               <div className="hero-actions">
                 <Link className="button button-primary" href="/signup">
@@ -368,7 +367,7 @@ export default async function HomePage({ searchParams }: {
             <BrandMark />
             <span>TagWorks</span>
           </a>
-          <p>{tx("The simplest way to turn HTML into a public link.", "HTML을 공개 링크로 바꾸는 가장 단순한 방법.")}</p>
+          <p>{brand.title}</p>
           <LanguageSwitcher locale={locale} />
           <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link href="#pricing">{tx("Pricing", "요금제")}</Link><Link href="#affiliates">{tx("Affiliate", "어필리에이트")}</Link><a href="#api-mcp">API &amp; MCP</a><a href="#faq">FAQ</a></div>
           <span>© {new Date().getFullYear()} TagWorks</span>

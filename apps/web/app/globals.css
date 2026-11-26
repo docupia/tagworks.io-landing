@@ -2484,3 +2484,6 @@ svg {
 @media (max-width: 760px) {
   .header-member { max-width: 120px; }
 }
+
+/* Let translated marketing headlines wrap naturally on narrow screens. */
+.hero h1 span { white-space: normal; }
