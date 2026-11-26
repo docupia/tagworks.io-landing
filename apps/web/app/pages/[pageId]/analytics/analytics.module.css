@@ -1,6 +1,17 @@
 .main {
   display: grid;
+  /* minmax(0, 1fr) stops wide charts and tables from stretching the page past the screen. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 22px;
+}
+
+.main > * {
+  min-width: 0;
+}
+
+.main .back {
+  margin-bottom: 0;
+  font-size: 0.85rem;
 }
 
 .hero {
@@ -438,20 +449,56 @@
 }
 
 .dailyChart {
+  --day-min: 30px;
+  --day-gap: 7px;
   display: grid;
-  gap: 7px;
-  min-width: max-content;
+  grid-template-columns: repeat(var(--days), minmax(var(--day-min), 1fr));
+  gap: var(--day-gap);
+  min-width: calc(var(--days) * (var(--day-min) + var(--day-gap)));
   height: 190px;
   padding: 8px 2px 0;
+}
+
+.dailyChart[data-density="medium"] {
+  --day-min: 22px;
+  --day-gap: 5px;
+}
+
+.dailyChart[data-density="dense"] {
+  --day-min: 8px;
+  --day-gap: 3px;
 }
 
 .day {
   display: grid;
   grid-template-rows: 22px 1fr 24px;
   gap: 4px;
-  min-width: 30px;
+  min-width: 0;
   align-items: end;
   text-align: center;
+}
+
+/* Dense ranges keep counts in the tooltip and label only every few days. */
+.dailyChart[data-density="dense"] .barValue {
+  visibility: hidden;
+}
+
+.dailyChart:not([data-density="loose"]) time:not([data-tick]) {
+  visibility: hidden;
+}
+
+.dailyChart:not([data-density="loose"]) time {
+  overflow: visible;
+  width: 0;
+  justify-self: center;
+  display: flex;
+  justify-content: center;
+}
+
+/* Keep the newest date inside the chart instead of clipping it at the edge. */
+.dailyChart:not([data-density="loose"]) .day:last-child time {
+  justify-self: end;
+  justify-content: flex-end;
 }
 
 .barValue {
@@ -461,7 +508,8 @@
 
 .barTrack {
   display: flex;
-  height: 132px;
+  height: 100%;
+  min-height: 0;
   align-items: flex-end;
   border-radius: 7px 7px 3px 3px;
   background: var(--surface-muted);
@@ -560,6 +608,97 @@
   background: var(--muted);
   font-size: 0.68rem;
   font-weight: 900;
+}
+
+/* Laptops (MacBook 13–16"): tighter spacing so the summary and trend fit in one screen. */
+@media (min-width: 681px) {
+  main.main {
+    width: min(1240px, calc(100% - 48px));
+    padding-top: 24px;
+    padding-bottom: 56px;
+  }
+
+  .main {
+    gap: 16px;
+  }
+
+  .hero .title {
+    font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+  }
+
+  .hero .subtitle {
+    margin-top: 6px;
+    font-size: 0.92rem;
+  }
+
+  .heroMeta {
+    margin-bottom: 8px;
+  }
+
+  .controlRow {
+    padding: 8px 10px;
+  }
+
+  .rangeTabs a {
+    min-height: 34px;
+  }
+
+  .panel {
+    padding: 20px 24px;
+  }
+
+  .panelHeading {
+    margin-bottom: 14px;
+  }
+
+  .panelHeading h2 {
+    font-size: 1.3rem;
+  }
+
+  .dailyChart {
+    height: 160px;
+  }
+
+  .flowRow {
+    padding: 10px 16px;
+  }
+
+  .sourceNode,
+  .resultNode,
+  .unobservedNode {
+    padding: 10px 12px;
+  }
+
+  .table th,
+  .table td {
+    padding: 11px 14px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .metricGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .metricCard {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .metricCard > strong {
+    margin-top: 10px;
+    font-size: clamp(1.5rem, 2vw, 1.9rem);
+  }
+
+  .metricCard > small {
+    margin-top: 8px;
+  }
+
+  .metricAccent {
+    width: 44px;
+    height: 5px;
+  }
 }
 
 @media (max-width: 820px) {

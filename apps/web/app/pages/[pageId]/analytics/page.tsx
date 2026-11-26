@@ -1,6 +1,7 @@
 import { publicationUrls } from "@/lib/publication-url";
 import { getPublicUsername } from "@/lib/public-username";
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import dashboardStyles from "@/app/dashboard/dashboard.module.css";
@@ -127,11 +128,17 @@ function DailyChart({ rows, locale }: { rows: AnalyticsDailyRow[]; locale: Local
     timeZone: "Asia/Seoul", month: "numeric", day: "numeric",
   });
   const maximum = Math.max(...rows.map((row) => row.sessions), 1);
+  // Long ranges show every Nth date so labels never collide.
+  const labelEvery = rows.length > 45 ? 7 : rows.length > 14 ? 3 : 1;
 
   return (
     <div className={styles.chartScroll} role="region" aria-label={tx("Daily visit session trend", "날짜별 방문 세션 추이")} tabIndex={0}>
-      <div className={styles.dailyChart} style={{ gridTemplateColumns: `repeat(${rows.length}, minmax(30px, 1fr))` }}>
-        {rows.map((row) => {
+      <div
+        className={styles.dailyChart}
+        data-density={rows.length > 45 ? "dense" : rows.length > 14 ? "medium" : "loose"}
+        style={{ "--days": rows.length } as CSSProperties}
+      >
+        {rows.map((row, index) => {
           const height = row.sessions ? Math.max(8, (row.sessions / maximum) * 100) : 0;
           const dateValue = new Date(`${row.date}T00:00:00+09:00`);
           const dateLabel = Number.isNaN(dateValue.getTime()) ? row.date : shortDate.format(dateValue);
@@ -139,13 +146,14 @@ function DailyChart({ rows, locale }: { rows: AnalyticsDailyRow[]; locale: Local
             <div
               className={styles.day}
               key={row.date}
+              title={tx(`${dateLabel} · ${row.sessions} sessions`, `${dateLabel} · 방문 ${row.sessions}개 세션`)}
               aria-label={tx(`${row.date}, ${row.sessions} visit sessions, ${row.clickSessions} outbound click sessions`, `${row.date}, 방문 ${row.sessions}개 세션, 외부 클릭 ${row.clickSessions}개 세션`)}
             >
               <div className={styles.barValue}>{row.sessions ? number.format(row.sessions) : ""}</div>
               <div className={styles.barTrack} aria-hidden="true">
                 <i style={{ height: `${height}%` }} />
               </div>
-              <time dateTime={row.date}>{dateLabel}</time>
+              <time dateTime={row.date} data-tick={(rows.length - 1 - index) % labelEvery === 0 ? "" : undefined}>{dateLabel}</time>
             </div>
           );
         })}
@@ -233,7 +241,7 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
     <div className={dashboardStyles.shell}>
 
       <main className={`${dashboardStyles.main} ${styles.main}`}>
-        <Link className={dashboardStyles.back} href="/dashboard">← {tx("Back to my pages", "내 페이지로 돌아가기")}</Link>
+        <Link className={`${dashboardStyles.back} ${styles.back}`} href="/dashboard">← {tx("Back to my pages", "내 페이지로 돌아가기")}</Link>
 
         <section className={styles.hero} aria-labelledby="analytics-title">
           <div>
@@ -242,8 +250,8 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
               <code>/{page.slug}</code>
             </div>
             <p className={dashboardStyles.eyebrow}>{tx("Page analytics", "페이지 분석")}</p>
-            <h1 className={dashboardStyles.title} id="analytics-title">{page.title}</h1>
-            <p className={dashboardStyles.subtitle}>
+            <h1 className={`${dashboardStyles.title} ${styles.title}`} id="analytics-title">{page.title}</h1>
+            <p className={`${dashboardStyles.subtitle} ${styles.subtitle}`}>
               {tx("See where visits started and which external links they reached.", "방문이 어디에서 시작되어 어떤 외부 링크로 이어졌는지 확인하세요.")}
             </p>
           </div>
