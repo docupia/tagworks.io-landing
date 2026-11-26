@@ -300,7 +300,7 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
                 <span className={styles.emptyIcon} aria-hidden="true">↗</span>
                 <div>
                   <h2>{tx("No visits have been observed yet.", "아직 관측된 방문이 없어요.")}</h2>
-                  <p>{tx("Share the public link and visit sessions and first outbound clicks will appear here.", "공개 링크를 공유하면 방문 세션과 첫 외부 클릭 흐름이 이곳에 표시됩니다.")}</p>
+                  <p>{tx("Share the permanent link and visit sessions and first outbound clicks will appear here.", "고정 링크를 공유하면 방문 세션과 첫 외부 클릭 흐름이 이곳에 표시됩니다.")}</p>
                 </div>
                 <a className={dashboardStyles.primaryButton} href={publicUrl} target="_blank" rel="noreferrer">
                   {tx("Open page to share", "공유할 페이지 열기")}

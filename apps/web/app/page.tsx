@@ -65,11 +65,11 @@ export default async function HomePage({ searchParams }: {
               <ul className="hero-proof" aria-label={tx("Available features", "현재 제공 기능")}>
                 <li><span aria-hidden="true">✓</span> {tx("Simple signup", "간편 회원가입")}</li>
                 <li><span aria-hidden="true">✓</span> {tx("HTML validation", "HTML 안전 검사")}</li>
-                <li><span aria-hidden="true">✓</span> {tx("Permanent public link", "고정 공개 링크")}</li>
+                <li><span aria-hidden="true">✓</span> {tx("Permanent link", "고정 링크")}</li>
               </ul>
               <p className="concept-note service-note">
                 <strong>{tx("Beta is open", "베타 서비스 운영 중")}</strong>
-                {tx("Create an account to upload HTML and generate a public link right away.", "계정을 만들면 HTML 업로드부터 공개 링크 생성까지 바로 사용할 수 있습니다.")}
+                {tx("Create an account to upload HTML and get a permanent link right away.", "계정을 만들면 HTML 업로드부터 고정 링크 생성까지 바로 사용할 수 있습니다.")}
               </p>
             </div>
 
@@ -272,7 +272,7 @@ export default async function HomePage({ searchParams }: {
                   <span>PRODUCT PAGE</span><strong>{tx("Product story", "상품 소개")}</strong><code>fixed · link</code>
                 </div>
                 <h3>{tx("Introduce a small product", "작은 상품을 소개할 때")}</h3>
-                <p>{tx("Upload your product page and share its public link on Instagram, your blog, or anywhere else.", "상품 설명 HTML을 올리고, 발급된 공개 링크를 인스타그램과 블로그에서 바로 공유합니다.")}</p>
+                <p>{tx("Upload your product page and share its permanent link on Instagram, your blog, or anywhere else.", "상품 설명 HTML을 올리고, 발급된 고정 링크를 인스타그램과 블로그에서 바로 공유합니다.")}</p>
                 <div className="tag-row"><span>{tx("Product page", "상품 소개")}</span><span>{tx("Permanent link", "고정 링크")}</span></div>
               </article>
               <article className="use-case-card" data-reveal>
@@ -355,7 +355,7 @@ export default async function HomePage({ searchParams }: {
             <div className="closing-tag" aria-hidden="true">BETA IS OPEN</div>
             <span className="section-kicker">{tx("Take your HTML to the next step", "당신의 HTML, 다음 단계로")}</span>
             <h2 id="closing-title">{tx("Your page is ready.", "만들어둔 페이지가 있다면,")}<br />{tx("Now give it a link.", "이제 링크로 만날 차례예요.")}</h2>
-            <p>{tx("Create an account and upload your HTML to get a permanent public link right away.", "계정을 만들고 HTML 파일을 올리면, 안전 검사 후 고정 공개 링크를 바로 받을 수 있습니다.")}</p>
+            <p>{tx("Create an account and upload your HTML to get a permanent link right away.", "계정을 만들고 HTML 파일을 올리면, 안전 검사 후 고정 링크를 바로 받을 수 있습니다.")}</p>
             <div className="closing-actions">
               <Link prefetch={false} className="button button-primary" href="/signup">{tx("Start free", "무료로 시작하기")} <ArrowIcon /></Link>
               <Link prefetch={false} className="text-link" href="/login">{tx("Log in", "로그인")} <span aria-hidden="true">→</span></Link>

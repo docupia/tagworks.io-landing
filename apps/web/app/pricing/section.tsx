@@ -32,7 +32,7 @@ export async function PricingSection() {
             <p className={styles.description}>{tx("Try the complete publishing flow with your first page.", "첫 페이지로 전체 게시 과정을 경험해 보세요.")}</p>
             <ul className={styles.features}>
               <li>{tx("1 HTML upload per account", "계정당 HTML 1개 업로드")}</li>
-              <li>{tx("Permanent public link and QR code", "고정 공개 링크와 QR 코드")}</li>
+              <li>{tx("Permanent link and QR code", "고정 링크와 QR 코드")}</li>
               <li>{tx("Visit and outbound-link analytics", "방문 및 외부 링크 분석")}</li>
             </ul>
             <Link className={`${styles.action} ${styles.secondary}`} href={user ? "/pages/new" : "/signup"}>

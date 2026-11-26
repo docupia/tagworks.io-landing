@@ -109,9 +109,9 @@ export default async function DashboardPage() {
                     </h2>
                     {page.description ? <p className={styles.description}>{page.description}</p> : null}
                     <dl className={styles.miniAnalytics} aria-label={tx("Analytics summary for the last 7 days", "최근 7일 분석 요약")}>
-                      <div><dt>{tx("Visits", "방문")}</dt><dd>{summary ? displayCount(summary.sessions, locale) : "—"}</dd></div>
-                      <div><dt>{tx("Click sessions", "클릭 세션")}</dt><dd>{summary ? displayCount(summary.click_sessions, locale) : "—"}</dd></div>
-                      <div><dt>{tx("Clicks", "클릭")}</dt><dd>{summary ? displayCount(summary.total_clicks, locale) : "—"}</dd></div>
+                      <div><dt>{tx("Visit sessions", "방문 세션")}</dt><dd>{summary ? displayCount(summary.sessions, locale) : "—"}</dd></div>
+                      <div><dt>{tx("Outbound click sessions", "외부 클릭 세션")}</dt><dd>{summary ? displayCount(summary.click_sessions, locale) : "—"}</dd></div>
+                      <div><dt>{tx("Total outbound clicks", "전체 외부 클릭")}</dt><dd>{summary ? displayCount(summary.total_clicks, locale) : "—"}</dd></div>
                     </dl>
                     <p className={styles.statsCaption}>{tx("Last 7 days", "최근 7일")}</p>
                   </div>

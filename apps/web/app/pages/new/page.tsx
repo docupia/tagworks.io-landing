@@ -14,7 +14,7 @@ type NewPageProps = { searchParams: Promise<{ edit?: string | string[] }> };
 export async function generateMetadata({ searchParams }: NewPageProps): Promise<Metadata> {
   const locale = await getLocale();
   const { edit } = await searchParams;
-  return { title: edit ? text(locale, "Replace HTML", "HTML 수정 업로드") : text(locale, "Upload HTML", "HTML 업로드") };
+  return { title: edit ? text(locale, "Replace HTML", "HTML 교체") : text(locale, "Upload HTML", "HTML 업로드") };
 }
 
 export default async function NewPage({ searchParams }: NewPageProps) {
@@ -49,7 +49,7 @@ export default async function NewPage({ searchParams }: NewPageProps) {
         <section className={styles.uploadCard}>
           <Link className={styles.back} href="/dashboard">← {tx("Back to my pages", "내 페이지로 돌아가기")}</Link>
           <p className={styles.eyebrow}>{revisionPage ? tx("Edit published page", "게시 페이지 수정") : tx("New page", "새 페이지")}</p>
-          <h1 className={styles.title}>{revisionPage ? tx("Replace HTML", "HTML 수정 업로드") : tx("Upload HTML", "HTML 업로드")}</h1>
+          <h1 className={styles.title}>{revisionPage ? tx("Replace HTML", "HTML 교체") : tx("Upload HTML", "HTML 업로드")}</h1>
           <p className={styles.subtitle}>
             {tx("Your original is stored privately and served from an isolated public URL.", "원본은 비공개로 보관하고, 별도 주소의 격리된 환경에서 공개합니다.")}
           </p>
