@@ -622,11 +622,22 @@
   }
 
   .metricGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .metricCard {
-    min-height: 132px;
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .metricCard > strong {
+    margin-top: 8px;
+    font-size: 1.5rem;
+  }
+
+  .metricCard > small {
+    margin-top: 6px;
   }
 
   .empty {

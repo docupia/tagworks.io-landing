@@ -17,6 +17,7 @@ import { getPublisherUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { LOCALE_TAGS, text, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
+import { statusLabel } from "@/lib/page-status";
 import styles from "./analytics.module.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -65,12 +66,6 @@ function sourceLabel(label: string, type: string, locale: Locale) {
 
 function rate(part: number, total: number) {
   return total > 0 ? Math.min(100, (part / total) * 100) : 0;
-}
-
-function statusLabel(status: PageRow["status"], locale: Locale) {
-  if (status === "published") return text(locale, "Published", "게시 중");
-  if (status === "paused") return text(locale, "Paused", "게시 중단");
-  return text(locale, "Private", "비공개");
 }
 
 function FlowRows({

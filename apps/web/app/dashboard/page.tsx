@@ -9,6 +9,7 @@ import { getPublisherUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { LOCALE_TAGS, text, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
+import { statusLabel } from "@/lib/page-status";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -75,7 +76,6 @@ export default async function DashboardPage() {
       <main className={styles.main}>
         <div className={styles.headingRow}>
           <div>
-            <p className={styles.eyebrow}>{tx("My pages", "내 페이지")}</p>
             <h1 className={styles.title}>{tx("My pages", "내 페이지")}</h1>
             <p className={styles.subtitle}>{tx("Manage your uploaded HTML and permanent links in one place.", "업로드한 HTML과 고정 링크를 한곳에서 확인하세요.")}</p>
           </div>
@@ -88,6 +88,7 @@ export default async function DashboardPage() {
           <div className={styles.grid}>
             {pages.map((page) => {
               const { publicUrl: href } = publicationUrls(page.slug, publisherUrl, process.env.TAGWORKS_PUBLISHING_DOMAIN, publicUsername);
+              const published = page.status === "published";
               const summary = summaries?.get(page.id) ?? (summaries ? {
                 page_id: page.id,
                 sessions: 0,
@@ -97,55 +98,49 @@ export default async function DashboardPage() {
               return (
                 <article className={styles.pageCard} key={page.id}>
                   <div className={styles.pageDetails}>
-                    <h2 className={styles.pageTitle}>{page.title}</h2>
-                    {page.description ? <p className={styles.description}>{page.description}</p> : null}
                     <div className={styles.meta}>
-                      <span className={styles.badge}>
-                        {page.status === "published" ? tx("Published", "게시 중") : tx("Private", "비공개")}
+                      <span className={styles.badge} data-status={page.status}>
+                        {statusLabel(page.status, locale)}
                       </span>
                       <span>{tx(`Created ${date.format(new Date(page.created_at))}`, `${date.format(new Date(page.created_at))} 생성`)}</span>
-                      <span>/{page.slug}</span>
                     </div>
-                    <div className={styles.miniAnalytics} aria-label={tx("Analytics summary for the last 7 days", "최근 7일 분석 요약")}>
-                      <span>{tx("Last 7 days", "최근 7일")}</span>
-                      {summary ? (
-                        <>
-                          <strong>{displayCount(summary.sessions, locale)} {tx("visits", "방문")}</strong>
-                          <i aria-hidden="true" />
-                          <strong>{displayCount(summary.click_sessions, locale)} {tx("outbound click sessions", "외부 클릭 세션")}</strong>
-                          <i aria-hidden="true" />
-                          <strong>{tx(`${displayCount(summary.total_clicks, locale)} clicks`, `${displayCount(summary.total_clicks, locale)}회 클릭`)}</strong>
-                        </>
-                      ) : (
-                        <strong>{tx("Stats —", "통계 —")}</strong>
-                      )}
-                    </div>
+                    <h2 className={styles.pageTitle}>
+                      <Link href={`/pages/${page.id}/analytics`}>{page.title}</Link>
+                    </h2>
+                    {page.description ? <p className={styles.description}>{page.description}</p> : null}
+                    <dl className={styles.miniAnalytics} aria-label={tx("Analytics summary for the last 7 days", "최근 7일 분석 요약")}>
+                      <div><dt>{tx("Visits", "방문")}</dt><dd>{summary ? displayCount(summary.sessions, locale) : "—"}</dd></div>
+                      <div><dt>{tx("Click sessions", "클릭 세션")}</dt><dd>{summary ? displayCount(summary.click_sessions, locale) : "—"}</dd></div>
+                      <div><dt>{tx("Clicks", "클릭")}</dt><dd>{summary ? displayCount(summary.total_clicks, locale) : "—"}</dd></div>
+                    </dl>
+                    <p className={styles.statsCaption}>{tx("Last 7 days", "최근 7일")}</p>
                   </div>
-                  <div className={styles.cardTools}>
-                    {page.status === "published" ? (
-                      <PageQrCode
-                        compact
-                        fileName={`tagworks-${page.slug}-qr.png`}
-                        title={page.title}
-                        url={href}
-                        locale={locale}
-                      />
+                  <div className={styles.cardActions}>
+                    <Link className={styles.primaryButton} href={`/pages/${page.id}/analytics`}>
+                      {tx("View analytics", "분석 보기")}
+                    </Link>
+                    {published ? (
+                      <a className={styles.secondaryButton} href={href} target="_blank" rel="noreferrer">
+                        {tx("Open link", "링크 열기")}
+                      </a>
                     ) : null}
-                    <div className={styles.cardActions}>
-                      {page.status === "published" ? (
-                        <Link className={styles.secondaryButton} href={`/pages/new?edit=${page.id}`}>
-                          {tx("Replace HTML", "HTML 수정 업로드")}
-                        </Link>
-                      ) : null}
-                      <Link className={styles.analyticsButton} href={`/pages/${page.id}/analytics`}>
-                        {tx("View analytics", "분석 보기")}
-                      </Link>
-                      {page.status === "published" ? (
-                        <a className={styles.secondaryButton} href={href} target="_blank" rel="noreferrer">
-                          {tx("Open permanent link", "고정 링크 열기")}
-                        </a>
-                      ) : null}
-                    </div>
+                    {published ? (
+                      <details className={styles.more}>
+                        <summary aria-label={tx("More actions", "더보기")}><span aria-hidden="true">⋯</span></summary>
+                        <div className={styles.morePanel}>
+                          <Link className={styles.moreItem} href={`/pages/new?edit=${page.id}`}>
+                            {tx("Replace HTML", "HTML 교체")}
+                          </Link>
+                          <PageQrCode
+                            compact
+                            fileName={`tagworks-${page.slug}-qr.png`}
+                            title={page.title}
+                            url={href}
+                            locale={locale}
+                          />
+                        </div>
+                      </details>
+                    ) : null}
                   </div>
                 </article>
               );

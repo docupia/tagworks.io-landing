@@ -392,6 +392,14 @@ const translations: Record<string, Translation> = {
   "PayPal checkout is temporarily unavailable. Please try again.": ["PayPal決済を開始できませんでした。しばらくしてからお試しください。", "PayPal no está disponible temporalmente. Inténtalo de nuevo.", "PayPal ist vorübergehend nicht verfügbar. Bitte versuche es erneut.", "PayPal 结账暂时不可用，请重试。"],
   "Could not start PayPal checkout.": ["PayPal決済を開始できませんでした。", "No se pudo iniciar el pago con PayPal.", "PayPal-Checkout konnte nicht gestartet werden.", "无法启动 PayPal 结账。"],
   "Opening PayPal…": ["PayPalを開いています…", "Abriendo PayPal…", "PayPal wird geöffnet…", "正在打开 PayPal…"],
+  "Affiliate": ["アフィリエイト", "Afiliados", "Partnerprogramm", "推广伙伴"],
+  "Public username": ["公開ユーザー名", "Nombre público", "Öffentlicher Benutzername", "公开用户名"],
+  "Account menu": ["アカウントメニュー", "Menú de cuenta", "Kontomenü", "账户菜单"],
+  "More actions": ["その他の操作", "Más acciones", "Weitere Aktionen", "更多操作"],
+  "Replace HTML": ["HTMLを差し替え", "Reemplazar HTML", "HTML ersetzen", "替换 HTML"],
+  "Open link": ["リンクを開く", "Abrir enlace", "Link öffnen", "打开链接"],
+  "Visits": ["訪問", "Visitas", "Besuche", "访问"],
+  "Clicks": ["クリック", "Clics", "Klicks", "点击"],
 };
 
 const indexByLocale: Record<TranslationLocale, number> = { ja: 0, es: 1, de: 2, zh: 3 };

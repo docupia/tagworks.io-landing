@@ -1,22 +1,158 @@
-.shell { display: grid; grid-template-columns: 240px minmax(0, 1fr); min-height: 100vh; }
-.sidebar { position: sticky; top: 0; height: 100dvh; padding: 24px 18px; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid #d8d4c6; background: #fffdf7; overflow-y: auto; }
-.email { overflow-wrap: anywhere; font-size: .8rem; color: #707565; }
-.sidebar nav { display: grid; gap: 6px; }
-.sidebar nav a, .sidebar button { display: block; width: 100%; padding: 12px; border: 0; border-radius: 8px; background: transparent; color: #4f5b3e; text-align: start; font: inherit; font-weight: 650; cursor: pointer; }
-.sidebar nav a:hover, .sidebar button:hover { background: #f0eddf; }
-.sidebar form { margin: 0; }
-.sidebar :global(.language-switcher) {
-  padding: 0;
-  background: #4f5b3e;
+.shell {
+  min-height: 100dvh;
+  color: var(--ink);
+  background: var(--canvas);
 }
-.sidebar :global(.language-switcher select) {
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 64px;
+  padding: 0 clamp(16px, 4vw, 40px);
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 253, 247, 0.92);
+  backdrop-filter: blur(14px);
+}
+
+.brand { flex: 0 0 auto; }
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: auto;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.navLink:hover { color: var(--olive); background: var(--surface-muted); }
+.navLink[aria-current="page"] { color: var(--olive); background: var(--surface-muted); }
+
+.navIcon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.account { position: relative; flex: 0 0 auto; }
+
+.account summary {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--surface);
+  background: var(--olive);
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+}
+
+.account summary::-webkit-details-marker { display: none; }
+.account summary:focus-visible { outline: 3px solid var(--sage); outline-offset: 2px; }
+
+.accountPanel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 4px;
+  width: min(280px, calc(100vw - 32px));
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.email {
+  padding: 10px 12px 6px;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.accountPanel form { margin: 0; }
+
+.menuItem {
+  display: flex;
+  align-items: center;
   width: 100%;
-  max-width: none;
-  min-height: 36px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  text-align: start;
+  text-decoration: none;
 }
+
+.menuItem:hover { background: var(--surface-muted); }
+
+.accountPanel :global(.language-switcher) { display: flex; margin: 4px 0; }
+.accountPanel :global(.language-switcher select) { width: 100%; max-width: none; min-height: 40px; font-size: 0.85rem; }
+
 .content { min-width: 0; }
+
 @media (max-width: 760px) {
-  .shell { grid-template-columns: 1fr; }
-  .sidebar { position: static; height: auto; padding: 16px; gap: 12px; border-right: 0; border-bottom: 1px solid #d8d4c6; }
-  .sidebar nav { grid-template-columns: 1fr; }
+  /* backdrop-filter would make the fixed tab bar position against the header. */
+  .topbar { justify-content: space-between; min-height: 56px; background: var(--surface); backdrop-filter: none; }
+
+  .nav {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: rgba(255, 253, 247, 0.96);
+    backdrop-filter: blur(14px);
+  }
+
+  .navLink {
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 56px;
+    padding: 4px 2px;
+    font-size: 0.68rem;
+  }
+
+  .navLink span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .navLink:hover { background: transparent; }
+  .navIcon { width: 22px; height: 22px; }
+
+  .content { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
 }
