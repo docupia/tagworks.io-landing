@@ -1,6 +1,8 @@
+import { ArrowIcon } from "@/components/marketing/arrow-icon";
 import Link from "next/link";
+import { Suspense } from "react";
 import { brandCopy } from "@/lib/brand-copy";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/current-user";
 import { PricingSection } from "./pricing/section";
 import { AffiliateSection } from "./affiliates/section";
 import { redirect } from "next/navigation";
@@ -9,7 +11,6 @@ import { LanguageSwitcher } from "./components/language-switcher";
 import { BrandMark } from "../components/marketing/brand-mark";
 import {
   AnalyticsDemo,
-  ArrowIcon,
   MarketingHeader,
   RevealController,
 } from "../components/marketing/marketing-interactions";
@@ -26,7 +27,7 @@ export default async function HomePage({ searchParams }: {
   }
   const locale = await getLocale();
   const brand = brandCopy[locale];
-  const { data: { user } } = await (await createClient()).auth.getUser();
+  const user = await getCurrentUser();
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const content = (
     <>
@@ -52,11 +53,11 @@ export default async function HomePage({ searchParams }: {
                 {brand.description}
               </p>
               <div className="hero-actions">
-                <Link className="button button-primary" href="/signup">
+                <Link prefetch={false} className="button button-primary" href="/signup">
                   {tx("Start free", "무료로 시작하기")}
                   <ArrowIcon />
                 </Link>
-                <Link className="text-link" href="/login">
+                <Link prefetch={false} className="text-link" href="/login">
                   {tx("I already have an account", "이미 계정이 있어요")}
                   <span aria-hidden="true">↘</span>
                 </Link>
@@ -188,7 +189,7 @@ export default async function HomePage({ searchParams }: {
             </ol>
 
             <div className="workflow-action" data-reveal>
-              <Link className="button button-primary" href="/signup">{tx("Publish my HTML", "내 HTML 공개하기")} <ArrowIcon /></Link>
+              <Link prefetch={false} className="button button-primary" href="/signup">{tx("Publish my HTML", "내 HTML 공개하기")} <ArrowIcon /></Link>
             </div>
           </div>
         </section>
@@ -296,7 +297,9 @@ export default async function HomePage({ searchParams }: {
           </div>
         </section>
 
-        <PricingSection />
+        <Suspense fallback={<section id="pricing" className="section shell" aria-busy="true"><h2>{tx("Pricing", "요금제")}</h2></section>}>
+          <PricingSection />
+        </Suspense>
         <AffiliateSection />
 
         <section className="section faq" id="api-mcp" aria-labelledby="api-mcp-title">
@@ -313,7 +316,7 @@ export default async function HomePage({ searchParams }: {
                 <dd><code>POST https://tagworks.io/api/v1/deploy</code></dd>
               </dl>
               <p>{tx("Both require a personal API key. Sign in to create one under Dashboard → API & MCP.", "두 기능 모두 개인 API 키가 필요합니다. 로그인 후 대시보드 → API & MCP에서 키를 발급할 수 있습니다.")}</p>
-              <Link className="text-link" href="/login?next=%2Fdashboard%2Fapi-keys">
+              <Link prefetch={false} className="text-link" href="/login?next=%2Fdashboard%2Fapi-keys">
                 {tx("Log in to manage API keys", "로그인하여 API 키 관리")}
               </Link>
             </div>
@@ -354,8 +357,8 @@ export default async function HomePage({ searchParams }: {
             <h2 id="closing-title">{tx("Your page is ready.", "만들어둔 페이지가 있다면,")}<br />{tx("Now give it a link.", "이제 링크로 만날 차례예요.")}</h2>
             <p>{tx("Create an account and upload your HTML to get a permanent public link right away.", "계정을 만들고 HTML 파일을 올리면, 안전 검사 후 고정 공개 링크를 바로 받을 수 있습니다.")}</p>
             <div className="closing-actions">
-              <Link className="button button-primary" href="/signup">{tx("Start free", "무료로 시작하기")} <ArrowIcon /></Link>
-              <Link className="text-link" href="/login">{tx("Log in", "로그인")} <span aria-hidden="true">→</span></Link>
+              <Link prefetch={false} className="button button-primary" href="/signup">{tx("Start free", "무료로 시작하기")} <ArrowIcon /></Link>
+              <Link prefetch={false} className="text-link" href="/login">{tx("Log in", "로그인")} <span aria-hidden="true">→</span></Link>
             </div>
           </div>
         </section>
@@ -369,7 +372,7 @@ export default async function HomePage({ searchParams }: {
           </a>
           <p>{brand.title}</p>
           <LanguageSwitcher locale={locale} />
-          <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link href="#pricing">{tx("Pricing", "요금제")}</Link><Link href="#affiliates">{tx("Affiliate", "어필리에이트")}</Link><a href="#api-mcp">API &amp; MCP</a><a href="#faq">FAQ</a></div>
+          <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link prefetch={false} href="#pricing">{tx("Pricing", "요금제")}</Link><Link prefetch={false} href="#affiliates">{tx("Affiliate", "어필리에이트")}</Link><a href="#api-mcp">API &amp; MCP</a><a href="#faq">FAQ</a></div>
           <span>© {new Date().getFullYear()} TagWorks</span>
           <a href="https://peerpush.com/p/tagworks" target="_blank" rel="noopener" className="footer-peerpush">
             <img

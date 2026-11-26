@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { LanguageSwitcher } from "@/app/components/language-switcher";
 import { LOCALE_TAGS, text, type Locale } from "@/lib/i18n";
 import { BrandMark } from "./brand-mark";
+import { ArrowIcon } from "./arrow-icon";
 
 type SourceKey = "all" | "instagram" | "blog" | "tagworks";
 
@@ -102,7 +103,7 @@ export function MarketingHeader({ locale, member }: { locale: Locale; member?: s
   return (
     <header className={`site-header${scrolled ? " is-scrolled" : ""}`}>
       <div className="nav-shell">
-        <Link className="brand" href="/#top" aria-label={tx("TagWorks home", "TagWorks 홈")}>
+        <Link prefetch={false} className="brand" href="/#top" aria-label={tx("TagWorks home", "TagWorks 홈")}>
           <BrandMark />
           <span>TagWorks</span>
         </Link>
@@ -118,13 +119,13 @@ export function MarketingHeader({ locale, member }: { locale: Locale; member?: s
         <div className="header-actions">
           <div className="header-language"><LanguageSwitcher locale={locale} /></div>
           {member ? (
-            <Link className="header-member" href="/dashboard" title={member}>
+            <Link prefetch={false} className="header-member" href="/dashboard" title={member}>
               {tx("My pages", "내 페이지")} · {member}
             </Link>
           ) : (
             <>
-              <Link className="header-login" href="/login">{tx("Log in", "로그인")}</Link>
-              <Link className="button button-small button-primary" href="/signup">
+              <Link prefetch={false} className="header-login" href="/login">{tx("Log in", "로그인")}</Link>
+              <Link prefetch={false} className="button button-small button-primary" href="/signup">
                 {tx("Start free", "무료로 시작하기")}<ArrowIcon />
               </Link>
             </>
@@ -135,7 +136,7 @@ export function MarketingHeader({ locale, member }: { locale: Locale; member?: s
               <LanguageSwitcher locale={locale} />
               <a href="#pricing">{tx("Pricing", "요금제")}</a>
               <a href="#affiliates">{tx("Affiliate", "어필리에이트")}</a>
-              <Link href={member ? "/dashboard" : "/login"}>{member ? member : tx("Log in", "로그인")}</Link>
+              <Link prefetch={false} href={member ? "/dashboard" : "/login"}>{member ? member : tx("Log in", "로그인")}</Link>
             </div>
           </details>
         </div>
@@ -154,6 +155,12 @@ export function RevealController() {
       return;
     }
 
+    // Keep content already in view visible while enhancing below-fold sections.
+    items.forEach((item) => {
+      if (item.getBoundingClientRect().top < window.innerHeight) {
+        item.classList.add("is-visible");
+      }
+    });
     root.classList.add("reveal-enabled");
     const observer = new IntersectionObserver(
       (entries) => {
@@ -372,10 +379,4 @@ export function AnalyticsDemo({ locale }: { locale: Locale }) {
   );
 }
 
-export function ArrowIcon() {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
-      <path d="m6 3 5 5-5 5" />
-    </svg>
-  );
-}
+export { ArrowIcon } from "./arrow-icon";

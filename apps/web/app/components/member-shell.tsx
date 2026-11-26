@@ -1,14 +1,14 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/current-user";
 import { getLocale } from "@/lib/i18n-server";
 import { BrandMark } from "@/components/marketing/brand-mark";
 import { LanguageSwitcher } from "./language-switcher";
 import styles from "./member-shell.module.css";
 
 export async function MemberShell({ children }: { children: ReactNode }) {
-  const { data: { user } } = await (await createClient()).auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/login");
   const locale = await getLocale();
   const labels = {

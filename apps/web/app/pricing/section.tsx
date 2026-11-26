@@ -3,14 +3,13 @@ import { PayPalCheckoutButton } from "@/app/components/paypal-checkout-button";
 import { getUploadEntitlement } from "@/lib/billing";
 import { text } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/current-user";
 import styles from "./pricing.module.css";
 
 export async function PricingSection() {
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   const entitlement = user ? await getUploadEntitlement(user.id) : null;
   const activeMonthly = entitlement?.tier === "monthly";
   const isSuperAdmin = entitlement?.tier === "admin";
