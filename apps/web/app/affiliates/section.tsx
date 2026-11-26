@@ -15,7 +15,7 @@ export async function AffiliateSection() {
           <p>TAGWORKS AFFILIATE</p>
           <h2 id="affiliate-title">{c[0]}</h2>
           <p>{c[1]}</p>
-          <Link className={styles.cta} href={joinUrl}>{c[2]}</Link>
+          <Link className="button button-primary" href={joinUrl}>{c[2]}</Link>
           <p>{c[3]}</p>
         </header>
         <aside className={styles.ticket}>
@@ -36,7 +36,7 @@ export async function AffiliateSection() {
         <details open><summary>{c[16]}</summary><p>{c[17]}</p></details>
         <details><summary>{c[18]}</summary><p>{c[19]}</p></details>
       </section>
-      <footer><h3>{c[20]}</h3><Link className={styles.cta} href={joinUrl}>{c[21]}</Link></footer>
+      <footer><h3>{c[20]}</h3><Link className="button button-primary" href={joinUrl}>{c[21]}</Link></footer>
     </section>
   );
 }
