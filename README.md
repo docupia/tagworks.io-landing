@@ -38,7 +38,7 @@ npm run dev:publisher
 `PAYPAL_ENV`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
 `PAYPAL_STARTER_MONTHLY_PLAN_ID`, `PAYPAL_STARTER_YEARLY_PLAN_ID`,
 `PAYPAL_PRO_MONTHLY_PLAN_ID`, `PAYPAL_PRO_YEARLY_PLAN_ID`, `PAYPAL_WEBHOOK_ID`가
-필요합니다. 퍼블리셔에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
+필요하고, 선택 항목으로 `RESEND_API_KEY`, `ADMIN_EMAIL`, `EMAIL_FROM`, `CRON_SECRET`이 있습니다. 퍼블리셔에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
 `TAGWORKS_ANALYTICS_EVENTS_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`을 설정합니다.
 이벤트 전달에 사용하는 대표 퍼블리셔 주소인 `NEXT_PUBLIC_PUBLISHER_URL`은 두 프로젝트에 동일하게 설정합니다.
 퍼블리셔는 PostgreSQL에 직접 접속하지 않습니다. 공개 페이지에 삽입된 스크립트는
@@ -90,9 +90,23 @@ printf '%s\n%s\n' "$PAYPAL_CLIENT_ID" "$PAYPAL_CLIENT_SECRET" | \
 
 ```sh
 for f in 202611280001_link_based_plans 202611280002_page_version_assets \
-         202611280003_plan_analytics 202611280004_paypal_link_plans; do
+         202611280003_plan_analytics 202611280004_paypal_link_plans \
+         202611280005_custom_plans_and_usage; do
   psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f "supabase/migrations/$f.sql"
 done
+```
+
+메일은 선택 사항입니다. `RESEND_API_KEY`가 있으면 Resend로 보내고, 없으면 보내지 않습니다.
+`ADMIN_EMAIL`(기본값 `info@tagworks.io`)은 Custom 문의와 페이지뷰 300% 알림을 받는 주소이고,
+`EMAIL_FROM`(기본값 `TagWorks <noreply@tagworks.io>`)은 Resend에서 인증한 도메인의 발신 주소여야 합니다.
+
+매일 한 번 실행하는 예약 작업 `/api/cron/daily`는 기간이 끝난 다운그레이드의 링크 정리,
+다운그레이드 7일·1일 전 안내 메일, 월간 페이지뷰 알림(80%·100%는 계정 주인, 300%는 관리자)을 처리합니다.
+`CRON_SECRET`을 설정한 경우에만 동작하며, Vercel Cron을 쓰려면 웹 앱 프로젝트에 아래 `vercel.json`을 추가합니다.
+페이지뷰가 한도를 넘어도 공개 페이지는 막지 않습니다.
+
+```json
+{ "crons": [{ "path": "/api/cron/daily", "schedule": "0 0 * * *" }] }
 ```
 
 Supabase Auth의 Site URL과 Redirect URLs에는 로컬 웹 주소와 실제 Vercel 웹 주소의

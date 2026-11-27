@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { getAccountPlan } from "@/lib/account-plan";
 import { getCurrentUser } from "@/lib/current-user";
 import { text } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
@@ -15,6 +16,7 @@ export async function MemberShell({ children }: { children: ReactNode }) {
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const email = user.email ?? "";
+  const superAdmin = (await getAccountPlan(user.id).catch(() => null))?.superAdmin ?? false;
 
   return <div className={styles.shell}>
     <header className={styles.topbar}>
@@ -33,6 +35,7 @@ export async function MemberShell({ children }: { children: ReactNode }) {
       <MemberAccountMenu label={tx("Account menu", "계정 메뉴")} initial={(email[0] ?? "?").toUpperCase()}>
         <span className={styles.email}>{email}</span>
         <Link className={styles.menuItem} href="/dashboard/profile">{tx("Public username", "공개 사용자명")}</Link>
+        {superAdmin ? <Link className={styles.menuItem} href="/admin">{tx("Admin", "관리자")}</Link> : null}
         <LanguageSwitcher locale={locale} />
         <form action="/auth/signout" method="post">
           <button className={styles.menuItem}>{tx("Log out", "로그아웃")}</button>

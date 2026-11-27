@@ -139,3 +139,46 @@
   color: var(--olive);
   font-weight: 800;
 }
+
+.field select,
+.field textarea {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--khaki-strong);
+  border-radius: var(--radius-sm);
+  outline: none;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  font-weight: 400;
+}
+
+.field textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--muted);
+  box-shadow: 0 0 0 4px rgba(116, 128, 95, 0.13);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.wideCard {
+  width: min(100%, 560px);
+}

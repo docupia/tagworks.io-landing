@@ -13,6 +13,7 @@ import { statusLabel } from "@/lib/page-status";
 import { getDatabase } from "@/lib/database";
 import { canViewSiteVisits, type SiteVisitSummary } from "@/lib/site-visits";
 import { getReconciledAccountPlan } from "@/lib/account-plan";
+import { refreshMonthlyUsage, usageNoticeLevel } from "@/lib/monthly-usage";
 import { limitMessage } from "@/lib/limit-messages";
 import { fill, SELF_SERVE_MAX_LINKS } from "@/lib/plans";
 import { setPageLive } from "./actions";
@@ -62,6 +63,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // Applies any plan change first so the list shows what is live right now.
   const account = await getReconciledAccountPlan(user.id);
   const { limits } = account;
+  // Counting usage must never break the dashboard.
+  const usage = await refreshMonthlyUsage(user.id, account, { ownerEmail: user.email, locale }).catch((error) => {
+    console.error("Could not refresh monthly usage.", error instanceof Error ? error.message : error);
+    return null;
+  });
+  const usageLevel = usage ? usageNoticeLevel(usage) : 0;
+  const views = new Intl.NumberFormat(LOCALE_TAGS[locale]);
 
   const [pagesResult, summariesResult] = await Promise.all([
     supabase
@@ -118,6 +126,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </Link>
         </section>
 
+        {usage && usageLevel ? (
+          <p className={styles.notice} role="status" data-level={usageLevel}>
+            {fill(usageLevel >= 100
+              ? tx("Your pages have {views} views this month, over the {limit} included in {plan}. They stay online. If this continues, consider a larger plan.", "이번 달 조회수가 {views}회로 {plan}에 포함된 {limit}회를 넘었어요. 페이지는 계속 공개돼요. 이런 흐름이 이어지면 더 큰 플랜을 고려해 주세요.")
+              : tx("Your pages have {views} views this month, {percent}% of the {limit} included in {plan}.", "이번 달 조회수가 {views}회로 {plan}에 포함된 {limit}회의 {percent}%예요."),
+              { views: views.format(usage.pageViews), limit: views.format(usage.limit), percent: usage.percent, plan: limits.name })}{" "}
+            <Link href={account.plan === "pro" || account.plan === "custom" ? "/contact" : "/billing"}>{account.plan === "pro" || account.plan === "custom" ? tx("Contact us", "문의하기") : tx("See plans", "플랜 보기")}</Link>
+          </p>
+        ) : null}
         {notice === "link_limit" ? (
           <p className={styles.notice} role="status">{limitMessage(locale, limits.maxLinks >= SELF_SERVE_MAX_LINKS ? "custom_needed" : "link_limit", { n: limits.maxLinks, plan: limits.name })}{" "}
             <Link href={limits.maxLinks >= SELF_SERVE_MAX_LINKS ? "/contact" : "/billing"}>{limits.maxLinks >= SELF_SERVE_MAX_LINKS ? tx("Contact us", "문의하기") : tx("See plans", "플랜 보기")}</Link></p>

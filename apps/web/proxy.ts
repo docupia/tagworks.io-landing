@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseBrowserEnv } from "@/lib/env";
 
 export async function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname === "/api/mcp" || request.nextUrl.pathname.startsWith("/api/v1/")) {
+  if (request.nextUrl.pathname === "/api/mcp" || request.nextUrl.pathname.startsWith("/api/v1/") || request.nextUrl.pathname.startsWith("/api/cron/")) {
     return NextResponse.next();
   }
   let response = NextResponse.next({ request });

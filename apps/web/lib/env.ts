@@ -75,3 +75,17 @@ export const getAnalyticsDatabaseUrl = () => {
 
   return value;
 };
+
+/** Email sending is optional: without RESEND_API_KEY, emails are skipped. */
+export const getEmailConfig = () => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return null;
+  return {
+    apiKey,
+    from: process.env.EMAIL_FROM ?? "TagWorks <noreply@tagworks.io>",
+    adminEmail: process.env.ADMIN_EMAIL ?? "info@tagworks.io",
+  };
+};
+
+/** Shared secret for the scheduled job route; the route is disabled without it. */
+export const getCronSecret = () => process.env.CRON_SECRET || null;
