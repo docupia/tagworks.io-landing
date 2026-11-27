@@ -39,3 +39,21 @@ test("JSON-LD is safe to embed in a script tag", () => {
   const serialized = jsonLd(blogPostJsonLd({ ...BLOG_POSTS[0], faq: [["</script><b>", "x"]] }));
   assert.doesNotMatch(serialized, /<\/script/i);
 });
+
+test("every guide links to the home page early in the body", () => {
+  for (const post of BLOG_POSTS) {
+    const firstHeading = post.body.indexOf("<h2");
+    const homeLink = post.body.search(/<a href="\/">[^<]*TagWorks[^<]*<\/a>/);
+    assert.ok(homeLink >= 0 && homeLink < firstHeading, `${post.slug} needs a keyword link to / before its first heading`);
+  }
+});
+
+test("FAQPage JSON-LD covers every visible FAQ item", () => {
+  for (const post of BLOG_POSTS) {
+    assert.ok(post.faq.length >= 3, `${post.slug} should have at least 3 FAQ items`);
+    const faqPage = (blogPostJsonLd(post) as { "@type": string; mainEntity?: { name: string; acceptedAnswer: { text: string } }[] }[])
+      .find((item) => item["@type"] === "FAQPage");
+    assert.ok(faqPage?.mainEntity, `${post.slug} is missing FAQPage`);
+    assert.deepEqual(faqPage.mainEntity.map((q) => [q.name, q.acceptedAnswer.text]), post.faq);
+  }
+});
