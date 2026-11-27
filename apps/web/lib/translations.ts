@@ -1,7 +1,10 @@
+import { PLAN_TRANSLATIONS } from "./translations-plans";
+
 type TranslationLocale = "ja" | "es" | "de" | "zh";
-type Translation = [japanese: string, spanish: string, german: string, chinese: string];
+export type Translation = [japanese: string, spanish: string, german: string, chinese: string];
 
 const translations: Record<string, Translation> = {
+  ...PLAN_TRANSLATIONS,
   "Key name": ["キー名", "Nombre de clave", "Schlüsselname", "密钥名称"],
   "Create API key": ["APIキーを作成", "Crear clave API", "API-Schlüssel erstellen", "创建 API 密钥"],
   "Copy key": ["キーをコピー", "Copiar clave", "Schlüssel kopieren", "复制密钥"],

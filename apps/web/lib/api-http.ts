@@ -32,8 +32,16 @@ export async function readJsonBody(request: Request, maxBytes: number): Promise<
 export function apiErrorResponse(error: unknown) {
   const known = error instanceof ApiError;
   if (!known) console.error("TagWorks API request failed");
-  return Response.json({ error: known ? error.message : "Service temporarily unavailable." }, {
+  // Plan-limit errors carry a stable code and values so agents can react.
+  const detail = known && "code" in error
+    ? { code: (error as ApiError & { code: string }).code, values: (error as ApiError & { values?: unknown }).values }
+    : {};
+  const values = (detail as { values?: Record<string, unknown> }).values;
+  const retryAfter = known && error.status === 429
+    ? String(typeof values?.retryAfter === "number" ? values.retryAfter : 60)
+    : null;
+  return Response.json({ error: known ? error.message : "Service temporarily unavailable.", ...detail }, {
     status: known ? error.status : 503,
-    headers: { ...PRIVATE_HEADERS, ...(known && error.status === 401 ? { "WWW-Authenticate": 'Bearer realm="tagworks"' } : {}), ...(known && error.status === 429 ? { "Retry-After": "60" } : {}) },
+    headers: { ...PRIVATE_HEADERS, ...(known && error.status === 401 ? { "WWW-Authenticate": 'Bearer realm="tagworks"' } : {}), ...(retryAfter ? { "Retry-After": retryAfter } : {}) },
   });
 }

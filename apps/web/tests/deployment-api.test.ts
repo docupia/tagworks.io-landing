@@ -23,7 +23,7 @@ test("deploy input rejects owner injection, invalid types and excessive UTF-8 by
   assert.throws(() => validateDeploymentInput({ ...input, ownerId: "another-user" }));
   assert.throws(() => validateDeploymentInput({ ...input, title: null }));
   assert.throws(() => validateDeploymentInput({ ...input, description: 1 }));
-  assert.throws(() => validateDeploymentInput({ ...input, html: `<p>${"한".repeat(400000)}</p>` }), error => error instanceof ApiError && error.status === 413);
+  assert.throws(() => validateDeploymentInput({ ...input, html: `<p>${"한".repeat(800000)}</p>` }), error => error instanceof ApiError && error.status === 413);
 });
 test("JSON reader limits chunked bodies with no content-length", async () => {
   const request = new Request("https://example.com", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ html: "x".repeat(500) }) });
@@ -40,7 +40,7 @@ test("MCP discovers tools, negotiates supported versions, and does not execute n
   const initialize = await handleMcpMessage({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2099-01-01", capabilities: {}, clientInfo: { name: "test", version: "1" } } }, dependencies);
   assert.equal((initialize as { result: { protocolVersion: string } }).result.protocolVersion, "2025-11-25");
   const list = await handleMcpMessage({ jsonrpc: "2.0", id: 2, method: "tools/list" }, dependencies);
-  assert.equal((list as { result: { tools: unknown[] } }).result.tools.length, 2);
+  assert.equal((list as { result: { tools: unknown[] } }).result.tools.length, 3);
   assert.equal(await handleMcpMessage({ jsonrpc: "2.0", method: "tools/call", params: { name: "deploy_html", arguments: {} } }, dependencies), null);
   assert.equal(calls, 0);
   await handleMcpMessage({ jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "deploy_html", arguments: {} } }, dependencies);

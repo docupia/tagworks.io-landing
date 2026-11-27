@@ -8,7 +8,11 @@ import styles from "@/app/dashboard/dashboard.module.css";
 import { deriveUploadTitle, titleFromHtmlFileName } from "@/lib/upload-title";
 import { text, type Locale } from "@/lib/i18n";
 
-import { MAX_IMAGE_BYTES, MAX_IMAGES, rewriteUploadedImages } from "@/lib/upload-images";
+import { rewriteUploadedImages } from "@/lib/upload-images";
+import { PLANS } from "@/lib/plans";
+
+const MAX_IMAGE_BYTES = PLANS.pro.maxImageBytes * PLANS.pro.maxImagesPerLink;
+const MAX_IMAGES = PLANS.pro.maxImagesPerLink;
 
 const MAX_HTML_BYTES = 1024 * 1024;
 

@@ -18,7 +18,7 @@ function sourceFiles(dir: string): string[] {
 
 test("every English UI string has ja, es, de and zh translations", () => {
   const missing: string[] = [];
-  for (const file of [...sourceFiles(join(ROOT, "app")), ...sourceFiles(join(ROOT, "components"))]) {
+  for (const file of [...sourceFiles(join(ROOT, "app")), ...sourceFiles(join(ROOT, "components")), ...sourceFiles(join(ROOT, "lib"))]) {
     const source = readFileSync(file, "utf8");
     for (const match of source.matchAll(/\b(?:tx|text\(locale,)\s*\(?\s*"((?:[^"\\]|\\.)*)",\s*"/g)) {
       const english = match[1];

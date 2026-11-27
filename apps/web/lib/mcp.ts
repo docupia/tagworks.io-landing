@@ -2,10 +2,11 @@ import { ApiError } from "@/lib/api-http";
 
 export const MCP_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26"];
 const tools = [
-  { name: "deploy_html", description: "Publish a new HTML page to a permanent public URL. Consumes one upload from the authenticated user's plan. Each call creates a new page.", inputSchema: { type: "object", properties: { html: { type: "string", description: "Complete HTML source, at most 1 MiB UTF-8." }, title: { type: "string", minLength: 1, maxLength: 100 }, description: { type: "string", maxLength: 300 } }, required: ["html", "title"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true } },
-  { name: "get_upload_allowance", description: "Read the current user's publishing plan and available uploads.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } },
+  { name: "deploy_html", description: "Publish a new HTML page at a permanent public URL. Uses one live link from the user's plan (Free 1, Starter 5, Pro 30). Each call creates a new link; to change an existing page use update_html instead.", inputSchema: { type: "object", properties: { html: { type: "string", description: "Complete HTML source, at most 2 MB UTF-8." }, title: { type: "string", minLength: 1, maxLength: 100 }, description: { type: "string", maxLength: 300 } }, required: ["html", "title"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true } },
+  { name: "update_html", description: "Replace the HTML of one of the user's existing pages. The URL and QR code stay the same and edits do not use a link. Limited to 20 edits per page per hour.", inputSchema: { type: "object", properties: { pageId: { type: "string", description: "page.id returned by deploy_html." }, html: { type: "string", description: "Complete HTML source, at most 2 MB UTF-8." } }, required: ["pageId", "html"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true } },
+  { name: "get_plan_usage", description: "Read the user's plan, how many links are live and how many are still available.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false } },
 ];
-type Dependencies = { deploy: (input: unknown) => Promise<unknown>; allowance: () => Promise<unknown> };
+type Dependencies = { deploy: (input: unknown) => Promise<unknown>; update?: (input: unknown) => Promise<unknown>; allowance: () => Promise<unknown> };
 export async function handleMcpMessage(input: unknown, dependencies: Dependencies) {
   const message = input as { jsonrpc?: unknown; id?: unknown; method?: unknown; params?: Record<string, unknown> } | null;
   const validId = typeof message?.id === "string" || (typeof message?.id === "number" && Number.isFinite(message.id));
@@ -22,7 +23,7 @@ export async function handleMcpMessage(input: unknown, dependencies: Dependencie
     case "initialize": {
       if (typeof message.params?.protocolVersion !== "string" || !message.params.clientInfo || !message.params.capabilities) return error(-32602, "Invalid initialize params");
       const requested = message.params.protocolVersion;
-      return result({ protocolVersion: MCP_VERSIONS.includes(requested) ? requested : MCP_VERSIONS[0], capabilities: { tools: {} }, serverInfo: { name: "tagworks", version: "1.0.0" }, instructions: "Publish HTML using deploy_html. Each successful call consumes one upload. Never include API keys in published HTML." });
+      return result({ protocolVersion: MCP_VERSIONS.includes(requested) ? requested : MCP_VERSIONS[0], capabilities: { tools: {} }, serverInfo: { name: "tagworks", version: "1.0.0" }, instructions: "Publish HTML using deploy_html, which uses one live link from the plan. To change a page, call update_html with its pageId: edits are free and keep the same URL. Check get_plan_usage before creating links. Never include API keys in published HTML." });
     }
     case "ping": return result({});
     case "tools/list": return result({ tools });
@@ -30,8 +31,11 @@ export async function handleMcpMessage(input: unknown, dependencies: Dependencie
       const name = message.params?.name;
       if (!tools.some(tool => tool.name === name)) return error(-32602, "Unknown tool");
       try {
-        if (name === "get_upload_allowance" && message.params?.arguments && Object.keys(message.params.arguments as object).length) throw new ApiError(400, "This tool takes no arguments.");
-        const data = name === "deploy_html" ? await dependencies.deploy(message.params?.arguments) : await dependencies.allowance();
+        if (name === "get_plan_usage" && message.params?.arguments && Object.keys(message.params.arguments as object).length) throw new ApiError(400, "This tool takes no arguments.");
+        const args = message.params?.arguments;
+        const data = name === "deploy_html" ? await dependencies.deploy(args)
+          : name === "update_html" ? await (dependencies.update ?? (() => { throw new ApiError(400, "update_html is not available."); }))(args)
+            : await dependencies.allowance();
         return result({ content: [{ type: "text", text: JSON.stringify(data) }], structuredContent: data, isError: false });
       } catch (cause) {
         return result({ content: [{ type: "text", text: cause instanceof ApiError ? cause.message : "Service temporarily unavailable." }], isError: true });

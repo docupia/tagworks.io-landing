@@ -15,6 +15,7 @@ import {
   renderTagworksCornerLink,
 } from "../../../lib/html-document";
 import { createPublicSupabaseClient } from "../../../lib/supabase";
+import { renderClosedPage } from "../../../lib/closed-page";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -170,6 +171,10 @@ export async function GET(
     }
 
     if (!data || data.slug !== slug || typeof data.sanitized_html !== "string") {
+      const { data: availability } = await supabase.rpc("get_page_availability", { page_slug: slug });
+      if (availability === "closed") {
+        return htmlResponse(renderClosedPage(request.headers.get("accept-language")), 404);
+      }
       return unavailableResponse(404);
     }
 

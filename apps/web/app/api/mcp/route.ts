@@ -1,7 +1,6 @@
 import { authenticateApiRequest } from "@/lib/api-auth";
 import { ApiError, apiErrorResponse, PRIVATE_HEADERS, readJsonBody } from "@/lib/api-http";
-import { getUploadEntitlement } from "@/lib/billing";
-import { deployHtml } from "@/lib/deploy-html";
+import { deployHtml, planUsage, updateHtml } from "@/lib/deploy-html";
 import { MAX_DEPLOY_BODY_BYTES } from "@/lib/deployment-input";
 import { getSiteUrl } from "@/lib/env";
 import { handleMcpMessage, MCP_VERSIONS } from "@/lib/mcp";
@@ -27,10 +26,8 @@ export async function POST(request: Request) {
     }
     const response = await handleMcpMessage(input, {
       deploy: args => deployHtml(ownerId, args),
-      allowance: async () => {
-        const value = await getUploadEntitlement(ownerId);
-        return { ...value, unlimited: value.tier === "admin", totalRemaining: value.tier === "admin" ? null : value.totalRemaining };
-      },
+      update: args => updateHtml(ownerId, args),
+      allowance: () => planUsage(ownerId),
     });
     return response === null ? new Response(null, { status: 202, headers: PRIVATE_HEADERS }) : Response.json(response, { headers: PRIVATE_HEADERS });
   } catch (error) { return apiErrorResponse(error); }
