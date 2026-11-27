@@ -1,0 +1,523 @@
+/* Home page. Colors come from the --tw-* tokens in globals.css. */
+.page {
+  /* Map the older shared tokens to the new palette so the pricing cards match. */
+  --ink: var(--tw-ink);
+  --muted: var(--tw-muted);
+  --subtle: #94a3b8;
+  --surface: #ffffff;
+  --canvas: #ffffff;
+  --olive: var(--tw-accent);
+  --olive-dark: var(--tw-accent-dark);
+  --line: var(--tw-line);
+  --khaki-strong: var(--tw-line-strong);
+  --butter: var(--tw-accent-soft);
+  --peach: var(--tw-accent-soft);
+  --radius-sm: var(--tw-radius-sm);
+  min-height: 100vh;
+  background: #fff;
+  color: var(--tw-ink);
+  line-height: 1.55;
+}
+
+.page h1,
+.page h2,
+.page h3 {
+  margin: 0;
+  color: var(--tw-ink);
+  letter-spacing: -0.02em;
+}
+
+.page h2 {
+  font-size: clamp(1.75rem, 4.2vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.page p {
+  margin: 0;
+}
+
+.shell,
+.narrow {
+  width: min(1160px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+.narrow {
+  width: min(860px, calc(100% - 40px));
+}
+
+.band {
+  border-block: 1px solid var(--tw-line);
+  background: var(--tw-soft);
+}
+
+.small {
+  color: var(--tw-muted);
+  font-size: 0.875rem;
+}
+
+/* Grid children may hold long code lines; let them shrink instead of overflowing. */
+.hero > *,
+.split > * {
+  min-width: 0;
+}
+
+/* Hero */
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  gap: 56px;
+  padding-block: 88px 96px;
+}
+
+.heroCopy {
+  display: grid;
+  justify-items: start;
+  gap: 22px;
+}
+
+.badge {
+  padding: 6px 12px;
+  border: 1px solid var(--tw-accent-border);
+  border-radius: 999px;
+  background: var(--tw-accent-soft);
+  color: var(--tw-accent-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.hero h1 {
+  font-size: clamp(2.25rem, 6vw, 3.75rem);
+  font-weight: 800;
+  line-height: 1.07;
+  letter-spacing: -0.03em;
+}
+
+/* Break Korean between words; Japanese and Chinese still break between characters. */
+.page:lang(ko) h1,
+.page:lang(ko) h2 {
+  word-break: keep-all;
+}
+
+.lead {
+  color: var(--tw-text);
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  line-height: 1.55;
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.primary,
+.secondary,
+.closingButton {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.primary {
+  background: var(--tw-accent);
+  color: #fff;
+}
+
+.primary:hover {
+  background: var(--tw-accent-dark);
+}
+
+.secondary {
+  border: 1px solid var(--tw-line-strong);
+  background: #fff;
+  color: var(--tw-ink);
+  font-weight: 600;
+}
+
+.secondary:hover {
+  border-color: var(--tw-muted);
+}
+
+.demo {
+  display: grid;
+  gap: 16px;
+  padding: 28px;
+  border: 1px solid var(--tw-line);
+  border-radius: 20px;
+  background: var(--tw-soft);
+}
+
+.bubbleUser,
+.bubbleAi {
+  max-width: 85%;
+  padding: 14px 16px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.bubbleUser {
+  justify-self: end;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--tw-ink);
+  color: #fff;
+}
+
+.bubbleAi {
+  justify-self: start;
+  border: 1px solid var(--tw-line);
+  border-radius: 16px 16px 16px 4px;
+  background: #fff;
+  color: var(--tw-body);
+}
+
+.bubbleAi strong {
+  color: var(--tw-accent-dark);
+  font-weight: 600;
+}
+
+.statCard,
+.sources,
+.apiCard {
+  border: 1px solid var(--tw-line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.statCard {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.statHead,
+.sourcesHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--tw-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.statHead span:last-child {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 0;
+}
+
+.stats div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.stats dd {
+  margin: 0;
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.stats dt {
+  color: var(--tw-muted);
+  font-size: 0.8rem;
+}
+
+/* Steps */
+.band > .shell {
+  display: grid;
+  gap: 40px;
+  padding-block: 88px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid var(--tw-line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.steps h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.steps p,
+.splitCopy p,
+.faqItem p,
+.apiCard p {
+  color: var(--tw-text);
+  line-height: 1.6;
+}
+
+.stepNo {
+  width: 36px;
+  height: 36px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--tw-accent-soft);
+  color: var(--tw-accent-ink);
+  font-weight: 800;
+}
+
+/* Two-column sections */
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  align-items: center;
+  gap: 56px;
+  padding-block: 88px;
+}
+
+.splitCopy {
+  display: grid;
+  gap: 16px;
+}
+
+.splitCopy p {
+  font-size: 1.1rem;
+}
+
+.sources {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.sourceRow {
+  display: grid;
+  gap: 8px;
+}
+
+.sourceLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--tw-body);
+}
+
+.sourceLine span:first-child {
+  color: var(--tw-ink);
+  font-weight: 600;
+}
+
+.bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--tw-line);
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tw-accent);
+}
+
+.apiCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 24px;
+}
+
+.apiCard dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  margin: 0;
+}
+
+.apiCard dt {
+  color: var(--tw-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.apiCard dd {
+  margin: 0 0 10px;
+}
+
+.apiCard code {
+  display: block;
+  overflow-x: auto;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--tw-soft);
+  border: 1px solid var(--tw-line);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.textLink {
+  color: var(--tw-accent-dark);
+  font-weight: 600;
+}
+
+.textLink:hover {
+  color: var(--tw-accent-ink);
+}
+
+/* Pricing (shared component, styled through the tokens above) */
+.band :global(#pricing) {
+  width: min(1160px, calc(100% - 40px));
+  padding-block: 88px;
+}
+
+.band :global(#pricing) h2 {
+  font-size: clamp(1.75rem, 4.2vw, 2.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.band :global(#pricing) article {
+  border-color: var(--tw-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.band :global(#pricing) li {
+  color: var(--tw-body);
+}
+
+.band :global(#pricing) a:not([class]) {
+  color: var(--tw-accent-dark);
+}
+
+/* FAQ */
+.faq {
+  display: grid;
+  gap: 28px;
+  padding-block: 88px;
+}
+
+.faqList {
+  border-top: 1px solid var(--tw-line);
+}
+
+.faqItem {
+  display: grid;
+  gap: 8px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--tw-line);
+}
+
+.faqItem h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.moreFaq summary {
+  width: fit-content;
+  color: var(--tw-accent-dark);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.moreFaq[open] summary {
+  margin-bottom: 16px;
+}
+
+/* Closing call to action */
+.closing {
+  background: var(--tw-ink);
+  color: #fff;
+}
+
+.closing .shell {
+  display: grid;
+  justify-items: center;
+  gap: 20px;
+  padding-block: 80px;
+  text-align: center;
+}
+
+.closing h2 {
+  color: #fff;
+  font-size: clamp(1.9rem, 4.6vw, 2.75rem);
+}
+
+.closing p {
+  color: #cbd5e1;
+  font-size: 1.1rem;
+}
+
+.closingButton {
+  background: #fff;
+  color: var(--tw-ink);
+}
+
+.closingButton:hover {
+  background: var(--tw-accent-soft);
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .split {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    padding-block: 48px 56px;
+  }
+
+  .band > .shell,
+  .split,
+  .faq,
+  .band :global(#pricing) {
+    padding-block: 56px;
+  }
+
+  .demo {
+    padding: 18px;
+  }
+
+  .ctaRow > a {
+    flex: 1 1 100%;
+  }
+
+  .steps li,
+  .sources,
+  .apiCard {
+    padding: 20px;
+  }
+}

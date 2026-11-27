@@ -1,21 +1,18 @@
-import { ArrowIcon } from "@/components/marketing/arrow-icon";
 import Link from "next/link";
 import { Suspense } from "react";
-import { brandCopy } from "@/lib/brand-copy";
-import { getCurrentUser } from "@/lib/current-user";
-import { PricingSection } from "./pricing/section";
-import { AffiliateSection } from "./affiliates/section";
 import { redirect } from "next/navigation";
-
-import { LanguageSwitcher } from "./components/language-switcher";
-import { BrandMark } from "../components/marketing/brand-mark";
-import {
-  AnalyticsDemo,
-  MarketingHeader,
-  RevealController,
-} from "../components/marketing/marketing-interactions";
+import { getCurrentUser } from "@/lib/current-user";
 import { text } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
+import { SiteFooter, SiteHeader } from "@/components/marketing/site-chrome";
+import { PricingSection } from "./pricing/section";
+import styles from "./home.module.css";
+
+const sampleSources = [
+  { english: "Instagram", korean: "인스타그램", visits: 142, clicks: 31 },
+  { english: "Blog", korean: "블로그", visits: 58, clicks: 9 },
+  { english: "Direct", korean: "직접 방문", visits: 20, clicks: 2 },
+];
 
 export default async function HomePage({ searchParams }: {
   searchParams: Promise<{ code?: string | string[] }>;
@@ -26,390 +23,156 @@ export default async function HomePage({ searchParams }: {
     redirect(`/auth/callback?code=${encodeURIComponent(code)}`);
   }
   const locale = await getLocale();
-  const brand = brandCopy[locale];
   const user = await getCurrentUser();
   const tx = (english: string, korean: string) => text(locale, english, korean);
-  const content = (
-    <>
+  const maxVisits = Math.max(...sampleSources.map((row) => row.visits));
+
+  const faq: Array<[string, string]> = [
+    [tx("Do I need to know how to code?", "코딩을 몰라도 되나요?"), tx("No. Upload the file your AI made, or ask your AI to publish it for you.", "네. AI가 만든 파일을 올리거나, AI에게 대신 게시해 달라고 하면 돼요.")],
+    [tx("Does editing a page count against my plan?", "페이지를 수정하면 한도가 줄어드나요?"), tx("No. Edit as often as you like; your URL and QR code stay the same.", "아니요. 원하는 만큼 수정하세요. 주소와 QR 코드도 그대로예요.")],
+    [tx("Can I upload images?", "이미지도 올릴 수 있나요?"), tx("Yes. PNG, JPG, WebP and GIF. We resize and compress them automatically.", "네. PNG, JPG, WebP, GIF를 지원하고, 크기 조정과 압축은 자동으로 해요.")],
+    [tx("What if my page gets a lot of visitors?", "방문자가 아주 많으면 어떻게 되나요?"), tx("Your page stays online. If you pass your plan's monthly views, we'll suggest an upgrade or reach out.", "페이지는 계속 공개돼요. 플랜의 월 조회수를 넘으면 업그레이드를 제안하거나 연락드릴게요.")],
+  ];
+  const moreFaq: Array<[string, string]> = [
+    [tx("What counts as a link?", "링크는 어떻게 세나요?"), tx("A page that is live. Unpublish or delete one to free a slot.", "공개 중인 페이지 하나가 링크 하나예요. 비공개로 바꾸거나 삭제하면 자리가 돌아와요.")],
+    [tx("Can I upload any file?", "아무 파일이나 올릴 수 있나요?"), tx("One HTML file and the images it uses. Local CSS files are not uploaded, so keep styles inside the HTML or link them over HTTPS. Publishing from an AI tool through MCP or the API keeps everything in one file.", "HTML 파일 하나와 그 페이지가 쓰는 이미지를 올릴 수 있어요. 로컬 CSS 파일은 함께 올라가지 않으니 스타일은 HTML 안에 넣거나 HTTPS 주소로 연결해 주세요. AI 도구에서 MCP나 API로 게시하면 한 파일로 깔끔하게 올릴 수 있어요.")],
+    [tx("What happens to my old images when I edit?", "수정하면 예전 이미지는 어떻게 되나요?"), tx("When you publish an edit, the previous images are removed and replaced by the ones you upload with it. Upload every image the page uses each time.", "수정본을 게시하면 이전 이미지는 지워지고 함께 올린 이미지로 바뀌어요. 매번 페이지에 쓰는 이미지를 모두 올려 주세요.")],
+    [tx("Will my HTML look and behave the same?", "HTML 디자인이 그대로 공개되나요?"), tx("Your original HTML, head scripts, and external styles are preserved. It runs inside a sandboxed publishing environment, so browser-restricted capabilities may still be unavailable.", "원본 HTML과 헤더 스크립트, 외부 CSS를 유지합니다. 다만 격리된 공개 환경에서 실행되므로 브라우저가 제한하는 기능은 사용할 수 없습니다.")],
+    [tx("Can I cancel anytime?", "언제든 해지할 수 있나요?"), tx("Yes. You keep your plan until the end of the period you paid for.", "네. 결제한 기간이 끝날 때까지 플랜을 그대로 쓸 수 있어요.")],
+    [tx("Is my login information sent to the public page?", "로그인 정보가 공개 페이지로 전달되나요?"), tx("No. The dashboard and public page are served separately. The public page receives only the content and minimum public configuration it needs.", "아닙니다. 관리 화면과 공개 페이지는 분리해 제공하고, 공개 페이지에는 정제된 콘텐츠와 공개에 필요한 최소 정보만 전달합니다.")],
+  ];
+
+  return (
+    <div className={styles.page}>
       <a className="skip-link" href="#main">{tx("Skip to content", "본문으로 바로가기")}</a>
-      <MarketingHeader locale={locale} member={user ? user.email ?? "Member" : undefined} />
-      <RevealController />
+      <SiteHeader locale={locale} member={user ? user.email ?? "Member" : undefined} />
 
       <main id="main">
-        <section className="hero" id="top" aria-labelledby="hero-title">
-          <div className="hero-haze haze-one" aria-hidden="true" />
-          <div className="hero-haze haze-two" aria-hidden="true" />
-          <div className="shell hero-grid">
-            <div className="hero-copy" data-reveal>
-              <div className="eyebrow">
-                <span className="eyebrow-dot" aria-hidden="true" />
-                {brand.eyebrow}
-              </div>
-              <h1 id="hero-title">
-                {brand.firstLine}<br />
-                <span>{brand.secondLine}</span>
-              </h1>
-              <p className="hero-description">
-                {brand.description}
-              </p>
-              <div className="hero-actions">
-                <Link prefetch={false} className="button button-primary" href="/signup">
-                  {tx("Start free", "무료로 시작하기")}
-                  <ArrowIcon />
-                </Link>
-                <Link prefetch={false} className="text-link" href="/login">
-                  {tx("I already have an account", "이미 계정이 있어요")}
-                  <span aria-hidden="true">↘</span>
-                </Link>
-              </div>
-              <ul className="hero-proof" aria-label={tx("Available features", "현재 제공 기능")}>
-                <li><span aria-hidden="true">✓</span> {tx("Simple signup", "간편 회원가입")}</li>
-                <li><span aria-hidden="true">✓</span> {tx("HTML validation", "HTML 안전 검사")}</li>
-                <li><span aria-hidden="true">✓</span> {tx("Permanent link", "고정 링크")}</li>
-              </ul>
-              <p className="concept-note service-note">
-                <strong>{tx("Beta is open", "베타 서비스 운영 중")}</strong>
-                {tx("Create an account to upload HTML and get a permanent link right away.", "계정을 만들면 HTML 업로드부터 고정 링크 생성까지 바로 사용할 수 있습니다.")}
-              </p>
+        <section className={`${styles.shell} ${styles.hero}`} id="top" aria-labelledby="hero-title">
+          <div className={styles.heroCopy}>
+            <span className={styles.badge}>{tx("Free forever for your first link", "첫 링크는 계속 무료")}</span>
+            <h1 id="hero-title">{tx("Turn AI-made pages into links. See who clicks.", "AI로 만든 페이지를 링크로. 누가 눌렀는지까지.")}</h1>
+            <p className={styles.lead}>{tx("Ask your AI to publish your page to TagWorks, or drop in the HTML file. Get a permanent link, a QR code and click tracking in seconds.", "AI에게 TagWorks로 게시해 달라고 하거나 HTML 파일을 올리세요. 고정 링크와 QR 코드, 클릭 분석이 바로 준비돼요.")}</p>
+            <div className={styles.ctaRow}>
+              <Link prefetch={false} className={styles.primary} href={user ? "/pages/new" : "/signup"}>{user ? tx("Upload HTML", "HTML 업로드") : tx("Start free", "무료로 시작하기")}</Link>
+              <a className={styles.secondary} href="#api-mcp">{tx("Connect your AI", "AI 연결하기")}</a>
             </div>
+            <p className={styles.small}>{tx("No card needed · Unlimited edits · Images included", "카드 등록 없음 · 수정 무제한 · 이미지 포함")}</p>
+          </div>
 
-            <div className="hero-product" data-reveal>
-              <div className="note-tab" aria-hidden="true">LIVE PRODUCT FLOW</div>
-              <div className="product-window">
-                <div className="window-bar">
-                  <div className="window-dots" aria-hidden="true"><span /><span /><span /></div>
-                  <div className="window-title">{tx("Add a new page", "새 페이지 등록")}</div>
-                  <div className="window-status"><span aria-hidden="true" /> {tx("Service available", "서비스 이용 가능")}</div>
-                </div>
-
-                <div className="upload-card">
-                  <div className="file-icon" aria-hidden="true">
-                    <svg viewBox="0 0 32 38"><path d="M5 2h14l8 8v26H5z" /><path d="M19 2v9h8" /><path d="M10 21h12M10 27h8" /></svg>
-                  </div>
-                  <div className="file-info">
-                    <strong>product-page.html</strong>
-                    <span>824 KB · {tx("Static HTML", "정적 HTML")}</span>
-                  </div>
-                  <div className="check-badge"><span aria-hidden="true">✓</span> {tx("Check passed", "검사 통과")}</div>
-                </div>
-
-                <div className="publish-line" aria-label={tx("Permanent public URL example", "고정 공개 주소 예시")}>
-                  <div>
-                    <span className="mini-label">{tx("Permanent public URL", "고정 공개 주소")}</span>
-                    <code>/p/slow-morning</code>
-                  </div>
-                  <span className="live-pill"><i aria-hidden="true" /> {tx("Published", "공개됨")}</span>
-                </div>
-
-                <div className="mini-dashboard">
-                  <div className="mini-dashboard-head">
-                    <div>
-                      <span className="mini-label">{tx("Ready to publish", "공개 준비 완료")}</span>
-                      <strong>{tx("Copy the page link and share it", "페이지 링크를 복사해 공유하세요")}</strong>
-                    </div>
-                    <span className="percent-pill">{tx("Check complete", "안전 검사 완료")}</span>
-                  </div>
-
-                  <div className="flow-preview" aria-label={tx("HTML processing steps", "HTML 처리 단계")}>
-                    <div className="flow-row">
-                      <span>{tx("File upload", "파일 업로드")}</span><div className="bar-track"><i style={{ width: "100%", background: "var(--peach)" }} /></div><b>{tx("Done", "완료")}</b>
-                    </div>
-                    <div className="flow-row">
-                      <span>{tx("Safety check", "안전 검사")}</span><div className="bar-track"><i style={{ width: "100%", background: "var(--sky)" }} /></div><b>{tx("Done", "완료")}</b>
-                    </div>
-                    <div className="flow-row">
-                      <span>{tx("Link creation", "링크 생성")}</span><div className="bar-track"><i style={{ width: "100%", background: "var(--lilac)" }} /></div><b>{tx("Done", "완료")}</b>
-                    </div>
-                  </div>
-
-                  <div className="click-summary">
-                    <span className="signal-dot signal-sage" aria-hidden="true" />
-                    <div><strong>{tx("Published page", "공개 페이지")}</strong><small>{tx("Anyone with the link can visit", "누구나 링크로 방문 가능")}</small></div>
-                    <span className="summary-arrow" aria-hidden="true">→</span>
-                    <span className="summary-number" aria-label={tx("Published", "공개 완료")}>✓</span>
-                  </div>
-                </div>
+          <div className={styles.demo} aria-label={tx("Example: publishing a page with AI", "예시: AI로 페이지 게시하기")} role="img">
+            <p className={styles.bubbleUser}>{tx("Publish this class signup page to TagWorks.", "이 클래스 모집 페이지를 TagWorks에 게시해 줘.")}</p>
+            <p className={styles.bubbleAi}>
+              {tx("Done. Your page is live:", "완료했어요. 페이지가 공개됐어요:")}<br />
+              <strong>tagworks.io/p/spring-class</strong>
+            </p>
+            <div className={styles.statCard}>
+              <div className={styles.statHead}>
+                <span>{tx("Last 7 days · sample", "최근 7일 · 샘플")}</span>
+                <span>spring-class</span>
               </div>
-              <div className="floating-tag tag-fixed" aria-hidden="true">{tx("One permanent URL", "한 번 만든 고정 주소")}</div>
-              <div className="floating-tag tag-source" aria-hidden="true">{tx("Isolated publishing", "안전한 공개 환경")}</div>
+              <dl className={styles.stats}>
+                <div><dt>{tx("visits", "방문")}</dt><dd>220</dd></div>
+                <div><dt>{tx("clicked “Apply”", "‘신청하기’ 클릭")}</dt><dd>42</dd></div>
+                <div><dt>{tx("top source", "최다 유입")}</dt><dd>Instagram</dd></div>
+              </dl>
             </div>
           </div>
         </section>
 
-        <section className="value-strip" aria-label={tx("TagWorks core value", "TagWorks 핵심 가치")}>
-          <div className="shell value-grid">
-            <article><span className="value-number">01</span><div><h2>{tx("Sign up", "가입")}</h2><p>{tx("Just use your email", "이메일로 간단하게")}</p></div></article>
-            <article><span className="value-number">02</span><div><h2>{tx("Upload", "업로드")}</h2><p>{tx("One HTML file is enough", "HTML 한 장이면 충분")}</p></div></article>
-            <article><span className="value-number">03</span><div><h2>{tx("Check", "검사")}</h2><p>{tx("Validate before publishing", "위험 요소는 안전하게 제거")}</p></div></article>
-            <article><span className="value-number">04</span><div><h2>{tx("Publish", "공개")}</h2><p>{tx("Share a permanent link", "고정 링크를 바로 공유")}</p></div></article>
-          </div>
-        </section>
-
-        <section className="section workflow" id="workflow" aria-labelledby="workflow-title">
-          <div className="shell">
-            <div className="section-heading" data-reveal>
-              <span className="section-kicker">{tx("From one file to one link", "한 장에서 링크까지")}</span>
-              <h2 id="workflow-title">{tx("Skip complicated deployment.", "복잡한 배포 대신,")}<br />{tx("Follow three clear steps.", "세 번의 명확한 단계.")}</h2>
-              <p>{tx("No need to learn code or server setup. Sign up, upload your file, and share the link.", "코드나 서버 설정을 다시 배우지 않아도 됩니다. 가입하고, 파일을 확인하고, 링크를 공유하세요.")}</p>
-            </div>
-
-            <ol className="steps-grid">
-              <li className="step-card step-upload" data-reveal>
-                <div className="step-topline"><span>STEP 01</span><i aria-hidden="true" /></div>
-                <div className="step-visual upload-visual" aria-hidden="true">
-                  <div className="drop-zone">
-                    <svg viewBox="0 0 32 32"><path d="M16 22V7m0 0-6 6m6-6 6 6M7 20v5h18v-5" /></svg>
-                    <span>{tx("HTML file", "HTML 파일")}</span>
-                  </div>
-                </div>
-                <h3>{tx("Upload your file", "파일을 올려요")}</h3>
-                <p>{tx("Log in, add a management title and description, then choose the HTML file to publish.", "로그인 후 제목과 설명을 적고, 공개할 정적 HTML 파일을 선택합니다.")}</p>
+        <section className={styles.band} id="how" aria-labelledby="how-title">
+          <div className={styles.shell}>
+            <h2 id="how-title">{tx("Three steps. No hosting, no code.", "세 단계면 끝. 호스팅도 코드도 필요 없어요.")}</h2>
+            <ol className={styles.steps}>
+              <li>
+                <span className={styles.stepNo}>1</span>
+                <h3>{tx("Make it with AI", "AI로 만들기")}</h3>
+                <p>{tx("Any tool that writes HTML works: Claude, ChatGPT, Gemini, Cursor.", "HTML을 만드는 도구라면 무엇이든 좋아요. Claude, ChatGPT, Gemini, Cursor.")}</p>
               </li>
-              <li className="step-card step-publish" data-reveal>
-                <div className="step-topline"><span>STEP 02</span><i aria-hidden="true" /></div>
-                <div className="step-visual version-visual" aria-hidden="true">
-                  <div className="version-card version-old"><span>HTML</span><b>{tx("Original saved", "원본 보관")}</b></div>
-                  <div className="version-arrow">→</div>
-                  <div className="version-card version-new"><span>SAFE</span><b>{tx("Safety check", "안전 검사")}</b></div>
-                  <code>{tx("isolated execution", "격리 환경에서 실행")}</code>
-                </div>
-                <h3>{tx("Validate it for publishing", "안전하게 검사해요")}</h3>
-                <p>{tx("We inspect the document and publish it in an isolated environment that keeps your account separate.", "문서를 검사한 뒤 계정 정보와 분리된 격리 환경에서 공개합니다.")}</p>
+              <li>
+                <span className={styles.stepNo}>2</span>
+                <h3>{tx("Publish in one step", "한 번에 게시")}</h3>
+                <p>{tx("Ask your AI to publish it through TagWorks MCP, or drag and drop the file with its images.", "AI에게 TagWorks MCP로 게시해 달라고 하거나, 파일과 이미지를 끌어다 놓으세요.")}</p>
               </li>
-              <li className="step-card step-measure" data-reveal>
-                <div className="step-topline"><span>STEP 03</span><i aria-hidden="true" /></div>
-                <div className="step-visual measure-visual" aria-hidden="true">
-                  <div><span>{tx("Upload", "업로드")}</span><i style={{ width: "100%" }} /></div>
-                  <div><span>{tx("Check", "검사")}</span><i style={{ width: "100%" }} /></div>
-                  <div><span>{tx("Publish", "공개")}</span><i style={{ width: "100%" }} /></div>
-                </div>
-                <h3>{tx("Publish at a permanent URL", "고정 주소로 공개해요")}</h3>
-                <p>{tx("As soon as the upload finishes, a unique shareable URL is created and saved to your dashboard.", "업로드가 끝나면 바로 공유할 수 있는 고유 주소가 만들어지고 대시보드에 보관됩니다.")}</p>
+              <li>
+                <span className={styles.stepNo}>3</span>
+                <h3>{tx("Share and see who clicks", "공유하고 클릭 확인")}</h3>
+                <p>{tx("Post the link or QR code anywhere. See which source brings visitors and which buttons they click.", "링크나 QR 코드를 어디든 올리세요. 어느 채널에서 방문자가 오고 어떤 버튼을 누르는지 볼 수 있어요.")}</p>
               </li>
             </ol>
-
-            <div className="workflow-action" data-reveal>
-              <Link prefetch={false} className="button button-primary" href="/signup">{tx("Publish my HTML", "내 HTML 공개하기")} <ArrowIcon /></Link>
-            </div>
           </div>
         </section>
 
-        <section className="section insights" id="product-view" aria-labelledby="insights-title">
-          <div className="shell">
-            <div className="insights-heading" data-reveal>
-              <div>
-                <span className="section-kicker">{tx("Per-page visit flow analytics", "페이지별 방문 흐름 분석")}</span>
-                <h2 id="insights-title">{tx("See the journey,", "숫자보다 흐름이")}<br />{tx("not just the numbers.", "먼저 보이게.")}</h2>
-              </div>
-              <p>
-                {tx("See where visits started and which external links they reached in analytics for each page.", "방문 세션이 어디에서 시작되어 어떤 외부 링크로 이어졌는지 페이지별 분석 화면에서 확인할 수 있습니다.")}
-              </p>
-            </div>
-            <AnalyticsDemo locale={locale} />
+        <section className={`${styles.shell} ${styles.split}`} aria-labelledby="insights-title">
+          <div className={styles.splitCopy}>
+            <h2 id="insights-title">{tx("Know which post actually works.", "어떤 게시물이 효과 있는지 알 수 있어요.")}</h2>
+            <p>{tx("Every link shows where visitors came from and which links they clicked next. Spend your time on the channel that brings sign-ups.", "링크마다 방문자가 어디서 왔고 다음에 무엇을 눌렀는지 보여 줘요. 신청이 들어오는 채널에 시간을 쓰세요.")}</p>
           </div>
-        </section>
-
-        <section className="section principles" id="principles" aria-labelledby="principles-title">
-          <div className="shell principles-grid">
-            <div className="principles-copy" data-reveal>
-              <span className="section-kicker">{tx("Publishing principles", "공개 원칙")}</span>
-              <h2 id="principles-title">{tx("Publish in isolation.", "안전하게 공개하고,")}<br />{tx("Keep the original private.", "원본은 따로 지킵니다.")}</h2>
-              <p>
-                {tx("We inspect each document before publishing and serve it in an environment separated from your login and management data.", "모든 HTML을 그대로 실행하는 호스팅이 아닙니다. 공개 전 지원 범위를 검사하고, 로그인 정보와 분리된 환경에서 정제된 버전만 제공합니다.")}
-              </p>
-              <a className="text-link" href="#faq">{tx("Read the FAQ", "자주 묻는 질문 보기")} <span aria-hidden="true">↓</span></a>
-            </div>
-
-            <div className="principle-board" data-reveal>
-              <div className="board-head">
-                <span>STATIC HTML CHECK</span>
-                <span className="secure-state"><i aria-hidden="true" /> {tx("Check complete", "검사 완료")}</span>
-              </div>
-              <div className="board-file">
-                <div className="board-file-icon" aria-hidden="true">HTML</div>
-                <div><strong>class-intro.html</strong><span>{tx("Isolated public copy · original stored privately", "정제된 공개본 · 원본은 비공개 보관")}</span></div>
-              </div>
-              <div className="check-groups">
-                <article className="allowed-group">
-                  <div className="check-group-title"><span aria-hidden="true">✓</span><strong>{tx("Supported", "지원해요")}</strong></div>
-                  <ul>
-                    <li>{tx("HTML content and layout", "정적 HTML 본문과 레이아웃")}</li>
-                    <li>{tx("Inline and external CSS", "파일 안에 포함된 CSS")}</li>
-                    <li>{tx("Standard HTTPS links", "일반 HTTPS 외부 링크")}</li>
-                    <li>{tx("Embedded PNG and JPG images", "파일에 포함된 PNG·JPG 이미지")}</li>
-                  </ul>
-                </article>
-                <article className="blocked-group">
-                  <div className="check-group-title"><span aria-hidden="true">×</span><strong>{tx("Restricted", "제거하거나 막아요")}</strong></div>
-                  <ul>
-                    <li>{tx("Unsafe browser capabilities", "위험한 브라우저 기능")}</li>
-                    <li>{tx("Account or publisher data access", "계정·퍼블리셔 데이터 접근")}</li>
-                    <li>{tx("Server, database, or API secrets", "서버·DB·API 비밀키")}</li>
-                    <li>{tx("Missing local file paths", "누락된 로컬 파일 경로")}</li>
-                  </ul>
-                </article>
-              </div>
-              <div className="board-foot">
-                <span>{tx("Dashboard", "관리 화면")}</span><i aria-hidden="true" /><span>{tx("Isolated public environment", "분리된 공개 환경")}</span><i aria-hidden="true" /><span>{tx("Visitor", "방문자")}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="section use-cases" aria-labelledby="use-cases-title">
-          <div className="shell">
-            <div className="use-cases-head" data-reveal>
-              <div>
-                <span className="section-kicker">{tx("Who is it for?", "누구를 위한 도구인가요?")}</span>
-                <h2 id="use-cases-title">{tx("You made the page.", "페이지는 만들었지만,")}<br />{tx("Deployment shouldn't get in the way.", "배포가 낯선 사람들.")}</h2>
-              </div>
-              <p>{tx("Built for independent creators who want to turn an AI-made page into a link real customers can visit.", "AI 도구로 완성한 홍보 페이지를 실제 고객이 만나는 링크로 바꾸고 싶은 1인 운영자부터 시작합니다.")}</p>
-            </div>
-            <div className="use-case-grid">
-              <article className="use-case-card" data-reveal>
-                <span className="use-case-index">01</span>
-                <div className="use-case-signal signal-product" aria-hidden="true">
-                  <span>PRODUCT PAGE</span><strong>{tx("Product story", "상품 소개")}</strong><code>fixed · link</code>
+          <div className={styles.sources}>
+            <div className={styles.sourcesHead}><span>{tx("Source", "유입 출처")}</span><span>{tx("Visits → clicks", "방문 → 클릭")}</span></div>
+            {sampleSources.map((row) => (
+              <div className={styles.sourceRow} key={row.english}>
+                <div className={styles.sourceLine}>
+                  <span>{tx(row.english, row.korean)}</span>
+                  <span>{row.visits} → <strong>{row.clicks}</strong></span>
                 </div>
-                <h3>{tx("Introduce a small product", "작은 상품을 소개할 때")}</h3>
-                <p>{tx("Upload your product page and share its permanent link on Instagram, your blog, or anywhere else.", "상품 설명 HTML을 올리고, 발급된 고정 링크를 인스타그램과 블로그에서 바로 공유합니다.")}</p>
-                <div className="tag-row"><span>{tx("Product page", "상품 소개")}</span><span>{tx("Permanent link", "고정 링크")}</span></div>
-              </article>
-              <article className="use-case-card" data-reveal>
-                <span className="use-case-index">02</span>
-                <div className="use-case-signal signal-republish" aria-hidden="true">
-                  <span>CLASS OPEN</span><strong>HTML → URL</strong><code>/p/my-class</code>
-                </div>
-                <h3>{tx("Open a class or service", "강의·서비스를 모집할 때")}</h3>
-                <p>{tx("Turn a finished signup page into one URL without configuring a separate hosting service.", "완성된 모집 페이지를 별도의 호스팅 설정 없이 하나의 주소로 만들어 안내합니다.")}</p>
-                <div className="tag-row"><span>{tx("Publish fast", "빠른 공개")}</span><span>{tx("Share easily", "쉬운 공유")}</span></div>
-              </article>
-              <article className="use-case-card" data-reveal>
-                <span className="use-case-index">03</span>
-                <div className="use-case-signal signal-flow" aria-hidden="true">
-                  <span>SAFE PUBLISH</span><strong>check → live</strong><code>static · html</code>
-                </div>
-                <h3>{tx("Share in an isolated environment", "안전하게 전달하고 싶을 때")}</h3>
-                <p>{tx("We inspect each upload and serve the public copy separately from your authenticated dashboard.", "지원하지 않는 동작을 검사하고 정제된 공개본을 로그인 환경과 분리해 제공합니다.")}</p>
-                <div className="tag-row"><span>{tx("Validation", "안전 검사")}</span><span>{tx("Isolated publishing", "분리 공개")}</span></div>
-              </article>
-            </div>
+                <div className={styles.bar} aria-hidden="true"><i style={{ width: `${Math.round((row.visits / maxVisits) * 100)}%` }} /></div>
+              </div>
+            ))}
+            <p className={styles.small}>{tx("Sample data", "샘플 데이터")}</p>
           </div>
         </section>
 
-        <Suspense fallback={<section id="pricing" className="section shell" aria-busy="true"><h2>{tx("Pricing", "요금제")}</h2></section>}>
-          <PricingSection />
-        </Suspense>
-        <AffiliateSection />
+        <div className={styles.band}>
+          <Suspense fallback={<section id="pricing" className={styles.shell} aria-busy="true"><h2>{tx("Pricing", "요금제")}</h2></section>}>
+            <PricingSection />
+          </Suspense>
+        </div>
 
-        <section className="section faq" id="api-mcp" aria-labelledby="api-mcp-title">
-          <div className="shell faq-grid">
-            <div className="faq-heading" data-reveal>
-              <h2 id="api-mcp-title">API &amp; MCP</h2>
-            </div>
-            <div data-reveal>
-              <p>{tx("Publish HTML from your own scripts with the REST API, or from a compatible AI client with MCP. Both return a link you can share.", "REST API로 스크립트에서, MCP로 호환되는 AI 도구에서 HTML을 게시하고 공유 링크를 받을 수 있습니다.")}</p>
-              <dl>
-                <dt>MCP · Streamable HTTP</dt>
-                <dd><code>https://tagworks.io/api/mcp</code></dd>
-                <dt>{tx("HTML publishing API", "HTML 게시 API")}</dt>
-                <dd><code>POST https://tagworks.io/api/v1/deploy</code></dd>
-              </dl>
-              <p>{tx("Both require a personal API key. Sign in to create one under Dashboard → API & MCP.", "두 기능 모두 개인 API 키가 필요합니다. 로그인 후 대시보드 → API & MCP에서 키를 발급할 수 있습니다.")}</p>
-              <Link prefetch={false} className="text-link" href="/login?next=%2Fdashboard%2Fapi-keys">
-                {tx("Log in to manage API keys", "로그인하여 API 키 관리")}
-              </Link>
-            </div>
+        <section className={`${styles.shell} ${styles.split}`} id="api-mcp" aria-labelledby="api-mcp-title">
+          <div className={styles.splitCopy}>
+            <h2 id="api-mcp-title">API &amp; MCP</h2>
+            <p>{tx("Publish HTML from your own scripts with the REST API, or from a compatible AI client with MCP. Both return a link you can share.", "REST API로 스크립트에서, MCP로 호환되는 AI 도구에서 HTML을 게시하고 공유 링크를 받을 수 있습니다.")}</p>
+          </div>
+          <div className={styles.apiCard}>
+            <dl>
+              <dt>MCP · Streamable HTTP</dt>
+              <dd><code>https://tagworks.io/api/mcp</code></dd>
+              <dt>{tx("HTML publishing API", "HTML 게시 API")}</dt>
+              <dd><code>POST https://tagworks.io/api/v1/deploy</code></dd>
+            </dl>
+            <p>{tx("Both require a personal API key. Sign in to create one under Dashboard → API & MCP.", "두 기능 모두 개인 API 키가 필요합니다. 로그인 후 대시보드 → API & MCP에서 키를 발급할 수 있습니다.")}</p>
+            <Link prefetch={false} className={styles.textLink} href="/login?next=%2Fdashboard%2Fapi-keys">{tx("Log in to manage API keys", "로그인하여 API 키 관리")}</Link>
           </div>
         </section>
 
-        <section className="section faq" id="faq" aria-labelledby="faq-title">
-          <div className="shell faq-grid">
-            <div className="faq-heading" data-reveal>
-              <span className="section-kicker">{tx("Frequently asked questions", "자주 묻는 질문")}</span>
-              <h2 id="faq-title">{tx("Clear answers.", "약속할 수 있는 것만,")}<br />{tx("No vague promises.", "분명하게 말합니다.")}</h2>
-            </div>
-            <div className="faq-list" data-reveal>
-              <details open>
-                <summary><span>{tx("Will my HTML look and behave the same?", "HTML 디자인이 그대로 공개되나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("Your original HTML, head scripts, and external styles are preserved. It runs inside a sandboxed publishing environment, so browser-restricted capabilities may still be unavailable.", "원본 HTML과 헤더 스크립트, 외부 CSS를 유지합니다. 다만 격리된 공개 환경에서 실행되므로 브라우저가 제한하는 기능은 사용할 수 없습니다.")}</p>
-              </details>
-              <details>
-                <summary><span>{tx("When is the URL created?", "업로드하면 주소는 언제 만들어지나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("A permanent URL is created as soon as validation and storage finish. You can reopen it or download its QR code from your dashboard.", "안전 검사와 저장이 끝나면 해당 페이지 전용 고정 주소가 즉시 만들어집니다. 대시보드에서 언제든 다시 복사할 수 있습니다.")}</p>
-              </details>
-              <details>
-                <summary><span>{tx("What counts as a link?", "링크는 어떻게 세나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("A page that is live. Unpublish or delete one to free a slot.", "공개 중인 페이지 하나가 링크 하나예요. 비공개로 바꾸거나 삭제하면 자리가 돌아와요.")}</p>
-              </details>
-              <details>
-                <summary><span>{tx("Does editing a page count against my plan?", "페이지를 수정하면 한도가 줄어드나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("No. Edit as often as you like; your URL and QR code stay the same.", "아니요. 원하는 만큼 수정하세요. 주소와 QR 코드도 그대로예요.")}</p>
-              </details>
-              <details>
-                <summary><span>{tx("Can I upload any file?", "아무 파일이나 올릴 수 있나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("One HTML file and the images it uses. Local CSS files are not uploaded, so keep styles inside the HTML or link them over HTTPS. Publishing from an AI tool through MCP or the API keeps everything in one file.", "HTML 파일 하나와 그 페이지가 쓰는 이미지를 올릴 수 있어요. 로컬 CSS 파일은 함께 올라가지 않으니 스타일은 HTML 안에 넣거나 HTTPS 주소로 연결해 주세요. AI 도구에서 MCP나 API로 게시하면 한 파일로 깔끔하게 올릴 수 있어요.")}</p>
-              </details>
-              <details>
-                <summary><span>{tx("Can I upload images?", "이미지도 올릴 수 있나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("Yes. PNG, JPG, WebP and GIF. We resize and compress them automatically.", "네. PNG, JPG, WebP, GIF를 지원하고, 크기 조정과 압축은 자동으로 해요.")}</p>
-              </details>
-              <details>
-                <summary><span>{tx("What happens to my old images when I edit?", "수정하면 예전 이미지는 어떻게 되나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("When you publish an edit, the previous images are removed and replaced by the ones you upload with it. Upload every image the page uses each time.", "수정본을 게시하면 이전 이미지는 지워지고 함께 올린 이미지로 바뀌어요. 매번 페이지에 쓰는 이미지를 모두 올려 주세요.")}</p>
-              </details>
-              <details>
-                <summary><span>{tx("What if my page gets a lot of visitors?", "방문자가 아주 많으면 어떻게 되나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("Your page stays online. If you pass your plan's monthly views, we'll suggest an upgrade or reach out.", "페이지는 계속 공개돼요. 플랜의 월 조회수를 넘으면 업그레이드를 제안하거나 연락드릴게요.")}</p>
-              </details>
-              <details>
-                <summary><span>{tx("Can I cancel anytime?", "언제든 해지할 수 있나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("Yes. You keep your plan until the end of the period you paid for.", "네. 결제한 기간이 끝날 때까지 플랜을 그대로 쓸 수 있어요.")}</p>
-              </details>
-              <details>
-                <summary><span>{tx("Is my login information sent to the public page?", "로그인 정보가 공개 페이지로 전달되나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("No. The dashboard and public page are served separately. The public page receives only the content and minimum public configuration it needs.", "아닙니다. 관리 화면과 공개 페이지는 분리해 제공하고, 공개 페이지에는 정제된 콘텐츠와 공개에 필요한 최소 정보만 전달합니다.")}</p>
-              </details>
-            </div>
+        <section className={`${styles.narrow} ${styles.faq}`} id="faq" aria-labelledby="faq-title">
+          <h2 id="faq-title">{tx("Questions", "자주 묻는 질문")}</h2>
+          <div className={styles.faqList}>
+            {faq.map(([question, answer]) => (
+              <div className={styles.faqItem} key={question}><h3>{question}</h3><p>{answer}</p></div>
+            ))}
           </div>
+          <details className={styles.moreFaq}>
+            <summary>{tx("See all questions", "질문 더 보기")}</summary>
+            <div className={styles.faqList}>
+              {moreFaq.map(([question, answer]) => (
+                <div className={styles.faqItem} key={question}><h3>{question}</h3><p>{answer}</p></div>
+              ))}
+            </div>
+          </details>
         </section>
 
-        <section className="closing-section" aria-labelledby="closing-title">
-          <div className="shell closing-card" data-reveal>
-            <div className="closing-tag" aria-hidden="true">BETA IS OPEN</div>
-            <span className="section-kicker">{tx("Take your HTML to the next step", "당신의 HTML, 다음 단계로")}</span>
-            <h2 id="closing-title">{tx("Your page is ready.", "만들어둔 페이지가 있다면,")}<br />{tx("Now give it a link.", "이제 링크로 만날 차례예요.")}</h2>
-            <p>{tx("Create an account and upload your HTML to get a permanent link right away.", "계정을 만들고 HTML 파일을 올리면, 안전 검사 후 고정 링크를 바로 받을 수 있습니다.")}</p>
-            <div className="closing-actions">
-              <Link prefetch={false} className="button button-primary" href="/signup">{tx("Start free", "무료로 시작하기")} <ArrowIcon /></Link>
-              <Link prefetch={false} className="text-link" href="/login">{tx("Log in", "로그인")} <span aria-hidden="true">→</span></Link>
-            </div>
+        <section className={styles.closing} aria-labelledby="closing-title">
+          <div className={styles.shell}>
+            <h2 id="closing-title">{tx("Your page is ready. Give it a link.", "만든 페이지, 이제 링크로 공유하세요.")}</h2>
+            <p>{tx("Free forever for your first link. No card needed.", "첫 링크는 계속 무료예요. 카드 등록도 필요 없어요.")}</p>
+            <Link prefetch={false} className={styles.closingButton} href={user ? "/pages/new" : "/signup"}>{user ? tx("Upload HTML", "HTML 업로드") : tx("Start free", "무료로 시작하기")}</Link>
           </div>
         </section>
       </main>
 
-      <footer className="site-footer">
-        <div className="shell footer-inner">
-          <a className="brand" href="#top" aria-label={tx("TagWorks home", "TagWorks 홈")}>
-            <BrandMark />
-            <span>TagWorks</span>
-          </a>
-          <p>{brand.title}</p>
-          <LanguageSwitcher locale={locale} />
-          <div className="footer-links"><a href="#workflow">{tx("How it works", "작동 방식")}</a><a href="#principles">{tx("What we support", "지원 범위")}</a><Link prefetch={false} href="#pricing">{tx("Pricing", "요금제")}</Link><Link prefetch={false} href="#affiliates">{tx("Affiliate", "어필리에이트")}</Link><a href="#api-mcp">API &amp; MCP</a><a href="#faq">FAQ</a></div>
-          <span>© {new Date().getFullYear()} TagWorks</span>
-          <a href="https://peerpush.com/p/tagworks" target="_blank" rel="noopener" className="footer-peerpush">
-            <img
-              src="https://peerpush.com/p/tagworks/badge.png"
-              alt="TagWorks on PeerPush"
-              width={230}
-              height={65}
-              loading="lazy"
-            />
-          </a>
-        </div>
-      </footer>
-    </>
+      <SiteFooter locale={locale} />
+    </div>
   );
-  return content;
 }
