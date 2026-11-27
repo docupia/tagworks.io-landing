@@ -196,13 +196,15 @@ test("replaces an existing title without rewriting surrounding bytes", () => {
   );
 });
 
-test("renders a fixed top-right Tagworks corner link above page content", () => {
+test("renders a small bottom-right TagWorks badge above page content", () => {
   const cornerLink = renderTagworksCornerLink();
 
   assert.match(cornerLink, /href="https:\/\/tagworks\.io\/"/);
-  assert.match(cornerLink, /clip-path:polygon\(0 0,100% 0,100% 100%\)!important/);
+  assert.match(cornerLink, /aria-label="Made with TagWorks"/);
+  assert.match(cornerLink, /position:fixed!important;right:max\(12px,env\(safe-area-inset-right\)\)!important;bottom:max\(12px,env\(safe-area-inset-bottom\)\)!important/);
   assert.match(cornerLink, /z-index:2147483647!important/);
-  assert.match(cornerLink, /position:fixed!important/);
+  assert.match(cornerLink, /@media print\{\[data-tagworks-platform="corner-link"\]\{display:none!important\}\}/);
+  assert.doesNotMatch(cornerLink, /<script/i);
 });
 
 test("does not mistake html-looking CSS text for a complete document", () => {

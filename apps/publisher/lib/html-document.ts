@@ -154,8 +154,32 @@ function ensureManagedTitle(
   return `${head}${document}`;
 }
 
+/**
+ * Small "Made with TagWorks" badge for Free pages. It sits in the bottom-right
+ * corner, away from page navigation, stays legible on light and dark pages,
+ * respects the safe area on phones and is hidden when printing.
+ */
 export function renderTagworksCornerLink(): string {
-  return '<a data-tagworks-platform="corner-link" href="https://tagworks.io/" target="_blank" rel="noopener noreferrer" aria-label="Tagworks.io로 이동" title="Tagworks.io" style="position:fixed!important;top:0!important;right:0!important;width:76px!important;height:76px!important;margin:0!important;padding:0!important;display:block!important;overflow:hidden!important;clip-path:polygon(0 0,100% 0,100% 100%)!important;background:#596248!important;color:#fffdf7!important;text-decoration:none!important;filter:drop-shadow(-4px 5px 8px rgba(32,38,26,.22))!important;z-index:2147483647!important;isolation:isolate!important"><span aria-hidden="true" style="position:absolute!important;top:10px!important;right:11px!important;color:#fffdf7!important;font:900 18px/1 system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif!important;letter-spacing:-.05em!important">T</span></a>';
+  const font = 'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+  return [
+    '<style data-tagworks-platform="corner-link-style">',
+    '@media print{[data-tagworks-platform="corner-link"]{display:none!important}}',
+    '[data-tagworks-platform="corner-link"]:hover{transform:translateY(-1px)!important;box-shadow:0 6px 18px rgba(32,38,26,.22)!important}',
+    '[data-tagworks-platform="corner-link"]:focus-visible{outline:2px solid #596248!important;outline-offset:2px!important}',
+    '</style>',
+    '<a data-tagworks-platform="corner-link" href="https://tagworks.io/" target="_blank" rel="noopener noreferrer" aria-label="Made with TagWorks" title="Made with TagWorks" style="',
+    'position:fixed!important;right:max(12px,env(safe-area-inset-right))!important;bottom:max(12px,env(safe-area-inset-bottom))!important;',
+    'top:auto!important;left:auto!important;width:auto!important;height:28px!important;margin:0!important;padding:0 10px 0 4px!important;',
+    'display:inline-flex!important;align-items:center!important;gap:6px!important;box-sizing:border-box!important;',
+    'border:1px solid rgba(89,98,72,.22)!important;border-radius:999px!important;background:rgba(255,253,247,.94)!important;',
+    'color:#3d4430!important;text-decoration:none!important;box-shadow:0 3px 12px rgba(32,38,26,.16)!important;',
+    `font:600 12px/1 ${font}!important;letter-spacing:0!important;white-space:nowrap!important;`,
+    '-webkit-backdrop-filter:blur(8px)!important;backdrop-filter:blur(8px)!important;transition:transform .15s,box-shadow .15s!important;',
+    'z-index:2147483647!important;isolation:isolate!important">',
+    `<span aria-hidden="true" style="display:inline-grid!important;place-items:center!important;width:20px!important;height:20px!important;border-radius:999px!important;background:#596248!important;color:#fffdf7!important;font:900 11px/1 ${font}!important">T</span>`,
+    '<span aria-hidden="true" style="color:inherit!important;font:inherit!important"><span style="color:#74805f!important;font-weight:500!important">Made with</span> TagWorks</span>',
+    '</a>',
+  ].join("");
 }
 
 function injectTracker(document: string, trackerScript: string): string {

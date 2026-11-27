@@ -94,6 +94,8 @@ type PublishedPage = {
   title: string;
   updated_at: string;
   version_id: string;
+  /** False for paid, custom and admin accounts. Missing before the badge migration. */
+  show_badge?: boolean | null;
 };
 
 function normalizedSlug(input: string): string | null {
@@ -112,7 +114,7 @@ function renderDocument(page: PublishedPage, trackerScript = ""): string {
     fallbackTitle: page.title,
     sanitizerVersion: page.sanitizer_version,
     sanitizedHtml: page.sanitized_html,
-    trackerScript: `${renderTagworksCornerLink()}${trackerScript}`,
+    trackerScript: `${page.show_badge === false ? "" : renderTagworksCornerLink()}${trackerScript}`,
   });
 }
 
