@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /billing
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://tagworks.io/sitemap.xml

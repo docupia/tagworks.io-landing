@@ -1,20 +1,21 @@
+/* Public site header and footer (2026-11 blog design: solid white bar, plain text links, dark "Start free"). */
 .header {
   position: sticky;
   z-index: 100;
   top: 0;
-  border-bottom: 1px solid var(--tw-line);
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
 }
 
 .headerInner,
-.footerInner {
+.footerInner,
+.footerMeta {
   width: min(1160px, calc(100% - 40px));
   margin-inline: auto;
 }
 
 .headerInner {
-  min-height: 64px;
+  min-height: 68px;
   display: flex;
   align-items: center;
   gap: 24px;
@@ -25,7 +26,7 @@
   align-items: center;
   gap: 10px;
   color: var(--tw-ink);
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -38,26 +39,32 @@
 
 .nav {
   display: flex;
-  gap: 28px;
+  align-items: center;
+  gap: 24px;
   margin-left: auto;
 }
 
-.nav a,
-.login {
+.nav a {
   color: var(--tw-body);
   font-size: 0.94rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
-.nav a:hover,
-.login:hover {
+.nav a:hover {
   color: var(--tw-ink);
+}
+
+.nav a[aria-current="page"],
+.menuPanel a[aria-current="page"] {
+  color: var(--tw-ink);
+  font-weight: 700;
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 8px;
 }
 
 .start {
@@ -74,7 +81,6 @@
   background: #1e293b;
 }
 
-.language :global(.language-switcher),
 .menuPanel :global(.language-switcher),
 .footerMeta :global(.language-switcher) {
   padding: 0;
@@ -83,7 +89,6 @@
   background: #fff;
 }
 
-.language :global(.language-switcher select),
 .menuPanel :global(.language-switcher select),
 .footerMeta :global(.language-switcher select) {
   min-height: 34px;
@@ -102,11 +107,11 @@
 
 .menu summary {
   white-space: nowrap;
-  padding: 9px 14px;
+  padding: 8px 12px;
   border: 1px solid var(--tw-line-strong);
   border-radius: var(--tw-radius-sm);
   color: var(--tw-ink);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 600;
   list-style: none;
   cursor: pointer;
@@ -142,10 +147,10 @@
 }
 
 .footer {
-  border-top: 1px solid var(--tw-line);
+  border-top: 1px solid #e5e7eb;
   background: #fff;
   color: var(--tw-muted);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .footerInner {
@@ -153,18 +158,18 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 20px 32px;
-  padding-block: 32px;
+  gap: 16px;
+  padding-block: 32px 16px;
 }
 
 .footerLinks {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 20px;
+  gap: 10px 18px;
 }
 
 .footerLinks a {
-  color: var(--tw-body);
+  color: var(--tw-text);
 }
 
 .footerLinks a:hover {
@@ -175,38 +180,37 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 16px;
+  padding-bottom: 32px;
 }
 
 .peerpush img {
-  width: 160px;
+  width: 140px;
   height: auto;
   display: block;
 }
 
-@media (max-width: 820px) {
-  .nav,
-  .language,
-  .login {
+@media (max-width: 900px) {
+  .nav {
     display: none;
   }
 
   .actions {
     margin-left: auto;
-    gap: 8px;
   }
 
   .menu {
     display: block;
   }
 
-  .start,
-  .menu summary {
+  .start {
     padding: 8px 12px;
     font-size: 0.86rem;
   }
 
   .headerInner {
+    min-height: 60px;
     gap: 12px;
   }
 

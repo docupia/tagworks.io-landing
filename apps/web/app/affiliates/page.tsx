@@ -12,7 +12,7 @@ export default async function AffiliatesPage() {
   const user = await getCurrentUser();
   return (
     <div className={styles.page}>
-      <SiteHeader locale={locale} member={user ? user.email ?? "Member" : undefined} />
+      <SiteHeader locale={locale} member={user ? user.email ?? "Member" : undefined} current="affiliates" />
       <main id="main"><AffiliateSection /></main>
       <SiteFooter locale={locale} />
     </div>

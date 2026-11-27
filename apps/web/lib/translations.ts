@@ -37,6 +37,18 @@ const translations: Record<string, Translation> = {
   "Free forever for your first link. No card needed.": ["最初のリンクはずっと無料。カード登録も不要です。", "Tu primer enlace es gratis para siempre. Sin tarjeta.", "Dein erster Link bleibt kostenlos. Keine Karte nötig.", "第一个链接永久免费，无需绑卡。"],
   "Footer": ["フッター", "Pie de página", "Fußzeile", "页脚"],
   "Affiliate (earn 30%)": ["アフィリエイト（30%還元）", "Afiliados (gana un 30 %)", "Partnerprogramm (30 % verdienen)", "联盟推广（赚取 30%）"],
+  // Blog (2026-11)
+  "Home": ["ホーム", "Inicio", "Startseite", "首页"],
+  "Breadcrumb": ["パンくずリスト", "Ruta de navegación", "Brotkrumen-Navigation", "面包屑导航"],
+  "Guides": ["ガイド", "Guías", "Anleitungen", "指南"],
+  "Guide": ["ガイド", "Guía", "Anleitung", "指南"],
+  "Publish AI-made pages, step by step": ["AIで作ったページを、ステップごとに公開", "Publica páginas creadas con IA, paso a paso", "KI-Seiten Schritt für Schritt veröffentlichen", "一步步发布 AI 制作的页面"],
+  "Practical guides for turning pages made with Claude, ChatGPT, Gemini and coding agents into permanent links you can share and track.": ["Claude、ChatGPT、Gemini、コーディングエージェントで作ったページを、共有・分析できる固定リンクにするための実践ガイドです。", "Guías prácticas para convertir páginas creadas con Claude, ChatGPT, Gemini y agentes de código en enlaces permanentes que puedes compartir y medir.", "Praktische Anleitungen, mit denen du Seiten aus Claude, ChatGPT, Gemini und Coding-Agents in dauerhafte Links verwandelst, die du teilen und auswerten kannst.", "实用指南：把用 Claude、ChatGPT、Gemini 和编程智能体制作的页面变成可分享、可追踪的固定链接。"],
+  "Read guide": ["ガイドを読む", "Leer la guía", "Anleitung lesen", "阅读指南"],
+  "More guides": ["ほかのガイド", "Más guías", "Weitere Anleitungen", "更多指南"],
+  "min read": ["分で読めます", "min de lectura", "Min. Lesezeit", "分钟阅读"],
+  "This guide is in English.": ["このガイドは英語で書かれています。", "Esta guía está en inglés.", "Diese Anleitung ist auf Englisch.", "本指南为英文。"],
+  "Give your page a link": ["ページにリンクを", "Dale un enlace a tu página", "Gib deiner Seite einen Link", "给你的页面一个链接"],
 
   "Key name": ["キー名", "Nombre de clave", "Schlüsselname", "密钥名称"],
   "Create API key": ["APIキーを作成", "Crear clave API", "API-Schlüssel erstellen", "创建 API 密钥"],
