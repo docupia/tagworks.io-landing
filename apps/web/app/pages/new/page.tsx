@@ -3,89 +3,99 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import styles from "@/app/dashboard/dashboard.module.css";
 import { UploadForm } from "./upload-form";
-import { getUploadEntitlement } from "@/lib/billing";
-import { MAX_PAGE_REVISIONS, PAGE_ID_PATTERN } from "@/lib/page-revisions";
-import { createClient } from "@/lib/supabase/server";
+import { getReconciledAccountPlan } from "@/lib/account-plan";
+import { getDatabase } from "@/lib/database";
 import { text } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
+import { limitMessage } from "@/lib/limit-messages";
+import { PAGE_ID_PATTERN } from "@/lib/page-revisions";
+import { fill, SELF_SERVE_MAX_LINKS } from "@/lib/plans";
+import { createClient } from "@/lib/supabase/server";
 
 type NewPageProps = { searchParams: Promise<{ edit?: string | string[] }> };
 
 export async function generateMetadata({ searchParams }: NewPageProps): Promise<Metadata> {
   const locale = await getLocale();
   const { edit } = await searchParams;
-  return { title: edit ? text(locale, "Replace HTML", "HTML 교체") : text(locale, "Upload HTML", "HTML 업로드") };
+  return { title: edit ? text(locale, "Edit page", "페이지 수정") : text(locale, "Upload HTML", "HTML 업로드") };
 }
 
 export default async function NewPage({ searchParams }: NewPageProps) {
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const { edit } = await searchParams;
-  let revisionPage: { id: string; title: string; revision_count: number } | null = null;
+
+  let editPage: { id: string; title: string; status: string } | null = null;
   if (edit !== undefined) {
     if (typeof edit !== "string" || !PAGE_ID_PATTERN.test(edit)) notFound();
-    const { data, error } = await supabase.from("pages")
-      .select("id,title,revision_count")
-      .eq("id", edit)
-      .eq("owner_id", user.id)
-      .eq("status", "published")
-      .is("deleted_at", null)
-      .maybeSingle();
-    if (error) throw error;
-    if (!data) notFound();
-    revisionPage = data;
+    const [row] = await getDatabase()<{ id: string; title: string; status: string }[]>`
+      select id, title, status
+      from public.pages
+      where id = ${edit}::uuid
+        and owner_id = ${user.id}::uuid
+        and deleted_at is null
+        and status in ('published', 'paused')
+    `;
+    if (!row) notFound();
+    editPage = row;
   }
-  const entitlement = await getUploadEntitlement(user.id);
-  const revisionsRemaining = revisionPage ? MAX_PAGE_REVISIONS - revisionPage.revision_count : 0;
+
+  const account = await getReconciledAccountPlan(user.id);
+  const { limits } = account;
+  const atLimit = !editPage && account.liveLinks >= limits.maxLinks;
+  const topTier = limits.maxLinks >= SELF_SERVE_MAX_LINKS;
+  const usage = account.superAdmin
+    ? fill(tx("{live} links live · no limit", "공개 링크 {live}개 · 제한 없음"), { live: account.liveLinks })
+    : fill(tx("{live} of {max} links live", "공개 링크 {max}개 중 {live}개 사용 중"), { live: account.liveLinks, max: limits.maxLinks });
 
   return (
     <div className={styles.shell}>
       <main className={styles.main}>
         <section className={styles.uploadCard}>
           <Link className={styles.back} href="/dashboard">← {tx("Back to my pages", "내 페이지로 돌아가기")}</Link>
-          <p className={styles.eyebrow}>{revisionPage ? tx("Edit published page", "게시 페이지 수정") : tx("New page", "새 페이지")}</p>
-          <h1 className={styles.title}>{revisionPage ? tx("Replace HTML", "HTML 교체") : tx("Upload HTML", "HTML 업로드")}</h1>
+          <p className={styles.eyebrow}>{editPage ? tx("Edit published page", "게시 페이지 수정") : tx("New page", "새 페이지")}</p>
+          <h1 className={styles.title}>{editPage ? editPage.title : tx("Upload HTML", "HTML 업로드")}</h1>
           <p className={styles.subtitle}>
             {tx("Your original is stored privately and served from an isolated public URL.", "원본은 비공개로 보관하고, 별도 주소의 격리된 환경에서 공개합니다.")}
           </p>
-          {revisionPage ? (
-            <div className={styles.quotaBanner}>
-              <div>
-                <strong>{revisionPage.title}</strong>
-                <span>{tx(`${revisionsRemaining} of ${MAX_PAGE_REVISIONS} revisions remaining`, `수정 업로드 ${MAX_PAGE_REVISIONS}회 중 ${revisionsRemaining}회 남음`)}</span>
-              </div>
+
+          <div className={styles.quotaBanner}>
+            <div>
+              <strong>{limits.name}</strong>
+              <span>{editPage ? tx("Edits are unlimited · the URL and QR code stay the same", "수정은 무제한 · URL과 QR은 그대로") : usage}</span>
             </div>
+            <Link href="/billing">{tx("View plan", "플랜 보기")}</Link>
+          </div>
+
+          {atLimit ? (
+            <section className={styles.limitCard} role="status">
+              <p>{limitMessage(locale, topTier ? "custom_needed" : "link_limit", { n: limits.maxLinks, plan: limits.name })}</p>
+              <div className={styles.errorActions}>
+                {topTier ? (
+                  <Link className={styles.primaryButton} href="/contact">{tx("Contact us", "문의하기")}</Link>
+                ) : (
+                  <Link className={styles.primaryButton} href="/billing">{tx("See plans", "플랜 보기")}</Link>
+                )}
+                <Link className={styles.secondaryButton} href="/dashboard">{tx("Manage my links", "내 링크 관리")}</Link>
+              </div>
+            </section>
           ) : (
-            <div className={styles.quotaBanner}>
-              <div>
-                <strong>{tx("Upload allowance", "업로드 이용량")}</strong>
-                <span>
-                  {entitlement.tier === "admin"
-                    ? tx("Unlimited uploads", "무제한 업로드")
-                    : tx(`${entitlement.totalRemaining} uploads available`, `${entitlement.totalRemaining}개 업로드 가능`)}
-                </span>
-              </div>
-              <Link href="/billing">{entitlement.canUpload ? tx("View plan", "플랜 보기") : tx("Choose a plan", "플랜 선택")}</Link>
-            </div>
+            <UploadForm
+              key={editPage?.id ?? "new"}
+              locale={locale}
+              revisionPageId={editPage?.id}
+              limits={{
+                name: limits.name,
+                maxHtmlBytes: limits.maxHtmlBytes,
+                maxImagesPerLink: limits.maxImagesPerLink,
+                maxImageBytes: limits.maxImageBytes,
+                maxLinkBytes: limits.maxLinkBytes,
+              }}
+            />
           )}
-          {revisionPage && revisionsRemaining === 0 ? (
-            <p className={styles.error}>{tx("This page has used all 3 revisions.", "이 페이지는 수정 업로드 3회를 모두 사용했습니다.")}</p>
-          ) : null}
-          {!revisionPage && !entitlement.canUpload ? (
-            <p className={styles.error}>{tx("Your upload allowance is used up. Choose a plan to publish more pages.", "업로드 이용량을 모두 사용했습니다. 더 게시하려면 플랜을 선택해 주세요.")}</p>
-          ) : null}
-          <UploadForm
-            key={revisionPage?.id ?? "new"}
-            locale={locale}
-            revisionPageId={revisionPage?.id}
-            disabled={revisionPage ? revisionsRemaining === 0 : !entitlement.canUpload}
-            canAttachImages={entitlement.paidCustomer}
-          />
         </section>
       </main>
     </div>

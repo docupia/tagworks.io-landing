@@ -599,3 +599,168 @@
   .siteVisitGrid dl { padding: 10px; }
   .siteVisitGrid dd { font-size: 1.1rem; }
 }
+
+/* Link-based plans: upload form, limits and link visibility */
+.dropzone[data-dragging] {
+  border-color: var(--olive);
+  background: var(--sage-soft);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fileSummary {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.fileSummaryHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.86rem;
+}
+
+.fileSummaryHead label { position: relative; cursor: pointer; }
+
+.fileList {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fileList li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 44px;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  font-size: 0.82rem;
+}
+
+.fileList span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileList small { color: var(--subtle); white-space: nowrap; }
+.fileList button { min-height: 36px; font-size: 1.1rem; }
+
+.previewBox {
+  display: grid;
+  gap: 10px;
+}
+
+.previewFrame {
+  width: 100%;
+  min-height: 360px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.missingNotice {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--butter);
+  color: var(--ink);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.missingNotice span { color: var(--muted); }
+
+.error p { margin: 0; }
+
+.errorActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.limitCard {
+  display: grid;
+  gap: 4px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  line-height: 1.6;
+}
+
+.limitCard p { margin: 0; }
+
+.planStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.planStrip > div { display: grid; gap: 6px; min-width: min(100%, 220px); flex: 1 1 220px; }
+.planStrip strong { font-size: 0.92rem; }
+.planStrip span { color: var(--muted); font-size: 0.8rem; }
+.planStrip a { color: var(--olive); font-size: 0.82rem; font-weight: 850; }
+
+.usageMeter {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+
+.usageMeter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--olive);
+}
+
+.usageMeter[data-full] i { background: var(--danger); }
+
+.notice {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--butter);
+  color: var(--ink);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.notice a { color: var(--olive); font-weight: 850; }
+
+.moreForm { margin: 0; }
+
+.moreForm button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}

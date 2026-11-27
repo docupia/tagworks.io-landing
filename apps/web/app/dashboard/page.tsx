@@ -12,6 +12,10 @@ import { getLocale } from "@/lib/i18n-server";
 import { statusLabel } from "@/lib/page-status";
 import { getDatabase } from "@/lib/database";
 import { canViewSiteVisits, type SiteVisitSummary } from "@/lib/site-visits";
+import { getReconciledAccountPlan } from "@/lib/account-plan";
+import { limitMessage } from "@/lib/limit-messages";
+import { fill, SELF_SERVE_MAX_LINKS } from "@/lib/plans";
+import { setPageLive } from "./actions";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -20,6 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 type PageRow = {
   id: string;
+  unpublished_reason: string | null;
   slug: string;
   title: string;
   description: string | null;
@@ -40,7 +45,8 @@ const displayCount = (value: unknown, locale: Locale) => {
   return Number.isFinite(count) && count > 0 ? Math.floor(count).toLocaleString(LOCALE_TAGS[locale]) : "0";
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
+  const { notice } = await searchParams;
   const locale = await getLocale();
   const tx = (english: string, korean: string) => text(locale, english, korean);
   const date = new Intl.DateTimeFormat(LOCALE_TAGS[locale], {
@@ -53,11 +59,14 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  // Applies any plan change first so the list shows what is live right now.
+  const account = await getReconciledAccountPlan(user.id);
+  const { limits } = account;
 
   const [pagesResult, summariesResult] = await Promise.all([
     supabase
       .from("pages")
-      .select("id,slug,title,description,status,published_at,created_at")
+      .select("id,slug,title,description,status,unpublished_reason,published_at,created_at")
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabase.rpc("get_owner_page_analytics_summary", { range_days: 7 }),
@@ -90,6 +99,36 @@ export default async function DashboardPage() {
           </div>
           <Link className={styles.primaryButton} href="/pages/new">{tx("Upload new HTML", "새 HTML 업로드")}</Link>
         </div>
+
+        <section className={styles.planStrip} aria-label={tx("Plan usage", "플랜 사용량")}>
+          <div>
+            <strong>{account.superAdmin
+              ? fill(tx("{plan} · {live} links live", "{plan} · 공개 링크 {live}개"), { plan: limits.name, live: account.liveLinks })
+              : fill(tx("{plan} · {live} of {max} links live", "{plan} · 공개 링크 {max}개 중 {live}개"), { plan: limits.name, live: account.liveLinks, max: limits.maxLinks })}</strong>
+            {account.superAdmin ? null : (
+              <div className={styles.usageMeter} data-full={account.liveLinks >= limits.maxLinks ? "" : undefined} aria-hidden="true">
+                <i style={{ width: `${Math.min(100, (account.liveLinks / Math.max(1, limits.maxLinks)) * 100)}%` }} />
+              </div>
+            )}
+            <span>{tx("Edits are unlimited. Make a link private to free a slot.", "수정은 무제한이에요. 링크를 비공개로 바꾸면 자리가 돌아와요.")}</span>
+          </div>
+          <Link href={limits.maxLinks >= SELF_SERVE_MAX_LINKS && account.liveLinks >= limits.maxLinks ? "/contact" : "/billing"}>
+            {limits.maxLinks >= SELF_SERVE_MAX_LINKS && account.liveLinks >= limits.maxLinks ? tx("Need more links?", "링크가 더 필요하세요?") : tx("View plan", "플랜 보기")}
+          </Link>
+        </section>
+
+        {notice === "link_limit" ? (
+          <p className={styles.notice} role="status">{limitMessage(locale, limits.maxLinks >= SELF_SERVE_MAX_LINKS ? "custom_needed" : "link_limit", { n: limits.maxLinks, plan: limits.name })}{" "}
+            <Link href={limits.maxLinks >= SELF_SERVE_MAX_LINKS ? "/contact" : "/billing"}>{limits.maxLinks >= SELF_SERVE_MAX_LINKS ? tx("Contact us", "문의하기") : tx("See plans", "플랜 보기")}</Link></p>
+        ) : notice === "unpublished" ? (
+          <p className={styles.notice} role="status">{tx("The link is now private. Its URL shows a closed notice until you publish it again.", "링크를 비공개로 바꿨어요. 다시 공개할 때까지 이 주소에는 닫힘 안내가 보여요.")}</p>
+        ) : notice === "published" ? (
+          <p className={styles.notice} role="status">{tx("The link is live again at the same URL.", "같은 주소로 다시 공개했어요.")}</p>
+        ) : null}
+        {pages.some((page) => page.status === "paused" && page.unpublished_reason === "downgrade") ? (
+          <p className={styles.notice} role="status">{fill(tx("Some links were made private because your plan allows {n} live links. They come back at the same URL when you upgrade.", "현재 플랜의 공개 링크 한도({n}개)를 넘는 링크는 비공개로 바뀌었어요. 업그레이드하면 같은 주소로 복구돼요."), { n: limits.maxLinks })}{" "}
+            <Link href="/billing">{tx("See plans", "플랜 보기")}</Link></p>
+        ) : null}
 
         {siteVisits !== undefined ? (
           <section className={styles.siteVisits} aria-labelledby="site-visits-title">
@@ -128,7 +167,7 @@ export default async function DashboardPage() {
                   <div className={styles.pageDetails}>
                     <div className={styles.meta}>
                       <span className={styles.badge} data-status={page.status}>
-                        {statusLabel(page.status, locale)}
+                        {statusLabel(page.status, locale, page.unpublished_reason)}
                       </span>
                       <span>{tx(`Created ${date.format(new Date(page.created_at))}`, `${date.format(new Date(page.created_at))} 생성`)}</span>
                     </div>
@@ -152,13 +191,27 @@ export default async function DashboardPage() {
                         {tx("Open link", "링크 열기")}
                       </a>
                     ) : null}
-                    {published ? (
-                      <details className={styles.more}>
-                        <summary aria-label={tx("More actions", "더보기")}><span aria-hidden="true">⋯</span></summary>
-                        <div className={styles.morePanel}>
-                          <Link className={styles.moreItem} href={`/pages/new?edit=${page.id}`}>
-                            {tx("Replace HTML", "HTML 교체")}
-                          </Link>
+                    {!published && page.status === "paused" ? (
+                      <form action={setPageLive} className={styles.moreForm}>
+                        <input type="hidden" name="pageId" value={page.id} />
+                        <input type="hidden" name="live" value="1" />
+                        <button className={styles.secondaryButton} type="submit">{tx("Publish again", "다시 공개")}</button>
+                      </form>
+                    ) : null}
+                    <details className={styles.more}>
+                      <summary aria-label={tx("More actions", "더보기")}><span aria-hidden="true">⋯</span></summary>
+                      <div className={styles.morePanel}>
+                        <Link className={styles.moreItem} href={`/pages/new?edit=${page.id}`}>
+                          {tx("Edit page", "페이지 수정")}
+                        </Link>
+                        {published ? (
+                          <form action={setPageLive} className={styles.moreForm}>
+                            <input type="hidden" name="pageId" value={page.id} />
+                            <input type="hidden" name="live" value="0" />
+                            <button className={styles.moreItem} type="submit">{tx("Make private", "비공개로 전환")}</button>
+                          </form>
+                        ) : null}
+                        {published ? (
                           <PageQrCode
                             compact
                             fileName={`tagworks-${page.slug}-qr.png`}
@@ -166,9 +219,9 @@ export default async function DashboardPage() {
                             url={href}
                             locale={locale}
                           />
-                        </div>
-                      </details>
-                    ) : null}
+                        ) : null}
+                      </div>
+                    </details>
                   </div>
                 </article>
               );
