@@ -1,18 +1,6 @@
 /* Home page. Colors come from the --tw-* tokens in globals.css. */
 .page {
-  /* Map the older shared tokens to the new palette so the pricing cards match. */
-  --ink: var(--tw-ink);
-  --muted: var(--tw-muted);
-  --subtle: #94a3b8;
-  --surface: #ffffff;
   --canvas: #ffffff;
-  --olive: var(--tw-accent);
-  --olive-dark: var(--tw-accent-dark);
-  --line: var(--tw-line);
-  --khaki-strong: var(--tw-line-strong);
-  --butter: var(--tw-accent-soft);
-  --peach: var(--tw-accent-soft);
-  --radius-sm: var(--tw-radius-sm);
   min-height: 100vh;
   background: #fff;
   color: var(--tw-ink);

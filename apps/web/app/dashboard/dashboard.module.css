@@ -138,7 +138,7 @@
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: #8fa472;
+  background: #22c55e;
   content: "";
 }
 
@@ -315,7 +315,7 @@
 .field {
   display: grid;
   gap: 8px;
-  color: var(--olive);
+  color: var(--ink);
   font-size: 0.9rem;
   font-weight: 750;
 }
@@ -337,7 +337,7 @@
 .field textarea:focus,
 .dropzone:focus-within {
   border-color: var(--muted);
-  box-shadow: 0 0 0 4px rgba(116, 128, 95, 0.13);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.13);
 }
 
 .dropzone {
@@ -361,7 +361,7 @@
 
 .dropTitle {
   margin: 10px 0 4px;
-  color: var(--olive);
+  color: var(--ink);
   font-weight: 850;
 }
 
@@ -432,7 +432,7 @@
   max-width: 100%;
   margin-top: 16px;
   padding: 12px;
-  border: 1px solid rgba(79, 91, 62, 0.18);
+  border: 1px solid rgba(15, 23, 42, 0.18);
   border-radius: var(--radius-sm);
   color: var(--olive);
   background: var(--surface);

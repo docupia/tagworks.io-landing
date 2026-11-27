@@ -3,10 +3,7 @@
   display: grid;
   place-items: center;
   padding: 40px 20px;
-  background:
-    radial-gradient(circle at 18% 14%, rgba(215, 222, 191, 0.75), transparent 28%),
-    radial-gradient(circle at 82% 82%, rgba(222, 214, 232, 0.7), transparent 28%),
-    var(--canvas);
+  background: var(--canvas);
 }
 
 .card {
@@ -14,8 +11,8 @@
   padding: 34px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 253, 247, 0.96);
-  box-shadow: 0 24px 70px rgba(79, 91, 62, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
 }
 
 
@@ -58,7 +55,7 @@
 .field {
   display: grid;
   gap: 7px;
-  color: var(--olive);
+  color: var(--ink);
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -76,7 +73,7 @@
 
 .field input:focus {
   border-color: var(--muted);
-  box-shadow: 0 0 0 4px rgba(116, 128, 95, 0.13);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.13);
 }
 
 .googleButton {
@@ -101,7 +98,7 @@
   cursor: pointer;
   font: inherit;
   font-weight: 850;
-  box-shadow: 0 10px 26px rgba(79, 91, 62, 0.18);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.18);
 }
 
 .submit:disabled {
@@ -162,7 +159,7 @@
 .field select:focus,
 .field textarea:focus {
   border-color: var(--muted);
-  box-shadow: 0 0 0 4px rgba(116, 128, 95, 0.13);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.13);
 }
 
 .hint {

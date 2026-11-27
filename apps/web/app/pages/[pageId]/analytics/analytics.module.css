@@ -57,7 +57,7 @@
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 253, 247, 0.76);
+  background: rgba(255, 255, 255, 0.76);
 }
 
 .rangeTabs {
@@ -109,8 +109,8 @@
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 253, 247, 0.94);
-  box-shadow: 0 12px 34px rgba(79, 91, 62, 0.055);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.055);
 }
 
 .metricCard > span {
@@ -144,15 +144,15 @@
   width: 62px;
   height: 7px;
   border-radius: 0 0 0 7px;
-  background: #a8b58e;
+  background: #93c5fd;
 }
 
 .metricAccent[data-tone="1"] {
-  background: #e7c7b5;
+  background: #fdba74;
 }
 
 .metricAccent[data-tone="2"] {
-  background: #cbc3d9;
+  background: #c4b5fd;
 }
 
 .panel,
@@ -160,8 +160,8 @@
 .errorCard {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 253, 247, 0.92);
-  box-shadow: 0 14px 40px rgba(79, 91, 62, 0.06);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
 }
 
 .panel {
@@ -245,7 +245,7 @@
 }
 
 .flowRow + .flowRow {
-  border-top: 1px solid rgba(220, 214, 197, 0.78);
+  border-top: 1px solid var(--line);
 }
 
 .sourceNode,
@@ -265,8 +265,8 @@
 }
 
 .sourceNode {
-  border: 1px solid #dfcdbf;
-  background: #f8e9df;
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
 }
 
 .resultNode {
@@ -291,7 +291,7 @@
 .resultNode strong,
 .unobservedNode strong {
   overflow: hidden;
-  color: var(--olive-dark);
+  color: var(--ink);
   font-size: 0.85rem;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -324,7 +324,7 @@
 }
 
 .pageNode strong {
-  color: var(--olive);
+  color: var(--ink);
   font-size: 0.78rem;
 }
 
@@ -349,7 +349,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #debca8, #a8b98c);
+  background: linear-gradient(90deg, #93c5fd, #2563eb);
   opacity: 0.78;
 }
 
@@ -378,7 +378,7 @@
 
 .tableScroll:focus-visible,
 .chartScroll:focus-visible {
-  outline: 3px solid rgba(116, 128, 95, 0.24);
+  outline: 3px solid rgba(37, 99, 235, 0.24);
   outline-offset: 3px;
 }
 
@@ -386,7 +386,7 @@
   width: 100%;
   min-width: 650px;
   border-collapse: collapse;
-  color: var(--olive);
+  color: var(--ink);
   font-size: 0.79rem;
 }
 
@@ -421,7 +421,7 @@
 }
 
 .table tbody th {
-  color: var(--olive-dark);
+  color: var(--ink);
   font-weight: 750;
 }
 
@@ -519,7 +519,7 @@
   display: block;
   width: 100%;
   border-radius: 7px 7px 3px 3px;
-  background: linear-gradient(180deg, #99aa7a, #cbd4b8);
+  background: linear-gradient(180deg, #2563eb, #93c5fd);
 }
 
 .day time {
@@ -557,7 +557,7 @@
 }
 
 .empty h2 {
-  color: var(--olive-dark);
+  color: var(--ink);
   font-size: 1.06rem;
   letter-spacing: -0.025em;
 }
@@ -592,7 +592,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   color: var(--muted);
-  background: rgba(239, 235, 222, 0.78);
+  background: var(--surface-muted);
   font-size: 0.78rem;
   line-height: 1.55;
 }
@@ -730,7 +730,7 @@
   .flowLine i {
     width: 100% !important;
     height: 100%;
-    background: linear-gradient(180deg, #debca8, #a8b98c);
+    background: linear-gradient(180deg, #93c5fd, #2563eb);
   }
 }
 

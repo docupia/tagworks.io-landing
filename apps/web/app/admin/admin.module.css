@@ -16,7 +16,7 @@
   font-size: 0.9rem;
 }
 .notice { color: var(--olive); background: var(--sage-soft); }
-.error { color: #8c2f1d; background: #fbe9e4; }
+.error { color: var(--danger); background: var(--danger-soft); }
 
 .muted { margin: 6px 0; color: var(--muted); font-size: 0.86rem; line-height: 1.5; }
 

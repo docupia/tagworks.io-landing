@@ -1,10 +1,7 @@
 .page {
   min-height: 100vh;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 12% 7%, rgba(235, 207, 188, 0.46), transparent 23rem),
-    radial-gradient(circle at 91% 13%, rgba(217, 208, 228, 0.52), transparent 25rem),
-    var(--canvas);
+  background: var(--canvas);
 }
 
 .main {
@@ -70,13 +67,13 @@
   padding: 28px;
   border: 1px solid var(--line);
   border-radius: 25px;
-  background: rgba(255, 253, 247, .94);
-  box-shadow: 0 16px 50px rgba(72, 78, 58, .08);
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 16px 50px rgba(15, 23, 42, .08);
 }
 
 .featured {
   border-color: var(--subtle);
-  box-shadow: 0 22px 60px rgba(79, 91, 62, .17);
+  box-shadow: 0 22px 60px rgba(15, 23, 42, .17);
   transform: translateY(-8px);
 }
 
@@ -138,7 +135,7 @@
   display: flex;
   gap: 9px;
   align-items: flex-start;
-  color: var(--olive);
+  color: var(--ink);
   font-size: .9rem;
   line-height: 1.45;
 }
@@ -211,7 +208,7 @@
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: rgba(255, 253, 247, .9);
+  background: rgba(255, 255, 255, .9);
 }
 
 .usage span {
@@ -311,7 +308,7 @@
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: 20px;
-  background: rgba(255, 253, 247, .94);
+  background: rgba(255, 255, 255, .94);
 }
 
 .downgradeCard h2 { margin: 0 0 6px; font-size: 1.05rem; }
