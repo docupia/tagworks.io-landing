@@ -112,6 +112,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             )}
             <span>{tx("Edits are unlimited. Make a link private to free a slot.", "수정은 무제한이에요. 링크를 비공개로 바꾸면 자리가 돌아와요.")}</span>
           </div>
+          <Link href="/dashboard/compare">{tx("Compare links", "링크 비교")}</Link>
           <Link href={limits.maxLinks >= SELF_SERVE_MAX_LINKS && account.liveLinks >= limits.maxLinks ? "/contact" : "/billing"}>
             {limits.maxLinks >= SELF_SERVE_MAX_LINKS && account.liveLinks >= limits.maxLinks ? tx("Need more links?", "링크가 더 필요하세요?") : tx("View plan", "플랜 보기")}
           </Link>

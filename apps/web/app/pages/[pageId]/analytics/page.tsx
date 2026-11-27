@@ -8,7 +8,8 @@ import dashboardStyles from "@/app/dashboard/dashboard.module.css";
 import {
   ANALYTICS_RANGE_OPTIONS,
   parseAnalyticsRange,
-  parsePageAnalytics,
+  periodChange,
+  rangesForPlan,
   safeOutboundUrl,
   type AnalyticsDailyRow,
   type AnalyticsFlow,
@@ -20,6 +21,10 @@ import { LOCALE_TAGS, text, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { statusLabel } from "@/lib/page-status";
 import styles from "./analytics.module.css";
+import { getAccountPlan } from "@/lib/account-plan";
+import { allowedRange, loadPageAnalytics } from "@/lib/plan-analytics";
+import { fill } from "@/lib/plans";
+import { LockedPreview } from "./locked-preview";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -227,11 +232,21 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
   if (!pageData) notFound();
   const page = pageData as PageRow;
 
-  const { data: analyticsData, error: analyticsError } = await supabase.rpc(
-    "get_page_analytics",
-    { target_page_id: page.id, range_days: rangeDays },
-  );
-  const analytics = analyticsError ? null : parsePageAnalytics(analyticsData, rangeDays);
+  const account = await getAccountPlan(user.id);
+  const full = account.limits.analytics === "full";
+  const availableRanges: readonly number[] = rangesForPlan(account.limits.analyticsMaxDays);
+  const effectiveRange = allowedRange(rangeDays, account.limits);
+  const analytics = await loadPageAnalytics(user.id, page.id, effectiveRange, account.limits).catch((reason) => {
+    console.error("Could not load page analytics", reason instanceof Error ? reason.message : "unknown error");
+    return null;
+  });
+  const rangeLabel = (days: number) => days === 0 ? tx("All time", "전체 기간") : tx(`Last ${days} days`, `최근 ${days}일`);
+  const change = (current: number, previous: number | undefined) => {
+    const value = periodChange(current, previous);
+    if (value === null) return null;
+    const rounded = Math.round(value);
+    return fill(tx("{change}% vs previous period", "이전 기간 대비 {change}%"), { change: rounded > 0 ? `+${rounded}` : rounded });
+  };
   const { publicUrl } = publicationUrls(page.slug, getPublisherUrl(), process.env.TAGWORKS_PUBLISHING_DOMAIN, await getPublicUsername(user.id));
   const isEmpty = analytics?.summary.sessions === 0;
   const updatedAt = analytics?.updatedAt ? new Date(analytics.updatedAt) : null;
@@ -262,17 +277,28 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
 
         <div className={styles.controlRow}>
           <nav className={styles.rangeTabs} aria-label={tx("Analytics period", "분석 기간")}>
-            {ANALYTICS_RANGE_OPTIONS.map((days) => (
+            {ANALYTICS_RANGE_OPTIONS.map((days) => availableRanges.includes(days) ? (
               <Link
-                className={rangeDays === days ? styles.activeRange : undefined}
-                href={`/pages/${page.id}/analytics?range=${days}`}
-                aria-current={rangeDays === days ? "page" : undefined}
+                className={effectiveRange === days ? styles.activeRange : undefined}
+                href={`/pages/${page.id}/analytics?range=${days === 0 ? "all" : days}`}
+                aria-current={effectiveRange === days ? "page" : undefined}
                 key={days}
               >
-                {tx(`Last ${days} days`, `최근 ${days}일`)}
+                {rangeLabel(days)}
+              </Link>
+            ) : (
+              <Link className={styles.lockedRange} href="/billing" key={days} title={tx("Available on Pro", "Pro에서 이용할 수 있어요")}>
+                {rangeLabel(days)} <span className={styles.proChip}>Pro</span>
               </Link>
             ))}
           </nav>
+          {full ? (
+            <a className={styles.csvButton} href={`/api/pages/${page.id}/analytics/csv?range=${effectiveRange === 0 ? "all" : effectiveRange}`} download>
+              {tx("Export CSV", "CSV 내보내기")}
+            </a>
+          ) : (
+            <Link className={styles.csvButton} data-locked="" href="/billing">{tx("Export CSV", "CSV 내보내기")} <span className={styles.proChip}>Pro</span></Link>
+          )}
           <p className={styles.updatedAt}>
             {validUpdatedAt ? tx(`Updated ${updatedDate.format(validUpdatedAt)}`, `${updatedDate.format(validUpdatedAt)} 기준`) : tx("Not calculated yet", "아직 집계 전")}
           </p>
@@ -285,18 +311,19 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
           </section>
         ) : (
           <>
-            <section className={styles.metricGrid} aria-label={tx(`Key metrics for the last ${analytics.rangeDays} days`, `최근 ${analytics.rangeDays}일 주요 지표`)}>
-              {[
-                [tx("Page views", "페이지 조회"), analytics.summary.pageViews, tx("Observed views including refreshes", "새로고침을 포함한 관측 횟수")],
-                [tx("Visit sessions", "방문 세션"), analytics.summary.sessions, tx("Sessions started in this period", "선택한 기간에 시작된 세션")],
-                [tx("Outbound click sessions", "외부 클릭 세션"), analytics.summary.clickSessions, tx("Clicked an external link at least once", "한 번 이상 외부 링크 클릭")],
-                [tx("Outbound click rate", "외부 클릭 비율"), `${percent.format(analytics.summary.clickRate)}%`, tx("Click sessions ÷ visit sessions", "클릭 세션 ÷ 방문 세션")],
-                [tx("Total outbound clicks", "전체 외부 클릭"), analytics.summary.totalClicks, tx("All clicks including repeats", "반복 클릭을 포함한 총수")],
-                [tx("TagWorks-attributed visits", "태그웍스 기여 방문"), analytics.summary.tagworksSessions, tx("Sessions referred inside TagWorks", "태그웍스 내부 경유 세션")],
-              ].map(([label, value, hint], index) => (
+            <section className={styles.metricGrid} aria-label={rangeLabel(analytics.rangeDays)}>
+              {([
+                [tx("Page views", "페이지 조회"), analytics.summary.pageViews, tx("Observed views including refreshes", "새로고침을 포함한 관측 횟수"), change(analytics.summary.pageViews, analytics.previous?.pageViews)],
+                [tx("Visit sessions", "방문 세션"), analytics.summary.sessions, tx("Sessions started in this period", "선택한 기간에 시작된 세션"), change(analytics.summary.sessions, analytics.previous?.sessions)],
+                [tx("Outbound click sessions", "외부 클릭 세션"), analytics.summary.clickSessions, tx("Clicked an external link at least once", "한 번 이상 외부 링크 클릭"), change(analytics.summary.clickSessions, analytics.previous?.clickSessions)],
+                [tx("Outbound click rate", "외부 클릭 비율"), `${percent.format(analytics.summary.clickRate)}%`, tx("Click sessions ÷ visit sessions", "클릭 세션 ÷ 방문 세션"), null],
+                [tx("Total outbound clicks", "전체 외부 클릭"), analytics.summary.totalClicks, tx("All clicks including repeats", "반복 클릭을 포함한 총수"), change(analytics.summary.totalClicks, analytics.previous?.totalClicks)],
+                [tx("TagWorks discovery visits", "태그웍스 discovery 유입"), analytics.summary.tagworksSessions, tx("Sessions referred inside TagWorks", "태그웍스 내부 경유 세션"), null],
+              ] as Array<[string, number | string, string, string | null]>).map(([label, value, hint, delta], index) => (
                 <article className={styles.metricCard} key={String(label)}>
                   <span>{label}</span>
                   <strong>{typeof value === "number" ? number.format(value) : value}</strong>
+                  {delta ? <em className={styles.metricDelta}>{delta}</em> : null}
                   <small>{hint}</small>
                   <i className={styles.metricAccent} data-tone={index % 3} aria-hidden="true" />
                 </article>
@@ -337,7 +364,9 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
                     </div>
                     <p>{tx("Only the first observed outbound click in each session is connected to the flow.", "한 세션에서 처음 관측된 외부 클릭 한 번만 흐름에 연결합니다.")}</p>
                   </div>
-                  {analytics.flows.length ? (
+                  {!full ? (
+                    <LockedPreview locale={locale} label={tx("See your page's flow on Pro", "Pro에서 내 페이지의 흐름 보기")} />
+                  ) : analytics.flows.length ? (
                     <>
                       <FlowRows flows={analytics.flows} page={page} locale={locale} />
                       <details className={styles.flowTableDetails}>
@@ -420,6 +449,12 @@ export default async function AnalyticsPage({ params, searchParams }: AnalyticsP
                   ) : (
                     <p className={styles.noRows}>{tx("No outbound links were found in the published document.", "게시된 문서에서 분석할 외부 링크를 찾지 못했습니다.")}</p>
                   )}
+                  {!full && analytics.linkCount > analytics.links.length ? (
+                    <p className={styles.lockNote}>
+                      {fill(tx("Showing the top link of {count}.", "링크 {count}개 중 가장 많이 클릭된 1개만 보여요."), { count: analytics.linkCount })}{" "}
+                      <Link href="/billing">{tx("See every link on Pro", "Pro에서 전체 링크 보기")}</Link>
+                    </p>
+                  ) : null}
                 </section>
 
                 <aside className={styles.observationNote}>

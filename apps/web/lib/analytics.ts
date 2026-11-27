@@ -1,4 +1,5 @@
-export const ANALYTICS_RANGE_OPTIONS = [7, 30, 90] as const;
+/** 0 means the whole history. Which ranges a plan may use comes from lib/plans.ts. */
+export const ANALYTICS_RANGE_OPTIONS = [7, 30, 90, 365, 0] as const;
 
 export type AnalyticsRangeDays = (typeof ANALYTICS_RANGE_OPTIONS)[number];
 
@@ -53,6 +54,11 @@ export type PageAnalytics = {
   flows: AnalyticsFlow[];
   links: AnalyticsLink[];
   daily: AnalyticsDailyRow[];
+  tier: "basic" | "full";
+  /** Summary of the previous period of the same length (full access only). */
+  previous: AnalyticsSummary | null;
+  /** Number of outbound links, even when only the top one is returned. */
+  linkCount: number;
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -78,6 +84,7 @@ const rows = <T>(value: unknown, parse: (row: JsonRecord) => T): T[] =>
 
 export function parseAnalyticsRange(value: string | string[] | undefined): AnalyticsRangeDays {
   const candidate = Array.isArray(value) ? value[0] : value;
+  if (candidate === "all") return 0;
   const number = Number(candidate);
   return ANALYTICS_RANGE_OPTIONS.includes(number as AnalyticsRangeDays)
     ? (number as AnalyticsRangeDays)
@@ -91,6 +98,14 @@ export function parsePageAnalytics(
   if (!isRecord(value) || !isRecord(value.summary)) return null;
 
   const summary = value.summary;
+  const parseSummary = (row: JsonRecord): AnalyticsSummary => ({
+    pageViews: count(row.pageViews),
+    sessions: count(row.sessions),
+    clickSessions: count(row.clickSessions),
+    clickRate: percentage(row.clickRate),
+    totalClicks: count(row.totalClicks),
+    tagworksSessions: count(row.tagworksSessions),
+  });
   const returnedRange = Number(value.rangeDays);
   const rangeDays = ANALYTICS_RANGE_OPTIONS.includes(returnedRange as AnalyticsRangeDays)
     ? (returnedRange as AnalyticsRangeDays)
@@ -99,14 +114,7 @@ export function parsePageAnalytics(
   return {
     updatedAt: typeof value.updatedAt === "string" ? value.updatedAt : null,
     rangeDays,
-    summary: {
-      pageViews: count(summary.pageViews),
-      sessions: count(summary.sessions),
-      clickSessions: count(summary.clickSessions),
-      clickRate: percentage(summary.clickRate),
-      totalClicks: count(summary.totalClicks),
-      tagworksSessions: count(summary.tagworksSessions),
-    },
+    summary: parseSummary(summary),
     sources: rows(value.sources, (row) => ({
       key: text(row.key, "direct"),
       type: text(row.type, "direct"),
@@ -137,6 +145,9 @@ export function parsePageAnalytics(
       sessions: count(row.sessions),
       clickSessions: count(row.clickSessions),
     })),
+    tier: value.tier === "full" ? "full" : "basic",
+    previous: isRecord(value.previous) ? parseSummary(value.previous) : null,
+    linkCount: value.linkCount === undefined ? (Array.isArray(value.links) ? value.links.length : 0) : count(value.linkCount),
   };
 }
 
@@ -149,4 +160,36 @@ export function safeOutboundUrl(value: string): string | null {
   } catch {
     return null;
   }
+}
+
+/** Ranges a plan may read: every option up to maxDays, or all when maxDays is null. */
+export function rangesForPlan(maxDays: number | null) {
+  return ANALYTICS_RANGE_OPTIONS.filter((days) => maxDays === null || (days !== 0 && days <= maxDays));
+}
+
+/** Relative change against the previous period, or null when there is nothing to compare. */
+export function periodChange(current: number, previous: number | undefined) {
+  if (previous === undefined || previous === 0) return null;
+  return ((current - previous) / previous) * 100;
+}
+
+const csvCell = (value: string | number) => {
+  const textValue = String(value);
+  // Neutralize spreadsheet formulas and quote everything.
+  const safe = /^[=+\-@\t\r]/.test(textValue) ? `'${textValue}` : textValue;
+  return `"${safe.replaceAll('"', '""')}"`;
+};
+
+/** CSV export of one page's analytics (full access). */
+export function analyticsCsv(title: string, analytics: PageAnalytics) {
+  const lines: Array<Array<string | number>> = [
+    ["section", "key", "label", "sessions", "click_sessions", "total_clicks"],
+    ["summary", "page_views", title, analytics.summary.pageViews, "", ""],
+    ["summary", "sessions", title, analytics.summary.sessions, analytics.summary.clickSessions, analytics.summary.totalClicks],
+    ...analytics.daily.map((row) => ["daily", row.date, "", row.sessions, row.clickSessions, ""]),
+    ...analytics.sources.map((row) => ["source", row.type, row.label, row.sessions, row.clickSessions, row.totalClicks]),
+    ...analytics.links.map((row) => ["link", row.url, row.label, row.firstClickSessions, row.clickSessions, row.totalClicks]),
+    ...analytics.flows.map((row) => ["flow", row.sourceLabel, row.linkLabel, row.sessions, "", ""]),
+  ];
+  return "\uFEFF" + lines.map((line) => line.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }

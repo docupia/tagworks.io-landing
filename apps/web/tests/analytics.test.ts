@@ -9,7 +9,9 @@ import {
 test("allows only supported analytics ranges", () => {
   assert.equal(parseAnalyticsRange("7"), 7);
   assert.equal(parseAnalyticsRange(["90", "7"]), 90);
-  assert.equal(parseAnalyticsRange("365"), 30);
+  assert.equal(parseAnalyticsRange("365"), 365);
+  assert.equal(parseAnalyticsRange("120"), 30);
+  assert.equal(parseAnalyticsRange("all"), 0);
   assert.equal(parseAnalyticsRange(undefined), 30);
 });
 
@@ -48,4 +50,20 @@ test("rejects malformed analytics payloads and unsafe outbound URLs", () => {
   assert.equal(safeOutboundUrl("javascript:alert(1)"), null);
   assert.equal(safeOutboundUrl("http://example.com"), null);
   assert.equal(safeOutboundUrl("https://example.com/path"), "https://example.com/path");
+});
+
+import { analyticsCsv, periodChange, rangesForPlan } from "../lib/analytics";
+
+test("plan ranges and period comparison", () => {
+  assert.deepEqual(rangesForPlan(30), [7, 30]);
+  assert.deepEqual(rangesForPlan(null), [7, 30, 90, 365, 0]);
+  assert.equal(periodChange(15, 10), 50);
+  assert.equal(periodChange(5, 0), null);
+});
+
+test("CSV export quotes cells and neutralizes formulas", () => {
+  const analytics = parsePageAnalytics({ rangeDays: 30, summary: { sessions: 2 }, sources: [{ key: "x", type: "utm", label: "=HYPERLINK(1)", sessions: 2 }], flows: [], links: [], daily: [] }, 30)!;
+  const csv = analyticsCsv("My page", analytics);
+  assert.ok(csv.includes(`"'=HYPERLINK(1)"`));
+  assert.ok(csv.startsWith("\uFEFF\"section\""));
 });
