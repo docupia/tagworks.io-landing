@@ -141,7 +141,7 @@ begin
     or has_table_privilege('tagworks_ingest', 'public.paypal_webhook_events', 'SELECT,INSERT,UPDATE,DELETE')
     or not has_function_privilege(
       'tagworks_ingest',
-      'public.reserve_upload_quota(uuid,uuid,text)',
+      'public.get_account_plan(uuid)',
       'EXECUTE'
     ) then
     raise exception 'billing data must be available only through the restricted function surface';
@@ -204,7 +204,8 @@ begin
     raise exception 'analytics collector function privileges are not least-privilege';
   end if;
 
-  if not has_function_privilege(
+  -- Full page analytics are plan-gated and read by the server only.
+  if has_function_privilege(
     'authenticated',
     'public.get_page_analytics(uuid,integer)',
     'EXECUTE'
@@ -212,8 +213,12 @@ begin
     'authenticated',
     'public.get_owner_page_analytics_summary(integer)',
     'EXECUTE'
+  ) or not has_function_privilege(
+    'tagworks_ingest',
+    'public.get_page_analytics_for_owner(uuid,uuid,integer,boolean)',
+    'EXECUTE'
   ) then
-    raise exception 'authenticated owners require aggregate analytics RPC access';
+    raise exception 'analytics RPC grants do not match the plan-gated design';
   end if;
 end;
 $$;
@@ -234,8 +239,8 @@ begin
     raise exception 'page-originals bucket must remain private';
   end if;
 
-  if bucket.file_size_limit is distinct from 1048576 then
-    raise exception 'page-originals bucket size limit must be 1 MiB';
+  if bucket.file_size_limit is distinct from 2097152 then
+    raise exception 'page-originals bucket size limit must be 2 MiB';
   end if;
 end;
 $$;

@@ -1,19 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
-  grantPayPalCreditPack,
+  markPaymentFailed,
   recordPayPalWebhookEvent,
-  syncPayPalSubscription,
+  syncSubscriptionFromPayPal,
+  webhookEventSeen,
 } from "@/lib/billing";
 import { getDatabase } from "@/lib/database";
-import { getPayPalMonthlyPlanId } from "@/lib/env";
-import {
-  completedCreditPack,
-  getPayPalOrder,
-  getPayPalSubscription,
-  subscriptionState,
-  verifyPayPalWebhook,
-  type PayPalWebhookEvent,
-} from "@/lib/paypal";
+import { verifyPayPalWebhook, type PayPalWebhookEvent } from "@/lib/paypal";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +17,7 @@ const subscriptionEvents = new Set([
   "BILLING.SUBSCRIPTION.SUSPENDED",
   "BILLING.SUBSCRIPTION.CANCELLED",
   "BILLING.SUBSCRIPTION.EXPIRED",
+  "BILLING.SUBSCRIPTION.PAYMENT.FAILED",
   "PAYMENT.SALE.COMPLETED",
   "PAYMENT.SALE.DENIED",
   "PAYMENT.SALE.REFUNDED",
@@ -53,23 +47,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
+    // Each event is processed once; PayPal retries deliver the same ID.
+    if (await webhookEventSeen(event.id)) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
     const resource = event.resource;
-    if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
-      const orderId = nestedString(resource, ["supplementary_data", "related_ids", "order_id"]);
-      if (orderId) {
-        const payment = completedCreditPack(await getPayPalOrder(orderId));
-        if (payment) await grantPayPalCreditPack(payment);
-      }
-    } else if (subscriptionEvents.has(event.event_type)) {
+    if (subscriptionEvents.has(event.event_type)) {
       const subscriptionId = event.event_type.startsWith("BILLING.SUBSCRIPTION.")
         ? nestedString(resource, ["id"])
         : nestedString(resource, ["billing_agreement_id"]);
       if (subscriptionId) {
-        const subscription = await getPayPalSubscription(subscriptionId);
-        if (subscription.plan_id === getPayPalMonthlyPlanId()) {
-          const state = subscriptionState(subscription, event.create_time);
-          if (state) await syncPayPalSubscription(state);
+        if (event.event_type === "BILLING.SUBSCRIPTION.PAYMENT.FAILED" || event.event_type === "PAYMENT.SALE.DENIED") {
+          await markPaymentFailed(subscriptionId);
         }
+        await syncSubscriptionFromPayPal(subscriptionId, event.create_time);
       }
     }
 

@@ -1,14 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { grantPayPalCreditPack, syncPayPalSubscription } from "@/lib/billing";
-import { getPayPalMonthlyPlanId, getSiteUrl } from "@/lib/env";
-import {
-  captureCreditPackOrder,
-  completedCreditPack,
-  getPayPalOrder,
-  getPayPalSubscription,
-  PayPalApiError,
-  subscriptionState,
-} from "@/lib/paypal";
+import { syncSubscriptionFromPayPal } from "@/lib/billing";
+import { getSiteUrl } from "@/lib/env";
+import { PayPalApiError } from "@/lib/paypal";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,42 +13,19 @@ const validPayPalId = (value: string | null) =>
 const billingRedirect = (state: string) =>
   NextResponse.redirect(`${getSiteUrl()}/billing?payment=${encodeURIComponent(state)}`, 303);
 
+/** PayPal sends the subscriber back here after approving a new or changed subscription. */
 export async function GET(request: NextRequest) {
-  const kind = request.nextUrl.searchParams.get("kind");
-
   try {
-    if (kind === "monthly") {
-      const subscriptionId = validPayPalId(
-        request.nextUrl.searchParams.get("subscription_id"),
-      );
-      if (!subscriptionId) return billingRedirect("error");
+    const subscriptionId = validPayPalId(request.nextUrl.searchParams.get("subscription_id"));
+    if (!subscriptionId) return billingRedirect("error");
 
-      const subscription = await getPayPalSubscription(subscriptionId);
-      if (subscription.plan_id !== getPayPalMonthlyPlanId()) return billingRedirect("error");
-      const state = subscriptionState(subscription);
-      if (!state) return billingRedirect("processing");
-      await syncPayPalSubscription(state);
-      return billingRedirect(state.status === "ACTIVE" ? "success" : "processing");
-    }
+    const result = await syncSubscriptionFromPayPal(subscriptionId);
+    if (!result) return billingRedirect("processing");
 
-    if (kind === "prepaid") {
-      const orderId = validPayPalId(request.nextUrl.searchParams.get("token"));
-      if (!orderId) return billingRedirect("error");
-
-      let order;
-      try {
-        order = await captureCreditPackOrder(orderId);
-      } catch (reason) {
-        if (!(reason instanceof PayPalApiError) || reason.status !== 422) throw reason;
-        order = await getPayPalOrder(orderId);
-      }
-      const payment = completedCreditPack(order);
-      if (!payment) return billingRedirect("processing");
-      await grantPayPalCreditPack(payment);
-      return billingRedirect("success");
-    }
-
-    return billingRedirect("error");
+    // Only the subscriber's own session gets a success message.
+    const { data: { user } } = await (await createClient()).auth.getUser();
+    if (user && user.id !== result.ownerId) return billingRedirect("error");
+    return billingRedirect(result.status === "ACTIVE" ? "success" : "processing");
   } catch (reason) {
     if (reason instanceof PayPalApiError) {
       console.error("PayPal return failed", { status: reason.status, debugId: reason.debugId });

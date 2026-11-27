@@ -34,8 +34,17 @@ export const getPayPalApiConfig = () => ({
   clientSecret: required("PAYPAL_CLIENT_SECRET", process.env.PAYPAL_CLIENT_SECRET),
 });
 
-export const getPayPalMonthlyPlanId = () =>
-  required("PAYPAL_MONTHLY_PLAN_ID", process.env.PAYPAL_MONTHLY_PLAN_ID);
+/** PayPal billing plan IDs for each paid plan and billing interval. */
+export const getPayPalPlanIds = () => ({
+  starter: {
+    month: required("PAYPAL_STARTER_MONTHLY_PLAN_ID", process.env.PAYPAL_STARTER_MONTHLY_PLAN_ID),
+    year: required("PAYPAL_STARTER_YEARLY_PLAN_ID", process.env.PAYPAL_STARTER_YEARLY_PLAN_ID),
+  },
+  pro: {
+    month: required("PAYPAL_PRO_MONTHLY_PLAN_ID", process.env.PAYPAL_PRO_MONTHLY_PLAN_ID),
+    year: required("PAYPAL_PRO_YEARLY_PLAN_ID", process.env.PAYPAL_PRO_YEARLY_PLAN_ID),
+  },
+});
 
 export const getPayPalWebhookId = () =>
   required("PAYPAL_WEBHOOK_ID", process.env.PAYPAL_WEBHOOK_ID);

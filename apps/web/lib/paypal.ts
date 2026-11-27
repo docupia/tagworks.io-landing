@@ -1,9 +1,12 @@
 import { randomUUID } from "node:crypto";
 import {
   getPayPalApiConfig,
-  getPayPalMonthlyPlanId,
+  getPayPalPlanIds,
   getPayPalWebhookId,
 } from "@/lib/env";
+import type { BillingInterval } from "@/lib/plans";
+
+export type PaidPlan = "starter" | "pro";
 
 type PayPalLink = { href: string; rel: string; method?: string };
 
@@ -19,25 +22,6 @@ export type PayPalSubscription = {
     next_billing_time?: string;
     last_payment?: { time?: string; amount?: { currency_code?: string; value?: string } };
   };
-  links?: PayPalLink[];
-};
-
-type PayPalCapture = {
-  id: string;
-  status: string;
-  create_time?: string;
-  amount?: { currency_code?: string; value?: string };
-};
-
-export type PayPalOrder = {
-  id: string;
-  status: string;
-  payer?: { payer_id?: string };
-  purchase_units?: Array<{
-    custom_id?: string;
-    amount?: { currency_code?: string; value?: string };
-    payments?: { captures?: PayPalCapture[] };
-  }>;
   links?: PayPalLink[];
 };
 
@@ -104,18 +88,32 @@ async function paypalRequest<T>(
 const approvalUrl = (links: PayPalLink[] | undefined) =>
   links?.find((link) => link.rel === "approve" || link.rel === "payer-action")?.href ?? null;
 
-export async function createMonthlySubscription(input: {
+/** Maps a PayPal plan ID back to our plan and interval; null for unknown or retired plans. */
+export function paidPlanForPayPalPlan(
+  paypalPlanId: string,
+  ids: ReturnType<typeof getPayPalPlanIds> = getPayPalPlanIds(),
+): { plan: PaidPlan; interval: BillingInterval } | null {
+  for (const plan of ["starter", "pro"] as const) {
+    for (const interval of ["month", "year"] as const) {
+      if (ids[plan][interval] === paypalPlanId) return { plan, interval };
+    }
+  }
+  return null;
+}
+
+export async function createSubscription(input: {
   ownerId: string;
   email: string | null;
+  plan: PaidPlan;
+  interval: BillingInterval;
   returnUrl: string;
   cancelUrl: string;
 }) {
-  const monthlyPlanId = getPayPalMonthlyPlanId();
   const subscription = await paypalRequest<PayPalSubscription>("/v1/billing/subscriptions", {
     method: "POST",
     requestId: randomUUID(),
     body: {
-      plan_id: monthlyPlanId,
+      plan_id: getPayPalPlanIds()[input.plan][input.interval],
       custom_id: input.ownerId,
       ...(input.email ? { subscriber: { email_address: input.email } } : {}),
       application_context: {
@@ -132,78 +130,42 @@ export async function createMonthlySubscription(input: {
   return { id: subscription.id, approvalUrl: url };
 }
 
-export const getPayPalSubscription = (subscriptionId: string) =>
-  paypalRequest<PayPalSubscription>(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}`);
-
-export async function createCreditPackOrder(input: {
-  ownerId: string;
+/**
+ * Moves an existing subscription to another plan or interval. Price
+ * differences follow PayPal's default handling. Downgrades are applied by us
+ * at the end of the paid period.
+ */
+export async function reviseSubscription(input: {
+  subscriptionId: string;
+  plan: PaidPlan;
+  interval: BillingInterval;
   returnUrl: string;
   cancelUrl: string;
 }) {
-  const order = await paypalRequest<PayPalOrder>("/v2/checkout/orders", {
-    method: "POST",
-    requestId: randomUUID(),
-    body: {
-      intent: "CAPTURE",
-      purchase_units: [
-        {
-          reference_id: "tagworks-prepaid-300",
-          custom_id: input.ownerId,
-          description: "TagWorks 300 HTML uploads",
-          amount: { currency_code: "USD", value: "100.00" },
-        },
-      ],
-      payment_source: {
-        paypal: {
-          experience_context: {
-            brand_name: "TagWorks",
-            shipping_preference: "NO_SHIPPING",
-            user_action: "PAY_NOW",
-            return_url: input.returnUrl,
-            cancel_url: input.cancelUrl,
-          },
+  const revision = await paypalRequest<{ links?: PayPalLink[] }>(
+    `/v1/billing/subscriptions/${encodeURIComponent(input.subscriptionId)}/revise`,
+    {
+      method: "POST",
+      requestId: randomUUID(),
+      body: {
+        plan_id: getPayPalPlanIds()[input.plan][input.interval],
+        application_context: {
+          brand_name: "TagWorks",
+          shipping_preference: "NO_SHIPPING",
+          user_action: "CONTINUE",
+          return_url: input.returnUrl,
+          cancel_url: input.cancelUrl,
         },
       },
     },
-  });
-  const url = approvalUrl(order.links);
-  if (!url) throw new Error("PayPal did not return an order approval link.");
-  return { id: order.id, approvalUrl: url };
+  );
+  const url = approvalUrl(revision.links);
+  if (!url) throw new Error("PayPal did not return a revision approval link.");
+  return { approvalUrl: url };
 }
 
-export const captureCreditPackOrder = (orderId: string) =>
-  paypalRequest<PayPalOrder>(`/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, {
-    method: "POST",
-    requestId: `tagworks-capture-${orderId}`,
-    body: {},
-  });
-
-export const getPayPalOrder = (orderId: string) =>
-  paypalRequest<PayPalOrder>(`/v2/checkout/orders/${encodeURIComponent(orderId)}`);
-
-export function completedCreditPack(order: PayPalOrder) {
-  const unit = order.purchase_units?.[0];
-  const capture = unit?.payments?.captures?.find((item) => item.status === "COMPLETED");
-  if (
-    order.status !== "COMPLETED"
-    || !unit?.custom_id
-    || unit.amount?.currency_code !== "USD"
-    || unit.amount?.value !== "100.00"
-    || !capture?.id
-    || capture.amount?.currency_code !== "USD"
-    || capture.amount?.value !== "100.00"
-  ) return null;
-
-  return {
-    ownerId: unit.custom_id,
-    orderId: order.id,
-    captureId: capture.id,
-    payerId: order.payer?.payer_id ?? null,
-    amount: capture.amount.value,
-    currencyCode: capture.amount.currency_code,
-    completedAt: capture.create_time ?? new Date().toISOString(),
-  };
-}
+export const getPayPalSubscription = (subscriptionId: string) =>
+  paypalRequest<PayPalSubscription>(`/v1/billing/subscriptions/${encodeURIComponent(subscriptionId)}`);
 
 export function subscriptionState(
   subscription: PayPalSubscription,

@@ -1,150 +1,28 @@
+import { reconcileLiveLinks } from "@/lib/account-plan";
 import { getDatabase } from "@/lib/database";
+import { getPayPalSubscription, paidPlanForPayPalPlan, subscriptionState } from "@/lib/paypal";
 
-export type UploadEntitlement = {
-  tier: "free" | "monthly" | "prepaid" | "admin";
-  paidCustomer: boolean;
-  subscriptionStatus: string | null;
-  subscriptionPeriodEnd: string | null;
-  monthlyLimit: number;
-  monthlyUsed: number;
-  monthlyRemaining: number;
-  prepaidGranted: number;
-  prepaidRemaining: number;
-  freeRemaining: number;
-  totalRemaining: number;
-  canUpload: boolean;
-};
+/**
+ * Fetches a subscription from PayPal and applies it to the owner's plan.
+ * Returns the new status, or null when the subscription is not one of ours.
+ * Always reads PayPal's current state, so repeated or out-of-order webhooks
+ * end in the same result.
+ */
+export async function syncSubscriptionFromPayPal(subscriptionId: string, observedAt?: string) {
+  const subscription = await getPayPalSubscription(subscriptionId);
+  const paid = paidPlanForPayPalPlan(subscription.plan_id);
+  if (!paid) return null;
+  const state = subscriptionState(subscription, observedAt);
+  if (!state) return null;
 
-type EntitlementRow = {
-  tier: UploadEntitlement["tier"];
-  paid_customer: boolean;
-  subscription_status: string | null;
-  subscription_period_end: Date | string | null;
-  monthly_limit: number;
-  monthly_used: number;
-  monthly_remaining: number;
-  prepaid_granted: number;
-  prepaid_remaining: number;
-  free_remaining: number;
-  total_remaining: number;
-  can_upload: boolean;
-};
-
-const asIso = (value: Date | string | null) =>
-  value ? new Date(value).toISOString() : null;
-
-export async function getUploadEntitlement(ownerId: string): Promise<UploadEntitlement> {
-  const sql = getDatabase();
-  const [row] = await sql<EntitlementRow[]>`
-    select * from public.get_upload_entitlement(${ownerId}::uuid)
-  `;
-  if (!row) throw new Error("Could not load the upload entitlement.");
-
-  return {
-    tier: row.tier,
-    paidCustomer: row.paid_customer,
-    subscriptionStatus: row.subscription_status,
-    subscriptionPeriodEnd: asIso(row.subscription_period_end),
-    monthlyLimit: Number(row.monthly_limit),
-    monthlyUsed: Number(row.monthly_used),
-    monthlyRemaining: Number(row.monthly_remaining),
-    prepaidGranted: Number(row.prepaid_granted),
-    prepaidRemaining: Number(row.prepaid_remaining),
-    freeRemaining: Number(row.free_remaining),
-    totalRemaining: Number(row.total_remaining),
-    canUpload: row.can_upload,
-  };
-}
-
-export async function reserveUploadQuota(
-  ownerId: string,
-  reservationId: string,
-  objectPath: string,
-) {
-  const sql = getDatabase();
-  const [row] = await sql<{
-    allowed: boolean;
-    quota_source: string | null;
-    total_remaining: number;
-  }[]>`
-    select * from public.reserve_upload_quota(
-      ${ownerId}::uuid,
-      ${reservationId}::uuid,
-      ${objectPath}
-    )
-  `;
-  return {
-    allowed: row?.allowed === true,
-    source: row?.quota_source ?? null,
-    remaining: Number(row?.total_remaining ?? 0),
-  };
-}
-
-export async function releaseUploadQuota(ownerId: string, reservationId: string) {
   const sql = getDatabase();
   await sql`
-    select public.release_upload_quota(${ownerId}::uuid, ${reservationId}::uuid)
-  `;
-}
-
-export async function consumeUploadQuota(ownerId: string, reservationId: string) {
-  const sql = getDatabase();
-  const [row] = await sql<{ consumed: boolean }[]>`
-    select public.consume_upload_quota(
-      ${ownerId}::uuid,
-      ${reservationId}::uuid
-    ) as consumed
-  `;
-  if (!row?.consumed) throw new Error("The upload reservation expired before publishing.");
-}
-
-export type CompletedCreditPack = {
-  ownerId: string;
-  orderId: string;
-  captureId: string;
-  payerId: string | null;
-  amount: string;
-  currencyCode: string;
-  completedAt: string;
-};
-
-export async function grantPayPalCreditPack(payment: CompletedCreditPack) {
-  const sql = getDatabase();
-  const [row] = await sql<{ applied: boolean; prepaid_remaining: number }[]>`
-    select * from public.grant_paypal_prepaid_pack(
-      ${payment.ownerId}::uuid,
-      ${payment.orderId},
-      ${payment.captureId},
-      ${payment.payerId},
-      ${payment.amount}::numeric,
-      ${payment.currencyCode},
-      ${payment.completedAt}::timestamptz
-    )
-  `;
-  return {
-    applied: row?.applied === true,
-    prepaidRemaining: Number(row?.prepaid_remaining ?? 0),
-  };
-}
-
-export type PayPalSubscriptionState = {
-  ownerId: string;
-  subscriptionId: string;
-  planId: string;
-  payerId: string | null;
-  status: string;
-  periodStart: string | null;
-  periodEnd: string | null;
-  statusUpdatedAt: string;
-};
-
-export async function syncPayPalSubscription(state: PayPalSubscriptionState) {
-  const sql = getDatabase();
-  await sql`
-    select public.sync_paypal_subscription(
+    select public.sync_paypal_plan(
       ${state.ownerId}::uuid,
       ${state.subscriptionId},
       ${state.planId},
+      ${paid.plan},
+      ${paid.interval},
       ${state.payerId},
       ${state.status},
       ${state.periodStart}::timestamptz,
@@ -152,6 +30,20 @@ export async function syncPayPalSubscription(state: PayPalSubscriptionState) {
       ${state.statusUpdatedAt}::timestamptz
     )
   `;
+  // Reopen links closed by an earlier downgrade, or close extras.
+  await reconcileLiveLinks(state.ownerId);
+  return { ownerId: state.ownerId, status: state.status, plan: paid.plan };
+}
+
+export async function markPaymentFailed(subscriptionId: string) {
+  const sql = getDatabase();
+  await sql`select public.mark_paypal_payment_failed(${subscriptionId})`;
+}
+
+export async function webhookEventSeen(eventId: string) {
+  const sql = getDatabase();
+  const [row] = await sql<{ seen: boolean }[]>`select public.paypal_webhook_event_seen(${eventId}) as seen`;
+  return row?.seen === true;
 }
 
 export async function recordPayPalWebhookEvent(event: {
@@ -169,4 +61,10 @@ export async function recordPayPalWebhookEvent(event: {
       ${event.occurredAt}::timestamptz
     )
   `;
+}
+
+/** Chooses which live links stay public when a downgrade takes effect. */
+export async function keepLinksOnDowngrade(ownerId: string, pageIds: string[]) {
+  const sql = getDatabase();
+  await sql`select public.set_links_kept_on_downgrade(${ownerId}::uuid, ${pageIds}::uuid[])`;
 }

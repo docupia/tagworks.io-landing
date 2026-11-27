@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { text, type Locale } from "@/lib/i18n";
+import type { BillingInterval } from "@/lib/plans";
 
 export function PayPalCheckoutButton({
   plan,
+  interval,
   locale,
   label,
   className,
 }: {
-  plan: "monthly" | "prepaid";
+  plan: "starter" | "pro";
+  interval: BillingInterval;
   locale: Locale;
   label: string;
   className?: string;
@@ -25,11 +28,11 @@ export function PayPalCheckoutButton({
       const response = await fetch("/api/paypal/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, interval }),
       });
       const body = await response.json() as { approvalUrl?: string; error?: string };
       if (response.status === 401) {
-        window.location.assign("/login");
+        window.location.assign("/login?next=/billing");
         return;
       }
       if (!response.ok || !body.approvalUrl) {
@@ -48,7 +51,7 @@ export function PayPalCheckoutButton({
         <span>{pending ? tx("Opening PayPal…", "PayPal 여는 중…") : label}</span>
         <strong aria-label="PayPal">PayPal</strong>
       </button>
-      {error ? <p role="alert" style={{ color: "#8b4238", fontSize: ".78rem", lineHeight: 1.45 }}>{error}</p> : null}
+      {error ? <p role="alert" style={{ color: "var(--danger)", fontSize: ".78rem", lineHeight: 1.45 }}>{error}</p> : null}
     </div>
   );
 }

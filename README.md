@@ -36,7 +36,8 @@ npm run dev:publisher
 `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_PUBLISHER_URL`, `SUPABASE_DATABASE_URL`,
 `SUPABASE_ANALYTICS_DATABASE_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`,
 `PAYPAL_ENV`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`,
-`PAYPAL_MONTHLY_PLAN_ID`, `PAYPAL_WEBHOOK_ID`가
+`PAYPAL_STARTER_MONTHLY_PLAN_ID`, `PAYPAL_STARTER_YEARLY_PLAN_ID`,
+`PAYPAL_PRO_MONTHLY_PLAN_ID`, `PAYPAL_PRO_YEARLY_PLAN_ID`, `PAYPAL_WEBHOOK_ID`가
 필요합니다. 퍼블리셔에는 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
 `TAGWORKS_ANALYTICS_EVENTS_URL`, `TAGWORKS_ANALYTICS_EVENT_SECRET`을 설정합니다.
 이벤트 전달에 사용하는 대표 퍼블리셔 주소인 `NEXT_PUBLIC_PUBLISHER_URL`은 두 프로젝트에 동일하게 설정합니다.
@@ -71,11 +72,28 @@ psql "$SUPABASE_ADMIN_DATABASE_URL" -c '\password tagworks_ingest'
 설정 후 `tagworks_ingest` 역할의 Transaction pooler URL만 웹 앱에 넣고, 관리자 URL은
 Vercel에 절대 등록하지 않습니다.
 
-PayPal 비밀키는 웹 앱의 서버 환경 변수에만 저장합니다. 월간 플랜은 PayPal의
-상품/구독 플랜 ID를 `PAYPAL_MONTHLY_PLAN_ID`에 넣고, 운영 웹훅 주소는
-`https://tagworks.io/api/paypal/webhook`으로 등록한 뒤 반환된 ID를
-`PAYPAL_WEBHOOK_ID`에 설정합니다. 무료 계정은 총 1회, 월간 플랜은 결제월마다
-50회, 선불 팩은 결제 1회당 만료 없는 300회의 업로드 권한을 받습니다.
+PayPal 비밀키는 웹 앱의 서버 환경 변수에만 저장합니다. 요금제는 공개 링크 수 기준입니다
+(Free 1개, Starter 5개 $5/월·$48/년, Pro 30개 $15/월·$144/년, 31개 이상은 관리자가 정하는 Custom).
+PayPal 플랜 4개는 기존 상품 아래에 아래 스크립트로 만들고, 반환된 ID를 같은 이름의 환경 변수에 넣습니다.
+두 번째 인자부터는 비활성화할 예전 플랜 ID($20 월간)입니다. 예전 $100 선불 팩은 PayPal 화면에서 직접 비활성화합니다.
+
+```sh
+printf '%s\n%s\n' "$PAYPAL_CLIENT_ID" "$PAYPAL_CLIENT_SECRET" | \
+  node scripts/setup-paypal-link-plans.mjs <product-id> <old-monthly-plan-id>
+```
+
+운영 웹훅 주소는 `https://tagworks.io/api/paypal/webhook`으로 등록한 뒤 반환된 ID를
+`PAYPAL_WEBHOOK_ID`에 설정합니다. 웹훅 이벤트에는 `BILLING.SUBSCRIPTION.*`와
+`PAYMENT.SALE.COMPLETED`, `PAYMENT.SALE.DENIED`, `BILLING.SUBSCRIPTION.PAYMENT.FAILED`를 포함합니다.
+
+플랜 개편 마이그레이션은 아래 순서로 적용합니다.
+
+```sh
+for f in 202611280001_link_based_plans 202611280002_page_version_assets \
+         202611280003_plan_analytics 202611280004_paypal_link_plans; do
+  psql "$SUPABASE_ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f "supabase/migrations/$f.sql"
+done
+```
 
 Supabase Auth의 Site URL과 Redirect URLs에는 로컬 웹 주소와 실제 Vercel 웹 주소의
 `/auth/callback`을 등록해야 이메일 확인 후 대시보드로 돌아옵니다.
@@ -142,21 +160,25 @@ curl https://tagworks.io/api/v1/deploy \
 
 The response contains `page`, `publicUrl`, `pathUrl`, `subdomainUrl` and `warnings`.
 `title` is required (1–100 characters), `description` is optional (up to 300), and
-`html` accepts at most 1 MiB of UTF-8. Vercel additionally imposes its platform
+`html` accepts at most 2 MB of UTF-8. Vercel additionally imposes its platform
 request-body limit, including JSON escaping overhead. Each successful call
-creates a **new** page and consumes one upload. There is no automatic retry or
+creates a **new** live link and counts toward the plan's live-link limit
+(Free 1, Starter 5, Pro 30, Custom as set by an admin). `PUT /api/v1/pages/{pageId}`
+with `{ "html": "..." }` replaces an existing page at the same URL; edits are
+unlimited but capped at 20 per hour per link. There is no automatic retry or
 idempotency key: after a network timeout, check the dashboard before retrying.
 Limits apply to API and browser uploads equally, including the super-admin
 exemption. Requests are limited to 120 per minute per owner across all keys.
 Errors use HTTP 400/413/415 for invalid bodies, 401 for invalid/revoked keys,
-402 for exhausted allowance, 429 for rate limits, and 503 for service failure.
+402 when all live links are in use (`code: link_limit` or `custom_needed`),
+413 for size limits, 429 for rate limits and the hourly edit cap (with `Retry-After`), and 503 for service failure.
 API originals are stored in immutable `page_versions.original_html` with
 `source_storage='database'`; their `source_object_path` is a logical identifier,
 not an object in the Storage bucket. Browser uploads continue to use Storage.
 
 The authenticated MCP endpoint is `/api/mcp`, using stateless Streamable HTTP
 with JSON responses, pinned to protocol revisions `2025-11-25`, `2025-06-18`,
-and `2025-03-26`. It provides `deploy_html` and `get_upload_allowance`, plus
+and `2025-03-26`. It provides `deploy_html`, `update_html` and `get_plan_usage`, plus
 `initialize`, `ping` and `tools/list`. Configure a compatible MCP client with:
 
 ```json
