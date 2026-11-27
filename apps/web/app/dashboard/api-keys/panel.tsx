@@ -22,7 +22,7 @@ export function ApiKeysPanel({ keys, siteUrl, locale }: { keys: KeyRow[]; siteUr
     finally { setBusy(false); }
   }
   return <div className={styles.apiPanel}>
-    <p className={styles.subtitle}>{tx("Publish HTML from external tools using your account's upload allowance.", "외부 도구에서 내 계정의 업로드 권한으로 HTML을 게시하세요.")}</p>
+    <p className={styles.subtitle}>{tx("Publish and update HTML from your scripts or AI tools. New pages count toward your plan's live links; edits are unlimited.", "스크립트나 AI 도구에서 HTML을 게시하고 수정하세요. 새 페이지는 플랜의 공개 링크 수에 포함되고, 수정은 무제한이에요.")}</p>
     <form className={styles.form} onSubmit={event => { event.preventDefault(); void mutate("POST", { name }); }}>
       <label className={styles.field}>{tx("Key name", "키 이름")}<input value={name} maxLength={80} required onChange={event => setName(event.target.value)} placeholder="My coding assistant" /></label>
       <button className={styles.submit} disabled={busy || !name.trim()}>{tx("Create API key", "API 키 발급")}</button>
@@ -40,13 +40,13 @@ export function ApiKeysPanel({ keys, siteUrl, locale }: { keys: KeyRow[]; siteUr
         {!key.revoked_at ? <button className={styles.secondaryButton} disabled={busy} onClick={() => { if (window.confirm(tx("Revoke this key? Connected tools will lose access immediately.", "이 키를 폐기할까요? 연결된 도구의 접근이 즉시 중단됩니다."))) void mutate("DELETE", { id: key.id }); }}>{tx("Revoke", "폐기")}</button> : null}
       </article>)}
     </section>
-    <section><h2>REST API</h2><p>{tx("Send HTML and a management title. Each successful request creates a new page and uses one upload.", "HTML과 관리용 제목을 전달하세요. 성공한 요청마다 새 페이지를 생성하고 업로드 권한 1개를 사용합니다.")}</p>
+    <section><h2>REST API</h2><p>{tx("Send HTML and a management title. Each successful request creates a new live link. To change an existing page at the same URL, send PUT /api/v1/pages/{pageId} with the new html.", "HTML과 관리용 제목을 전달하세요. 성공한 요청마다 새 공개 링크가 만들어져요. 기존 페이지를 같은 주소로 바꾸려면 PUT /api/v1/pages/{pageId}에 새 html을 보내세요.")}</p>
       <pre className={styles.apiCode}>{`curl '${siteUrl}/api/v1/deploy' \\\n  -H 'Authorization: Bearer YOUR_API_KEY' \\\n  -H 'Content-Type: application/json' \\\n  -d '{"title":"Hello","html":"<!doctype html><html><head></head><body><h1>Hello</h1></body></html>"}'`}</pre>
-      <p>{tx("The response includes publicUrl, pathUrl, page.id and page.slug. HTML is limited to 1 MiB. API requests are limited to 120 per minute per account.", "응답에는 publicUrl, pathUrl, page.id, page.slug가 포함됩니다. HTML은 1MiB까지, API 호출은 계정당 분당 120회까지 가능합니다.")}</p>
+      <p>{tx("The response includes publicUrl, pathUrl, page.id and page.slug. HTML is limited to 2 MB. Each link can be edited up to 20 times an hour, and API requests are limited to 120 per minute per account.", "응답에는 publicUrl, pathUrl, page.id, page.slug가 포함됩니다. HTML은 2MB까지, 링크마다 시간당 20번까지 수정할 수 있고, API 호출은 계정당 분당 120회까지 가능합니다.")}</p>
     </section>
     <section><h2>MCP</h2><p>{tx("Connect an MCP client that supports Streamable HTTP and custom Authorization headers. OAuth-only clients are not supported.", "Streamable HTTP와 Authorization 헤더 설정을 지원하는 MCP 클라이언트를 연결하세요. OAuth 전용 클라이언트는 지원하지 않습니다.")}</p>
       <pre className={styles.apiCode}>{JSON.stringify({ mcpServers: { tagworks: { url: `${siteUrl}/api/mcp`, headers: { Authorization: "Bearer YOUR_API_KEY" } } } }, null, 2)}</pre>
-      <p><code>deploy_html</code> · <code>get_upload_allowance</code></p>
+      <p><code>deploy_html</code> · <code>update_html</code> · <code>get_plan_usage</code></p>
       <p>{tx("Configuration format varies by client. Use an environment variable or the client's secret store for the key.", "클라이언트마다 설정 형식이 다릅니다. 키는 환경 변수나 클라이언트의 비밀 저장소에 보관하세요.")}</p>
     </section>
   </div>;

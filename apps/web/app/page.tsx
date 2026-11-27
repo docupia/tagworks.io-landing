@@ -339,8 +339,32 @@ export default async function HomePage({ searchParams }: {
                 <p>{tx("A permanent URL is created as soon as validation and storage finish. You can reopen it or download its QR code from your dashboard.", "안전 검사와 저장이 끝나면 해당 페이지 전용 고정 주소가 즉시 만들어집니다. 대시보드에서 언제든 다시 복사할 수 있습니다.")}</p>
               </details>
               <details>
+                <summary><span>{tx("What counts as a link?", "링크는 어떻게 세나요?")}</span><i aria-hidden="true" /></summary>
+                <p>{tx("A page that is live. Unpublish or delete one to free a slot.", "공개 중인 페이지 하나가 링크 하나예요. 비공개로 바꾸거나 삭제하면 자리가 돌아와요.")}</p>
+              </details>
+              <details>
+                <summary><span>{tx("Does editing a page count against my plan?", "페이지를 수정하면 한도가 줄어드나요?")}</span><i aria-hidden="true" /></summary>
+                <p>{tx("No. Edit as often as you like; your URL and QR code stay the same.", "아니요. 원하는 만큼 수정하세요. 주소와 QR 코드도 그대로예요.")}</p>
+              </details>
+              <details>
                 <summary><span>{tx("Can I upload any file?", "아무 파일이나 올릴 수 있나요?")}</span><i aria-hidden="true" /></summary>
-                <p>{tx("The beta supports one HTML file within the size limit. Local image or CSS files are not uploaded with it, so use HTTPS URLs or resources embedded in the document.", "현재 베타는 용량 제한 안의 단일 HTML 파일을 지원합니다. 로컬 폴더의 이미지나 CSS 파일은 함께 올라가지 않으므로 HTTPS 주소나 문서에 포함된 리소스를 사용해 주세요.")}</p>
+                <p>{tx("One HTML file and the images it uses. Local CSS files are not uploaded, so keep styles inside the HTML or link them over HTTPS. Publishing from an AI tool through MCP or the API keeps everything in one file.", "HTML 파일 하나와 그 페이지가 쓰는 이미지를 올릴 수 있어요. 로컬 CSS 파일은 함께 올라가지 않으니 스타일은 HTML 안에 넣거나 HTTPS 주소로 연결해 주세요. AI 도구에서 MCP나 API로 게시하면 한 파일로 깔끔하게 올릴 수 있어요.")}</p>
+              </details>
+              <details>
+                <summary><span>{tx("Can I upload images?", "이미지도 올릴 수 있나요?")}</span><i aria-hidden="true" /></summary>
+                <p>{tx("Yes. PNG, JPG, WebP and GIF. We resize and compress them automatically.", "네. PNG, JPG, WebP, GIF를 지원하고, 크기 조정과 압축은 자동으로 해요.")}</p>
+              </details>
+              <details>
+                <summary><span>{tx("What happens to my old images when I edit?", "수정하면 예전 이미지는 어떻게 되나요?")}</span><i aria-hidden="true" /></summary>
+                <p>{tx("When you publish an edit, the previous images are removed and replaced by the ones you upload with it. Upload every image the page uses each time.", "수정본을 게시하면 이전 이미지는 지워지고 함께 올린 이미지로 바뀌어요. 매번 페이지에 쓰는 이미지를 모두 올려 주세요.")}</p>
+              </details>
+              <details>
+                <summary><span>{tx("What if my page gets a lot of visitors?", "방문자가 아주 많으면 어떻게 되나요?")}</span><i aria-hidden="true" /></summary>
+                <p>{tx("Your page stays online. If you pass your plan's monthly views, we'll suggest an upgrade or reach out.", "페이지는 계속 공개돼요. 플랜의 월 조회수를 넘으면 업그레이드를 제안하거나 연락드릴게요.")}</p>
+              </details>
+              <details>
+                <summary><span>{tx("Can I cancel anytime?", "언제든 해지할 수 있나요?")}</span><i aria-hidden="true" /></summary>
+                <p>{tx("Yes. You keep your plan until the end of the period you paid for.", "네. 결제한 기간이 끝날 때까지 플랜을 그대로 쓸 수 있어요.")}</p>
               </details>
               <details>
                 <summary><span>{tx("Is my login information sent to the public page?", "로그인 정보가 공개 페이지로 전달되나요?")}</span><i aria-hidden="true" /></summary>
